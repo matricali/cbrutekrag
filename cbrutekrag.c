@@ -58,6 +58,63 @@ void print_banner()
     );
 }
 
+int try_login(const char *hostname, const char *username, const char *password)
+{
+    ssh_session my_ssh_session;
+    int verbosity = 0;
+    int port = 22;
+    long timeout = 3;
+
+    if (verbose) verbosity = SSH_LOG_PROTOCOL;
+
+    my_ssh_session = ssh_new();
+
+    if (my_ssh_session == NULL) {
+        return -1;
+    }
+
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, NULL);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, NULL);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &timeout);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_STRICTHOSTKEYCHECK, 0);
+
+
+
+    int r;
+    r = ssh_connect(my_ssh_session);
+    if (r != SSH_OK) {
+        ssh_free(my_ssh_session);
+        if (verbose) {
+            fprintf(
+                stderr,
+                "Error connecting to %s: %s\n",
+                hostname,
+                ssh_get_error(my_ssh_session)
+            );
+        }
+        return -1;
+    }
+
+    r = ssh_userauth_password(my_ssh_session, username, password);
+    if (r != SSH_AUTH_SUCCESS) {
+        fprintf(
+            stderr,
+            "Error authenticating with password: %s\n",
+            ssh_get_error(my_ssh_session)
+        );
+        ssh_disconnect(my_ssh_session);
+        ssh_free(my_ssh_session);
+        return -1;
+    }
+
+    ssh_disconnect(my_ssh_session);
+    ssh_free(my_ssh_session);
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     int opt;
@@ -74,31 +131,11 @@ int main(int argc, char** argv)
     }
     print_banner();
 
-    ssh_session my_ssh_session;
-    int verbosity = SSH_LOG_PROTOCOL;
-    int port = 22;
+    int ret = try_login("localhost", "root", "toor");
 
-    my_ssh_session = ssh_new();
-
-    if (my_ssh_session == NULL) {
-        exit(-1);
+    if (ret == 0) {
+        printf("\n\nLogin correcto\n");
+    } else {
+        printf("\n\nLogin incorrecto\n");
     }
-
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, "localhost");
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
-
-    int r;
-    r = ssh_connect(my_ssh_session);
-    if (r != SSH_OK) {
-        fprintf(
-            stderr,
-            "Error connecting to localhost: %s\n",
-            ssh_get_error(my_ssh_session)
-        );
-        exit(-1);
-    }
-
-
-    ssh_free(my_ssh_session);
 }
