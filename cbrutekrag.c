@@ -1,22 +1,4 @@
-#include <libssh/libssh.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <assert.h>
-
-#define BUFFSIZE 1024
-
-typedef struct {
-    char *hostname;
-    char *username;
-    char *password;
-} intento_t;
-
-typedef struct {
-    size_t lenght;
-    char **words;
-} wordlist_t;
+#include "cbrutekrag.h"
 
 int verbose = 0;
 
@@ -215,34 +197,76 @@ wordlist_t load_wordlist(char *filename)
     return ret;
 }
 
+int brute(char *hostname, char *username, char *password, int count, int total)
+{
+    char *bar_suffix = 0;
+    // snprintf(bar_suffix, 4, "[%d] %s %s %s", count, hostnames.words[y], login_data[0], login_data[1]);
+    update_progress(count, total, bar_suffix, 80);
+    int ret = try_login(hostname, username, password);
+    if (ret == 0) {
+        printf("\n\nLOGIN OK!\t%s\t%s\t%s\n\n", hostname, username, password);
+        return 0;
+    } else {
+        if (verbose) {
+            printf("\n\nLogin incorrecto\n");
+        }
+    }
+    return -1;
+}
+
 int main(int argc, char** argv)
 {
     int opt;
     int total = 0;
+    int THREADS = 1;
+    char *hostnames_filename = NULL;
+    char *combos_filename = NULL;
 
-    while ((opt = getopt(argc, argv, "vT")) != -1) {
+    while ((opt = getopt(argc, argv, "T:C:t:v")) != -1) {
         switch (opt) {
             case 'v':
                 verbose = 1;
                 break;
             case 'T':
-                verbose = 1;
+                hostnames_filename = optarg;
+                break;
+            case 'C':
+                combos_filename = optarg;
+                break;
+            case 't':
+                THREADS = atoi(optarg);
                 break;
             default:
-            fprintf(stderr, "Usage: %s [-ilw] [file...]\n", argv[0]);
+            fprintf(stderr, "Usage: %s [-v -T hostnames.txt -t THREADS] [file...]\n", argv[0]);
             exit(EXIT_FAILURE);
         }
     }
     print_banner();
 
+    if (hostnames_filename == NULL) {
+        hostnames_filename = strdup("hostnames.txt");
+    }
+    if (combos_filename == NULL) {
+        combos_filename = strdup("combos.txt");
+    }
 
-    wordlist_t hostnames = load_wordlist("hostnames.txt");
-    wordlist_t combos = load_wordlist("combos.txt");
+    wordlist_t hostnames = load_wordlist(hostnames_filename);
+    wordlist_t combos = load_wordlist(combos_filename);
     total = hostnames.lenght * combos.lenght;
 
     printf("\nCantidad de combos: %zu\n", combos.lenght);
     printf("Cantidad de hostnames: %zu\n", hostnames.lenght);
     printf("Combinaciones totales: %d\n\n", total);
+    printf("Cantidad de threads: %d\n\n", THREADS);
+
+    pid_t pids[THREADS];
+
+    for(int i = 0; i < THREADS; i++){
+		pids[i] = 0;
+	}
+
+    pid_t tmp;
+    int p = 0;
 
     int count = 0;
     for (int x = 0; x < combos.lenght; x++) {
@@ -260,17 +284,30 @@ int main(int argc, char** argv)
                     login_data[1]
                 );
             }
-            char *bar_suffix = 0;
-            // snprintf(bar_suffix, 4, "[%d] %s %s %s", count, hostnames.words[y], login_data[0], login_data[1]);
-            update_progress(count, total, bar_suffix, 80);
-            int ret = try_login(hostnames.words[y], login_data[0], login_data[1]);
-            if (verbose) {
-                if (ret == 0) {
-                    printf("\n\nLogin correcto\n");
-                } else {
-                    printf("\n\nLogin incorrecto\n");
-                }
+
+            tmp = fork();
+
+            if (tmp) {
+                pids[p] = tmp;
+            } else if(tmp == 0) {
+                brute(hostnames.words[y], login_data[0], login_data[1], count, total);
+                exit(EXIT_SUCCESS);
+            } else {
+                print_error("Fork failed!\n\n");
             }
+            p++;
+
+            if (p == THREADS){
+                for (int i = 0; i < THREADS; i++) {
+                    waitpid(pids[i], NULL, 0);
+                }
+
+                for (int i = 0; i < THREADS; i++) {
+                    pids[i] = 0;
+                }
+                p = 0;
+            }
+
             count++;
         }
     }

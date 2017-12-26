@@ -1,11 +1,21 @@
-.DEFAULT_GOAL := all
+CC	= gcc
 
-CC=gcc
-CFLAGS=-Wall -lssh
+CFLAGS	+= -Wall -g -std=gnu99 -O3
+LDFLAGS	+= -lssh
 
-cbrutekrag:
-	$(CC) $(CFLAGS) -o cbrutekrag cbrutekrag.c
-all: clean cbrutekrag
+NAME	= cbrutekrag
+SRCS	= cbrutekrag.c
+OBJS	= $(SRCS:.c=.o)
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CC) -o $(NAME) $(OBJS) $(LDFLAGS)
 
 clean:
-	rm -f cbrutekrag
+	rm -f $(OBJS)
+
+fclean: clean
+	rm -f $(NAME)
+
+re: fclean all
