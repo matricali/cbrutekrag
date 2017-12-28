@@ -1,6 +1,7 @@
 #include "cbrutekrag.h"
 
 int verbose = 0;
+int timeout = 1;
 
 char** str_split(char* a_str, const char a_delim)
 {
@@ -46,15 +47,27 @@ char** str_split(char* a_str, const char a_delim)
     return result;
 }
 
-void print_error(char *message)
+void print_error(const char *format, ...)
 {
-    printf("\033[91m%s\033[0m\n", message);
+    va_list arg;
+    fprintf(stderr, "\033[91m");
+    va_start(arg, format);
+    vfprintf(stderr, format, arg);
+    va_end (arg);
+    fprintf(stderr, "\033[0m\n");
 }
 
-void print_debug(char *message)
+void print_debug(const char *format, ...)
 {
-    if (verbose)
-    printf("\033[37m%s\033[0m\n", message);
+    if (verbose != 1) {
+        return;
+    }
+    va_list arg;
+    fprintf(stderr, "\033[37m");
+    va_start(arg, format);
+    vfprintf(stderr, format, arg);
+    va_end (arg);
+    fprintf(stderr, "\033[0m\n");
 }
 
 const char *str_repeat(char *str, size_t times)
@@ -104,7 +117,6 @@ int try_login(const char *hostname, const char *username, const char *password)
     ssh_session my_ssh_session;
     int verbosity = 0;
     int port = 22;
-    long timeout = 3;
 
     if (verbose) {
         verbosity = SSH_LOG_PROTOCOL;
@@ -135,8 +147,7 @@ int try_login(const char *hostname, const char *username, const char *password)
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
         if (verbose) {
-            fprintf(
-                stderr,
+            print_error(
                 "Error connecting to %s: %s\n",
                 hostname,
                 ssh_get_error(my_ssh_session)
@@ -148,8 +159,7 @@ int try_login(const char *hostname, const char *username, const char *password)
     r = ssh_userauth_password(my_ssh_session, username, password);
     if (r != SSH_AUTH_SUCCESS) {
         if (verbose) {
-            fprintf(
-                stderr,
+            print_error(
                 "Error authenticating with password: %s\n",
                 ssh_get_error(my_ssh_session)
             );
@@ -175,7 +185,7 @@ wordlist_t load_wordlist(char *filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Error opening file. (%s)\n", filename);
+        print_error("Error opening file. (%s)\n", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -197,19 +207,21 @@ wordlist_t load_wordlist(char *filename)
     return ret;
 }
 
-int brute(char *hostname, char *username, char *password, int count, int total)
+int brute(char *hostname, char *username, char *password, int count, int total, FILE *output)
 {
-    char *bar_suffix = 0;
-    // snprintf(bar_suffix, 4, "[%d] %s %s %s", count, hostnames.words[y], login_data[0], login_data[1]);
+    char bar_suffix[50];
+    sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
+
     update_progress(count, total, bar_suffix, 80);
     int ret = try_login(hostname, username, password);
     if (ret == 0) {
-        printf("\n\nLOGIN OK!\t%s\t%s\t%s\n\n", hostname, username, password);
+        print_debug("LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+        if (output != NULL) {
+            fprintf(output, "LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+        }
         return 0;
     } else {
-        if (verbose) {
-            printf("\n\nLogin incorrecto\n");
-        }
+        print_debug("LOGIN FAIL\t%s\t%s\t%s\n", hostname, username, password);
     }
     return -1;
 }
@@ -221,8 +233,10 @@ int main(int argc, char** argv)
     int THREADS = 1;
     char *hostnames_filename = NULL;
     char *combos_filename = NULL;
+    char *output_filename = NULL;
+    FILE *output;
 
-    while ((opt = getopt(argc, argv, "T:C:t:v")) != -1) {
+    while ((opt = getopt(argc, argv, "T:C:t:o:v")) != -1) {
         switch (opt) {
             case 'v':
                 verbose = 1;
@@ -236,8 +250,11 @@ int main(int argc, char** argv)
             case 't':
                 THREADS = atoi(optarg);
                 break;
+            case 'o':
+                output_filename = optarg;
+                break;
             default:
-            fprintf(stderr, "Usage: %s [-v -T hostnames.txt -t THREADS] [file...]\n", argv[0]);
+            print_error("Usage: %s [-v -T hostnames.txt -t THREADS] [file...]\n", argv[0]);
             exit(EXIT_FAILURE);
         }
     }
@@ -259,6 +276,14 @@ int main(int argc, char** argv)
     printf("Combinaciones totales: %d\n\n", total);
     printf("Cantidad de threads: %d\n\n", THREADS);
 
+    if (output_filename != NULL) {
+        output = fopen(output_filename, "a");
+        if (output == NULL) {
+            print_error("Error opening output file. (%s)\n", output_filename);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     pid_t pids[THREADS];
 
     for(int i = 0; i < THREADS; i++){
@@ -276,21 +301,19 @@ int main(int argc, char** argv)
         }
         // strtok(login_data[1], "$BLANKPASS");
         for (int y = 0; y < hostnames.lenght; y++) {
-            if (verbose) {
-                printf(
-                    "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
-                    hostnames.words[y],
-                    login_data[0],
-                    login_data[1]
-                );
-            }
+            print_debug(
+                "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
+                hostnames.words[y],
+                login_data[0],
+                login_data[1]
+            );
 
             tmp = fork();
 
             if (tmp) {
                 pids[p] = tmp;
             } else if(tmp == 0) {
-                brute(hostnames.words[y], login_data[0], login_data[1], count, total);
+                brute(hostnames.words[y], login_data[0], login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {
                 print_error("Fork failed!\n\n");
@@ -310,6 +333,10 @@ int main(int argc, char** argv)
 
             count++;
         }
+    }
+
+    if (output != NULL) {
+        fclose(output);
     }
 
     exit(EXIT_SUCCESS);
