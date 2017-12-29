@@ -101,15 +101,21 @@ void update_progress(int count, int total, char* suffix, int bar_len)
 void print_banner()
 {
     printf(
-        "\033[92m      _                _       _\n"
-        "     | |              | |     | |\n"
-        "     | |__  _ __ _   _| |_ ___| | ___ __ __ _  __ _\n"
-        "     | '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
-        "     | |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
-        "     |_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "            \033[0m\033[1mOpenSSH Brute force tool 0.3.1\033[92m     __/ |\n"
-        "          \033[0m(c) Copyright 2014 Jorge Matricali\033[92m  |___/\033[0m\n\n"
+        "\033[92m           _                _       _\n"
+        "          | |              | |     | |\n"
+        "\033[37m      ___\033[92m | |__  _ __ _   _| |_ ___| | ___ __ __ _  __ _\n"
+        "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
+        "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
+        "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
+        "               \033[0m\033[1mOpenSSH Brute force tool 0.1.3\033[92m       __/ |\n"
+        "             \033[0m(c) Copyright 2017 Jorge Matricali\033[92m    |___/\033[0m\n\n"
     );
+}
+
+void usage(const char *p)
+{
+    printf("\nusage: %s [-h] [-v] [-T TARGETS.lst] [-C combinations.lst]\n"
+            "\t\t[-t THREADS] [-o OUTPUT.txt]\n\n", p);
 }
 
 int try_login(const char *hostname, const char *username, const char *password)
@@ -236,7 +242,7 @@ int main(int argc, char** argv)
     char *output_filename = NULL;
     FILE *output;
 
-    while ((opt = getopt(argc, argv, "T:C:t:o:v")) != -1) {
+    while ((opt = getopt(argc, argv, "T:C:t:o:vh")) != -1) {
         switch (opt) {
             case 'v':
                 verbose = 1;
@@ -253,9 +259,13 @@ int main(int argc, char** argv)
             case 'o':
                 output_filename = optarg;
                 break;
+            case 'h':
+                print_banner();
+                usage(argv[0]);
+                exit(EXIT_SUCCESS);
             default:
-            print_error("Usage: %s [-v -T hostnames.txt -t THREADS] [file...]\n", argv[0]);
-            exit(EXIT_FAILURE);
+                usage(argv[0]);
+                exit(EXIT_FAILURE);
         }
     }
     print_banner();
