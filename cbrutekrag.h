@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <libssh/libssh.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
 
 #define BUFFSIZE 1024
 

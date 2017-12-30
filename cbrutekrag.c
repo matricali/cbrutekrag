@@ -84,17 +84,24 @@ const char *str_repeat(char *str, size_t times)
 
 void update_progress(int count, int total, char* suffix, int bar_len)
 {
-    if (bar_len < 0) bar_len = 60;
+    struct winsize w;
+    ioctl(0, TIOCGWINSZ, &w);
+
+    int max_cols = w.ws_col;
+
+    if (bar_len < 0) bar_len = max_cols - 60;
     if (suffix == NULL) suffix = "";
 
     int filled_len = bar_len * count / total;
     int empty_len = bar_len - filled_len;
     float percents = 100.0f * count / total;
+    int fill = max_cols - bar_len - strlen(suffix) - 16;
 
     printf("\033[37m[");
     if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
     printf("\033[37m%s\033[37m]\033[0m", str_repeat("-", empty_len));
-    printf("  %.2f%%   %s\r", percents, suffix);
+    if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
+    if (fill > 0) printf("%s\r", str_repeat(" ", fill));
     fflush(stdout);
 }
 
@@ -218,7 +225,7 @@ int brute(char *hostname, char *username, char *password, int count, int total, 
     char bar_suffix[50];
     sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
 
-    update_progress(count, total, bar_suffix, 80);
+    update_progress(count, total, bar_suffix, -1);
     int ret = try_login(hostname, username, password);
     if (ret == 0) {
         print_debug("LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
