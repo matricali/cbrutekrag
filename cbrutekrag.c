@@ -321,16 +321,10 @@ int main(int argc, char** argv)
         }
     }
 
-    pid_t pids[THREADS];
-
-    for(int i = 0; i < THREADS; i++){
-		pids[i] = 0;
-	}
-
-    pid_t tmp;
+    pid_t pid = 0;
     int p = 0;
-
     int count = 0;
+
     for (int x = 0; x < combos.lenght; x++) {
         char **login_data = str_split(combos.words[x], ' ');
         if (login_data == NULL) {
@@ -340,6 +334,12 @@ int main(int argc, char** argv)
             login_data[1] = strdup("");
         }
         for (int y = 0; y < hostnames.lenght; y++) {
+
+            if (p >= THREADS){
+                waitpid(-1, NULL, 0);
+                p--;
+            }
+
             print_debug(
                 "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
                 hostnames.words[y],
@@ -347,31 +347,22 @@ int main(int argc, char** argv)
                 login_data[1]
             );
 
-            tmp = fork();
+            pid = fork();
 
-            if (tmp) {
-                pids[p] = tmp;
-            } else if(tmp == 0) {
+            if (pid) {
+                p++;
+            } else if(pid == 0) {
                 brute(hostnames.words[y], login_data[0], login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {
                 print_error("Fork failed!\n\n");
             }
-            p++;
 
-            if (p == THREADS){
-                for (int i = 0; i < THREADS; i++) {
-                    waitpid(pids[i], NULL, 0);
-                }
-
-                for (int i = 0; i < THREADS; i++) {
-                    pids[i] = 0;
-                }
-                p = 0;
-            }
             count++;
         }
     }
+
+    pid = 0;
 
     if (output != NULL) {
         fclose(output);
