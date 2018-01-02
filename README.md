@@ -31,7 +31,7 @@ $ cbrutekrag -h
  / __|| '_ \| '__| | | | __/ _ \ |/ / '__/ _` |/ _` |
 | (__ | |_) | |  | |_| | ||  __/   <| | | (_| | (_| |
  \___||_.__/|_|   \__,_|\__\___|_|\_\_|  \__,_|\__, |
-           OpenSSH Brute force tool 0.1.3       __/ |
+           OpenSSH Brute force tool 0.2.1       __/ |
          (c) Copyright 2017 Jorge Matricali    |___/
 
 
