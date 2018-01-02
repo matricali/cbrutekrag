@@ -368,5 +368,7 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
+    printf("\n");
+
     exit(EXIT_SUCCESS);
 }
