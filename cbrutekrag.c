@@ -1,7 +1,8 @@
 #include "cbrutekrag.h"
 
-int verbose = 0;
-int timeout = 1;
+int g_verbose = 0;
+int g_timeout = 3;
+char *g_blankpass_placeholder = "$BLANKPASS";
 
 char** str_split(char* a_str, const char a_delim)
 {
@@ -59,7 +60,7 @@ void print_error(const char *format, ...)
 
 void print_debug(const char *format, ...)
 {
-    if (verbose != 1) {
+    if (g_verbose != 1) {
         return;
     }
     va_list arg;
@@ -84,12 +85,16 @@ const char *str_repeat(char *str, size_t times)
 
 void update_progress(int count, int total, char* suffix, int bar_len)
 {
+    if (g_verbose) {
+        return;
+    }
+
     struct winsize w;
     ioctl(0, TIOCGWINSZ, &w);
 
     int max_cols = w.ws_col;
 
-    if (bar_len < 0) bar_len = max_cols - 60;
+    if (bar_len < 0) bar_len = max_cols - 80;
     if (suffix == NULL) suffix = "";
 
     int filled_len = bar_len * count / total;
@@ -97,9 +102,11 @@ void update_progress(int count, int total, char* suffix, int bar_len)
     float percents = 100.0f * count / total;
     int fill = max_cols - bar_len - strlen(suffix) - 16;
 
-    printf("\033[37m[");
-    if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
-    printf("\033[37m%s\033[37m]\033[0m", str_repeat("-", empty_len));
+    if (bar_len > 0) {
+        printf("\033[37m[");
+        if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
+        printf("\033[37m%s\033[37m]\033[0m", str_repeat("-", empty_len));
+    }
     if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
     if (fill > 0) printf("%s\r", str_repeat(" ", fill));
     fflush(stdout);
@@ -131,7 +138,7 @@ int try_login(const char *hostname, const char *username, const char *password)
     int verbosity = 0;
     int port = 22;
 
-    if (verbose) {
+    if (g_verbose) {
         verbosity = SSH_LOG_PROTOCOL;
     } else {
         verbosity = SSH_LOG_NOLOG;
@@ -140,26 +147,23 @@ int try_login(const char *hostname, const char *username, const char *password)
     my_ssh_session = ssh_new();
 
     if (my_ssh_session == NULL) {
+        print_error("Cant create SSH session\n");
         return -1;
     }
 
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, NULL);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, NULL);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &timeout);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_STRICTHOSTKEYCHECK, 0);
-
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
-
-
 
     int r;
     r = ssh_connect(my_ssh_session);
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
-        if (verbose) {
+        if (g_verbose) {
             print_error(
                 "Error connecting to %s: %s\n",
                 hostname,
@@ -169,27 +173,43 @@ int try_login(const char *hostname, const char *username, const char *password)
         return -1;
     }
 
-    r = ssh_userauth_password(my_ssh_session, username, password);
-    if (r != SSH_AUTH_SUCCESS) {
-        if (verbose) {
-            print_error(
-                "Error authenticating with password: %s\n",
-                ssh_get_error(my_ssh_session)
-            );
-        }
+    r = ssh_userauth_none(my_ssh_session, username);
+    if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
         ssh_disconnect(my_ssh_session);
         ssh_free(my_ssh_session);
-        return -1;
+        return r;
+    }
+
+    int method = 0;
+
+    method = ssh_userauth_list(my_ssh_session, NULL);
+
+    if (method & SSH_AUTH_METHOD_NONE) {
+        r = ssh_userauth_none(my_ssh_session, NULL);
+        if (r == SSH_AUTH_SUCCESS) {
+            ssh_disconnect(my_ssh_session);
+            ssh_free(my_ssh_session);
+            return r;
+        }
+    }
+
+    if (method & SSH_AUTH_METHOD_PASSWORD) {
+        r = ssh_userauth_password(my_ssh_session, NULL, password);
+        if (r == SSH_AUTH_SUCCESS) {
+            ssh_disconnect(my_ssh_session);
+            ssh_free(my_ssh_session);
+            return r;
+        }
     }
 
     ssh_disconnect(my_ssh_session);
     ssh_free(my_ssh_session);
-    return 0;
+    return -1;
 }
 
 wordlist_t load_wordlist(char *filename)
 {
-    FILE* fp;
+    FILE *fp;
     wordlist_t ret;
     char **words = NULL;
     ssize_t read;
@@ -252,7 +272,7 @@ int main(int argc, char** argv)
     while ((opt = getopt(argc, argv, "T:C:t:o:vh")) != -1) {
         switch (opt) {
             case 'v':
-                verbose = 1;
+                g_verbose = 1;
                 break;
             case 'T':
                 hostnames_filename = optarg;
@@ -316,7 +336,9 @@ int main(int argc, char** argv)
         if (login_data == NULL) {
             continue;
         }
-        // strtok(login_data[1], "$BLANKPASS");
+        if (strcmp(login_data[1], g_blankpass_placeholder) == 0) {
+            login_data[1] = strdup("");
+        }
         for (int y = 0; y < hostnames.lenght; y++) {
             print_debug(
                 "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
@@ -347,7 +369,6 @@ int main(int argc, char** argv)
                 }
                 p = 0;
             }
-
             count++;
         }
     }

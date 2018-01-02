@@ -7,14 +7,7 @@
 #include <libssh/libssh.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-
-#define BUFFSIZE 1024
-
-typedef struct {
-    char *hostname;
-    char *username;
-    char *password;
-} intento_t;
+#include <errno.h>
 
 typedef struct {
     size_t lenght;
@@ -27,5 +20,6 @@ void print_debug(const char *format, ...);
 const char *str_repeat(char *str, size_t times);
 void update_progress(int count, int total, char* suffix, int bar_len);
 void print_banner();
+void usage(const char *p);
 int try_login(const char *hostname, const char *username, const char *password);
 wordlist_t load_wordlist(char *filename);
