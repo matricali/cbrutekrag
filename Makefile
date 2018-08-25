@@ -19,3 +19,12 @@ fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
+
+.PHONY: install
+install: $(NAME)
+	mkdir -p $(DESTDIR)$(PREFIX)/$(BINDIR)
+	cp $(NAME) $(DESTDIR)$(PREFIX)/$(BINDIR)/$(NAME)
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/$(BINDIR)/$(NAME)
