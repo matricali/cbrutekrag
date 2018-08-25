@@ -1,0 +1,9 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Debianized-By: Jorge Matricali <jorgematricali@gmail.com>
+Upstream-Name: cbrutekrag
+Upstream-Contact: jorgematricali@gmail.com
+Source: https://github.com/jorge-matricali/cbrutekrag
+
+Files: *
+Copyright: 2014-2018 by Jorge Matricali <jorgematricali@gmail.com>
+License: MIT

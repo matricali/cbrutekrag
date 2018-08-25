@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+INSTALL := install -o root -g root -m 755
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	$(INSTALL) cbrutekrag $(CURDIR)/debian/cbrutekrag/usr/bin

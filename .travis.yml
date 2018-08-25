@@ -1,0 +1,36 @@
+sudo: required
+services:
+- docker
+cache:
+  directories:
+  - "$HOME/.cache"
+language: C
+env:
+  matrix:
+  - OS=el DIST=6
+  - OS=el DIST=7
+  - OS=fedora DIST=24
+  - OS=fedora DIST=25
+  - OS=ubuntu DIST=trusty
+  - OS=ubuntu DIST=precise
+  - OS=ubuntu DIST=xenial
+  - OS=ubuntu DIST=yakkety
+  - OS=debian DIST=jessie
+  - OS=debian DIST=wheezy
+  - OS=debian DIST=stretch
+  - OS=ubuntu DIST=xenial ARCH=i386
+  - OS=debian DIST=jessie ARCH=i386
+script:
+- git describe --long
+- git clone https://github.com/packpack/packpack.git packpack
+- packpack/packpack
+deploy:
+  provider: releases
+  api_key:
+    secure: E+tXhQFkh5yQLhjXvajK/qwSzVjSCBCJLOn3HT7iDgi2n2La/7Vf8jY9JF3pAXP1yqK8reFT1w+0L342OxwjSBmi+VMIjfkp3qlRq0FkN9r4xVdBDQp5G7VPUhRdJorlt47wDmRyf1Gw+dbot3b3Ux0Psk+xxO6z0stW6XqK2FZhW+jCiQGGj+nxUpGgLFHzKDvuK0dIp6Hi3uyCaIIwskb07zZc+gWN1jYl15AQomdxmFjqwfFtcjz+N/5EyBp3+BdXdhdFnIEwHUu/wJIMtiFSoQkpUP02LGf6ai1TkyYVtRZLmxAoHbnv0OUMo3t3X+9lOeXE5396tUHmQKIx1huyWo6pYb/XvrXOBZcCdn4uD4I2rDbaiRkszkzNoq3mP2ejH6QP6wZfjTCvE7z2OpBYqNaoyHpp4VLjkDbMJDs+X+os4svhbhxzSfBaMnJ50wemqn08ZOZ4uXtjR31IDEzEpPJuBuZaRscXR2P6Cgi35TueXNMTwubDdw5f7dxYYe3A5p98wXJ5ks+NMBL40cvgDIhZRga13TEi/tD7wbAg05BpkEHK/hQUaXujPG99yJwQ2ZP9CT0VAOWsRC0MXTfVpvtKNSXkBMYMaVWZYkadEn5XDANN/SFhr9wcb2cU43hRILxu6fbMTyETajoyo/EppesDdwtCi1kg8O27gYY=
+  file_glob: true
+  file: build/*.{deb,rpm}
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: jorge-matricali/cbrutekrag

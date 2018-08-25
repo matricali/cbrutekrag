@@ -1,0 +1,16 @@
+Source: cbrutekrag
+Priority: optional
+Section: net
+Maintainer: Jorge Matricali <jorgematricali@gmail.com>
+Build-Depends: debhelper (>= 9), libssh-dev
+Standards-Version: 4.2.0
+Homepage: https://github.com/jorge-matricali/cbrutekrag
+Vcs-Git: git://github.com/jorge-matricali/cbrutekrag.git
+Vcs-Browser: https://github.com/jorge-matricali/cbrutekrag
+
+Package: cbrutekrag
+Architecture: all
+Depends: libssh-4 (>= 0.5.0), ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Description: SSH bruteforce tool
+ Penetration tests on SSH servers using brute force or dictionary attacks.
