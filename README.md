@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/github/license/jorge-matricali/cbrutekrag.svg)](https://jorge-matricali.mit-license.org/2017) [![GitHub contributors](https://img.shields.io/github/contributors/jorge-matricali/cbrutekrag.svg)](https://github.com/jorge-matricali/cbrutekrag/graphs/contributors)
+[![license](https://img.shields.io/github/license/jorge-matricali/cbrutekrag.svg)](https://jorge-matricali.mit-license.org/2017) [![GitHub contributors](https://img.shields.io/github/contributors/jorge-matricali/cbrutekrag.svg)](https://github.com/jorge-matricali/cbrutekrag/graphs/contributors) [![Build Status](https://travis-ci.org/jorge-matricali/cbrutekrag.svg?branch=master)](https://travis-ci.org/jorge-matricali/cbrutekrag)
 
 # cbrutekrag
 Penetration tests on SSH servers using dictionary attacks. Written in _C_.
