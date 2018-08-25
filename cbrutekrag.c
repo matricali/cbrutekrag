@@ -175,8 +175,10 @@ int try_login(const char *hostname, const char *username, const char *password)
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
+#if LIBSSH_VERSION_MAYOR > 0 || (LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
     ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
+#endif
     ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
 
