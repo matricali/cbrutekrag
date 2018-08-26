@@ -126,7 +126,8 @@ void update_progress(int count, int total, char* suffix, int bar_len)
     if (bar_len > 0) {
         printf("\033[37m[");
         if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
-        printf("\033[37m%s\033[37m]\033[0m", str_repeat("-", empty_len));
+        if (empty_len > 0) printf("\033[37m%s", str_repeat("-", empty_len));
+        printf("\033[37m]\033[0m");
     }
     if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
     if (fill > 0) printf("%s\r", str_repeat(" ", fill));
@@ -290,7 +291,7 @@ int main(int argc, char** argv)
     char *hostnames_filename = NULL;
     char *combos_filename = NULL;
     char *output_filename = NULL;
-    FILE *output;
+    FILE *output = NULL;
 
     while ((opt = getopt(argc, argv, "T:C:t:o:vh")) != -1) {
         switch (opt) {
@@ -346,7 +347,7 @@ int main(int argc, char** argv)
 
     pid_t pid = 0;
     int p = 0;
-    int count = 0;
+    int count = 1;
 
     for (int x = 0; x < combos.lenght; x++) {
         char **login_data = str_split(combos.words[x], ' ');
@@ -391,7 +392,7 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
-    printf("\n");
+    printf("\f");
 
     exit(EXIT_SUCCESS);
 }
