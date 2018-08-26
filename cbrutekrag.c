@@ -19,68 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <libssh/libssh.h>
+#include <sys/ioctl.h>
+
 #include "cbrutekrag.h"
 #include "log.h"
+#include "str.h"
+#include "wordlist.h"
 
 int g_verbose = 0;
 int g_timeout = 3;
 char *g_blankpass_placeholder = "$BLANKPASS";
-
-char** str_split(char* a_str, const char a_delim)
-{
-    char** result = 0;
-    size_t count = 0;
-    char* tmp = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
-
-    /* Count how many elements will be extracted. */
-    while (*tmp) {
-        if (a_delim == *tmp) {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
-
-    /* Add space for trailing token. */
-    count += last_comma < (a_str + strlen(a_str) - 1);
-
-    /* Add space for terminating null string so caller
-       knows where the list of returned strings ends. */
-    count++;
-
-    result = malloc(sizeof(char*) * count);
-
-    if (result) {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
-
-        while (token) {
-            assert(idx < count);
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
-        assert(idx == count - 1);
-        *(result + idx) = 0;
-    }
-
-    return result;
-}
-
-const char *str_repeat(char *str, size_t times)
-{
-    if (times < 1) return NULL;
-    char *ret = malloc(sizeof(str) * times + 1);
-    if (ret == NULL) return NULL;
-    strcpy(ret, str);
-    while (--times > 0) {
-        strcat(ret, str);
-    }
-    return ret;
-}
 
 void update_progress(int count, int total, char* suffix, int bar_len)
 {
@@ -121,7 +74,7 @@ void print_banner()
         "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
         "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
         "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "               \033[0m\033[1mOpenSSH Brute force tool 0.2.1\033[92m       __/ |\n"
+        "               \033[0m\033[1mOpenSSH Brute force tool 0.3.0\033[92m       __/ |\n"
         "             \033[0m(c) Copyright 2017 Jorge Matricali\033[92m    |___/\033[0m\n\n"
     );
 }
@@ -209,39 +162,6 @@ int try_login(const char *hostname, const char *username, const char *password)
     return -1;
 }
 
-wordlist_t load_wordlist(char *filename)
-{
-    FILE *fp;
-    wordlist_t ret;
-    char **words = NULL;
-    ssize_t read;
-    char *temp = 0;
-    size_t len;
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        log_error("Error opening file. (%s)", filename);
-        exit(EXIT_FAILURE);
-    }
-
-    for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
-        strtok(temp, "\n");
-        if (words == NULL) {
-            words = malloc(sizeof(temp));
-            *words = strdup(temp);
-        } else {
-            words = realloc(words, sizeof(temp) * (i + 1));
-            *(words + i) = strdup(temp);
-        }
-        ret.lenght = i + 1;
-    }
-    fclose(fp);
-
-    ret.words = words;
-
-    return ret;
-}
-
 int brute(char *hostname, char *username, char *password, int count, int total, FILE *output)
 {
     char bar_suffix[50];
@@ -312,8 +232,8 @@ int main(int argc, char** argv)
         combos_filename = strdup("combos.txt");
     }
 
-    wordlist_t hostnames = load_wordlist(hostnames_filename);
-    wordlist_t combos = load_wordlist(combos_filename);
+    wordlist_t hostnames = wordlist_load(hostnames_filename);
+    wordlist_t combos = wordlist_load(combos_filename);
     total = hostnames.lenght * combos.lenght;
 
     printf("\nAmount of username/password combinations: %zu\n", combos.lenght);
