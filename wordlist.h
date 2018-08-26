@@ -20,7 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#ifndef WORDLIST_H
+#define WORDLIST_H
+
+typedef struct {
+    size_t lenght;
+    char **words;
+} wordlist_t;
+
+wordlist_t wordlist_load(char *filename);
+
+#endif /* WORDLIST_H */

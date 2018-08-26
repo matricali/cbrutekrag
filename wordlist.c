@@ -20,7 +20,42 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "wordlist.h"
+#include "log.h"
+
+wordlist_t wordlist_load(char *filename)
+{
+    FILE *fp;
+    wordlist_t ret;
+    char **words = NULL;
+    ssize_t read;
+    char *temp = 0;
+    size_t len;
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        log_error("Error opening file. (%s)", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
+        strtok(temp, "\n");
+        if (words == NULL) {
+            words = malloc(sizeof(temp));
+            *words = strdup(temp);
+        } else {
+            words = realloc(words, sizeof(temp) * (i + 1));
+            *(words + i) = strdup(temp);
+        }
+        ret.lenght = i + 1;
+    }
+    fclose(fp);
+
+    ret.words = words;
+
+    return ret;
+}

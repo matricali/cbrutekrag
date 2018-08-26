@@ -19,90 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <libssh/libssh.h>
+#include <sys/ioctl.h>
+
 #include "cbrutekrag.h"
+#include "log.h"
+#include "str.h"
+#include "wordlist.h"
 
 int g_verbose = 0;
 int g_timeout = 3;
 char *g_blankpass_placeholder = "$BLANKPASS";
-
-char** str_split(char* a_str, const char a_delim)
-{
-    char** result = 0;
-    size_t count = 0;
-    char* tmp = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
-
-    /* Count how many elements will be extracted. */
-    while (*tmp) {
-        if (a_delim == *tmp) {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
-
-    /* Add space for trailing token. */
-    count += last_comma < (a_str + strlen(a_str) - 1);
-
-    /* Add space for terminating null string so caller
-       knows where the list of returned strings ends. */
-    count++;
-
-    result = malloc(sizeof(char*) * count);
-
-    if (result) {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
-
-        while (token) {
-            assert(idx < count);
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
-        assert(idx == count - 1);
-        *(result + idx) = 0;
-    }
-
-    return result;
-}
-
-void print_error(const char *format, ...)
-{
-    va_list arg;
-    fprintf(stderr, "\033[91m");
-    va_start(arg, format);
-    vfprintf(stderr, format, arg);
-    va_end (arg);
-    fprintf(stderr, "\033[0m\n");
-}
-
-void print_debug(const char *format, ...)
-{
-    if (g_verbose != 1) {
-        return;
-    }
-    va_list arg;
-    fprintf(stderr, "\033[37m");
-    va_start(arg, format);
-    vfprintf(stderr, format, arg);
-    va_end (arg);
-    fprintf(stderr, "\033[0m\n");
-}
-
-const char *str_repeat(char *str, size_t times)
-{
-    if (times < 1) return NULL;
-    char *ret = malloc(sizeof(str) * times + 1);
-    if (ret == NULL) return NULL;
-    strcpy(ret, str);
-    while (--times > 0) {
-        strcat(ret, str);
-    }
-    return ret;
-}
 
 void update_progress(int count, int total, char* suffix, int bar_len)
 {
@@ -126,7 +57,8 @@ void update_progress(int count, int total, char* suffix, int bar_len)
     if (bar_len > 0) {
         printf("\033[37m[");
         if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
-        printf("\033[37m%s\033[37m]\033[0m", str_repeat("-", empty_len));
+        if (empty_len > 0) printf("\033[37m%s", str_repeat("-", empty_len));
+        printf("\033[37m]\033[0m");
     }
     if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
     if (fill > 0) printf("%s\r", str_repeat(" ", fill));
@@ -142,8 +74,8 @@ void print_banner()
         "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
         "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
         "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "               \033[0m\033[1mOpenSSH Brute force tool 0.2.1\033[92m       __/ |\n"
-        "             \033[0m(c) Copyright 2017 Jorge Matricali\033[92m    |___/\033[0m\n\n"
+        "              \033[0m\033[1mOpenSSH Brute force tool 0.3.0\033[0m\033[92m        __/ |\n"
+        "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n"
     );
 }
 
@@ -168,15 +100,17 @@ int try_login(const char *hostname, const char *username, const char *password)
     my_ssh_session = ssh_new();
 
     if (my_ssh_session == NULL) {
-        print_error("Cant create SSH session\n");
+        log_error("Cant create SSH session.");
         return -1;
     }
 
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
+#if LIBSSH_VERSION_MAYOR > 0 || (LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
     ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
+#endif
     ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
 
@@ -185,8 +119,8 @@ int try_login(const char *hostname, const char *username, const char *password)
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
         if (g_verbose) {
-            print_error(
-                "Error connecting to %s: %s\n",
+            log_error(
+                "Error connecting to %s: %s.",
                 hostname,
                 ssh_get_error(my_ssh_session)
             );
@@ -228,39 +162,6 @@ int try_login(const char *hostname, const char *username, const char *password)
     return -1;
 }
 
-wordlist_t load_wordlist(char *filename)
-{
-    FILE *fp;
-    wordlist_t ret;
-    char **words = NULL;
-    ssize_t read;
-    char *temp = 0;
-    size_t len;
-
-    fp = fopen(filename, "r");
-    if (fp == NULL) {
-        print_error("Error opening file. (%s)\n", filename);
-        exit(EXIT_FAILURE);
-    }
-
-    for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
-        strtok(temp, "\n");
-        if (words == NULL) {
-            words = malloc(sizeof(temp));
-            *words = strdup(temp);
-        } else {
-            words = realloc(words, sizeof(temp) * (i + 1));
-            *(words + i) = strdup(temp);
-        }
-        ret.lenght = i + 1;
-    }
-    fclose(fp);
-
-    ret.words = words;
-
-    return ret;
-}
-
 int brute(char *hostname, char *username, char *password, int count, int total, FILE *output)
 {
     char bar_suffix[50];
@@ -269,13 +170,13 @@ int brute(char *hostname, char *username, char *password, int count, int total, 
     update_progress(count, total, bar_suffix, -1);
     int ret = try_login(hostname, username, password);
     if (ret == 0) {
-        print_debug("LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+        log_debug("LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
         if (output != NULL) {
-            fprintf(output, "LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+            log_output(output, "LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
         }
         return 0;
     } else {
-        print_debug("LOGIN FAIL\t%s\t%s\t%s\n", hostname, username, password);
+        log_debug("LOGIN FAIL\t%s\t%s\t%s", hostname, username, password);
     }
     return -1;
 }
@@ -288,7 +189,7 @@ int main(int argc, char** argv)
     char *hostnames_filename = NULL;
     char *combos_filename = NULL;
     char *output_filename = NULL;
-    FILE *output;
+    FILE *output = NULL;
 
     while ((opt = getopt(argc, argv, "T:C:t:o:vh")) != -1) {
         switch (opt) {
@@ -310,6 +211,12 @@ int main(int argc, char** argv)
             case 'h':
                 print_banner();
                 usage(argv[0]);
+                printf("  -h                This help\n"
+                        "  -v                Verbose mode\n"
+                        "  -T <targets>      Targets file\n"
+                        "  -C <combinations> Username and password file\n"
+                        "  -t <threads>      Max threads\n"
+                        "  -o <output>       Output log file\n");
                 exit(EXIT_SUCCESS);
             default:
                 usage(argv[0]);
@@ -325,19 +232,19 @@ int main(int argc, char** argv)
         combos_filename = strdup("combos.txt");
     }
 
-    wordlist_t hostnames = load_wordlist(hostnames_filename);
-    wordlist_t combos = load_wordlist(combos_filename);
+    wordlist_t hostnames = wordlist_load(hostnames_filename);
+    wordlist_t combos = wordlist_load(combos_filename);
     total = hostnames.lenght * combos.lenght;
 
-    printf("\nCantidad de combos: %zu\n", combos.lenght);
-    printf("Cantidad de hostnames: %zu\n", hostnames.lenght);
-    printf("Combinaciones totales: %d\n\n", total);
-    printf("Cantidad de threads: %d\n\n", THREADS);
+    printf("\nAmount of username/password combinations: %zu\n", combos.lenght);
+    printf("Number of targets: %zu\n", hostnames.lenght);
+    printf("Total attemps: %d\n", total);
+    printf("Max threads: %d\n\n", THREADS);
 
     if (output_filename != NULL) {
         output = fopen(output_filename, "a");
         if (output == NULL) {
-            print_error("Error opening output file. (%s)\n", output_filename);
+            log_error("Error opening output file. (%s)", output_filename);
             exit(EXIT_FAILURE);
         }
     }
@@ -361,8 +268,8 @@ int main(int argc, char** argv)
                 p--;
             }
 
-            print_debug(
-                "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
+            log_debug(
+                "HOSTNAME=%s\tUSERNAME=%s\tPASSWORD=%s",
                 hostnames.words[y],
                 login_data[0],
                 login_data[1]
@@ -376,7 +283,7 @@ int main(int argc, char** argv)
                 brute(hostnames.words[y], login_data[0], login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {
-                print_error("Fork failed!\n\n");
+                log_error("Fork failed!");
             }
 
             count++;
@@ -389,7 +296,8 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
-    printf("\n");
+    update_progress(count, total, NULL, -1);
+    printf("\f");
 
     exit(EXIT_SUCCESS);
 }

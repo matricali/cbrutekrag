@@ -20,7 +20,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#include <stdio.h> /* fprintf, vfprintf, stderr */
+#include <stdarg.h> /* va_list, va_start, va_end */
+#include <time.h> /* time_t, time, tm, localtime, strftime */
+
+#include "log.h"
+
+int g_verbose;
+
+void print_output(int level, const char *file, int line, const char *head,
+    const char *tail, FILE *stream, const char *format, ...)
+{
+    if (level == LOG_DEBUG && g_verbose != 1) {
+        return;
+    }
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+
+    va_list arg;
+    char s[20];
+
+    s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+    fprintf(stream, "%s[%s] ", head, s);
+
+    va_start(arg, format);
+    vfprintf(stream, format, arg);
+    va_end (arg);
+    fprintf(stream, "%s\n", tail);
+    fflush(stream);
+}

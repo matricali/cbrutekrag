@@ -20,7 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#ifndef LOGGER_H
+#define LOGGER_H
+
+extern int g_verbose;
+
+enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+
+#define log_error(...) print_output(LOG_ERROR, __FILE__, __LINE__, \
+    "\033[91m", "\033[0m", stderr, __VA_ARGS__)
+#define log_debug(...) print_output(LOG_DEBUG, __FILE__, __LINE__, \
+    "\033[37m", "\033[0m", stderr, __VA_ARGS__)
+#define log_output(...) print_output(LOG_DEBUG, __FILE__, __LINE__, \
+    "", "", __VA_ARGS__)
+
+void print_output(int level, const char *file, int line, const char *head,
+    const char *tail, FILE *stream, const char *format, ...);
+
+#endif /* LOGGER_H */

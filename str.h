@@ -20,7 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#ifndef STR_H
+#define STR_H
+
+#include <stdlib.h>
+
+char** str_split(char* a_str, const char a_delim);
+const char *str_repeat(char *str, size_t times);
+
+#endif /* STR_H */
