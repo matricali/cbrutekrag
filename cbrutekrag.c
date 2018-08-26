@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 #include "cbrutekrag.h"
+#include "log.h"
 
 int g_verbose = 0;
 int g_timeout = 3;
@@ -67,29 +68,6 @@ char** str_split(char* a_str, const char a_delim)
     }
 
     return result;
-}
-
-void print_error(const char *format, ...)
-{
-    va_list arg;
-    fprintf(stderr, "\033[91m");
-    va_start(arg, format);
-    vfprintf(stderr, format, arg);
-    va_end (arg);
-    fprintf(stderr, "\033[0m\n");
-}
-
-void print_debug(const char *format, ...)
-{
-    if (g_verbose != 1) {
-        return;
-    }
-    va_list arg;
-    fprintf(stderr, "\033[37m");
-    va_start(arg, format);
-    vfprintf(stderr, format, arg);
-    va_end (arg);
-    fprintf(stderr, "\033[0m\n");
 }
 
 const char *str_repeat(char *str, size_t times)
@@ -169,7 +147,7 @@ int try_login(const char *hostname, const char *username, const char *password)
     my_ssh_session = ssh_new();
 
     if (my_ssh_session == NULL) {
-        print_error("Cant create SSH session\n");
+        log_error("Cant create SSH session.");
         return -1;
     }
 
@@ -188,8 +166,8 @@ int try_login(const char *hostname, const char *username, const char *password)
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
         if (g_verbose) {
-            print_error(
-                "Error connecting to %s: %s\n",
+            log_error(
+                "Error connecting to %s: %s.",
                 hostname,
                 ssh_get_error(my_ssh_session)
             );
@@ -242,7 +220,7 @@ wordlist_t load_wordlist(char *filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        print_error("Error opening file. (%s)\n", filename);
+        log_error("Error opening file. (%s)", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -272,13 +250,13 @@ int brute(char *hostname, char *username, char *password, int count, int total, 
     update_progress(count, total, bar_suffix, -1);
     int ret = try_login(hostname, username, password);
     if (ret == 0) {
-        print_debug("LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+        log_debug("LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
         if (output != NULL) {
-            fprintf(output, "LOGIN OK!\t%s\t%s\t%s\n", hostname, username, password);
+            log_output(output, "LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
         }
         return 0;
     } else {
-        print_debug("LOGIN FAIL\t%s\t%s\t%s\n", hostname, username, password);
+        log_debug("LOGIN FAIL\t%s\t%s\t%s", hostname, username, password);
     }
     return -1;
 }
@@ -332,22 +310,22 @@ int main(int argc, char** argv)
     wordlist_t combos = load_wordlist(combos_filename);
     total = hostnames.lenght * combos.lenght;
 
-    printf("\nCantidad de combos: %zu\n", combos.lenght);
-    printf("Cantidad de hostnames: %zu\n", hostnames.lenght);
-    printf("Combinaciones totales: %d\n\n", total);
-    printf("Cantidad de threads: %d\n\n", THREADS);
+    printf("\nAmount of username/password combinations: %zu\n", combos.lenght);
+    printf("Number of targets: %zu\n", hostnames.lenght);
+    printf("Total attemps: %d\n", total);
+    printf("Max threads: %d\n\n", THREADS);
 
     if (output_filename != NULL) {
         output = fopen(output_filename, "a");
         if (output == NULL) {
-            print_error("Error opening output file. (%s)\n", output_filename);
+            log_error("Error opening output file. (%s)", output_filename);
             exit(EXIT_FAILURE);
         }
     }
 
     pid_t pid = 0;
     int p = 0;
-    int count = 1;
+    int count = 0;
 
     for (int x = 0; x < combos.lenght; x++) {
         char **login_data = str_split(combos.words[x], ' ');
@@ -364,8 +342,8 @@ int main(int argc, char** argv)
                 p--;
             }
 
-            print_debug(
-                "HOSTNAME=%s\tUSUARIO=%s\tPASSWORD=%s\n",
+            log_debug(
+                "HOSTNAME=%s\tUSERNAME=%s\tPASSWORD=%s",
                 hostnames.words[y],
                 login_data[0],
                 login_data[1]
@@ -379,7 +357,7 @@ int main(int argc, char** argv)
                 brute(hostnames.words[y], login_data[0], login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {
-                print_error("Fork failed!\n\n");
+                log_error("Fork failed!");
             }
 
             count++;

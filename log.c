@@ -20,26 +20,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <string.h>
-#include <assert.h>
-#include <libssh/libssh.h>
-#include <sys/wait.h>
-#include <sys/ioctl.h>
-#include <errno.h>
+#include <stdio.h> /* fprintf, vfprintf, stderr */
+#include <stdarg.h> /* va_list, va_start, va_end */
+#include <time.h> /* time_t, time, tm, localtime, strftime */
 
-typedef struct {
-    size_t lenght;
-    char **words;
-} wordlist_t;
+#include "log.h"
 
-char** str_split(char* a_str, const char a_delim);
-const char *str_repeat(char *str, size_t times);
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
-wordlist_t load_wordlist(char *filename);
+int g_verbose;
+
+void print_output(int level, const char *file, int line, const char *head,
+    const char *tail, FILE *stream, const char *format, ...)
+{
+    if (level == LOG_DEBUG && g_verbose != 1) {
+        return;
+    }
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+
+    va_list arg;
+    char s[20];
+
+    s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+    fprintf(stream, "%s[%s] ", head, s);
+
+    va_start(arg, format);
+    vfprintf(stream, format, arg);
+    va_end (arg);
+    fprintf(stream, "%s\n", tail);
+    fflush(stream);
+}

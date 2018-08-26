@@ -20,26 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <string.h>
-#include <assert.h>
-#include <libssh/libssh.h>
-#include <sys/wait.h>
-#include <sys/ioctl.h>
-#include <errno.h>
+#ifndef LOGGER_H
+#define LOGGER_H
 
-typedef struct {
-    size_t lenght;
-    char **words;
-} wordlist_t;
+extern int g_verbose;
 
-char** str_split(char* a_str, const char a_delim);
-const char *str_repeat(char *str, size_t times);
-void update_progress(int count, int total, char* suffix, int bar_len);
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
-wordlist_t load_wordlist(char *filename);
+enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
+
+#define log_error(...) print_output(LOG_ERROR, __FILE__, __LINE__, \
+    "\033[91m", "\033[0m", stderr, __VA_ARGS__)
+#define log_debug(...) print_output(LOG_DEBUG, __FILE__, __LINE__, \
+    "\033[37m", "\033[0m", stderr, __VA_ARGS__)
+#define log_output(...) print_output(LOG_DEBUG, __FILE__, __LINE__, \
+    "", "", __VA_ARGS__)
+
+void print_output(int level, const char *file, int line, const char *head,
+    const char *tail, FILE *stream, const char *format, ...);
+
+#endif /* LOGGER_H */
