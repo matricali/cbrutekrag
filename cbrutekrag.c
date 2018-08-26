@@ -291,6 +291,12 @@ int main(int argc, char** argv)
             case 'h':
                 print_banner();
                 usage(argv[0]);
+                printf("  -h                This help\n"
+                        "  -v                Verbose mode\n"
+                        "  -T <targets>      Targets file\n"
+                        "  -C <combinations> Username and password file\n"
+                        "  -t <threads>      Max threads\n"
+                        "  -o <output>       Output log file\n");
                 exit(EXIT_SUCCESS);
             default:
                 usage(argv[0]);
@@ -370,6 +376,7 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
+    update_progress(count, total, NULL, -1);
     printf("\f");
 
     exit(EXIT_SUCCESS);
