@@ -36,6 +36,10 @@ wordlist_t wordlist_load(char *filename)
     char *temp = 0;
     size_t len;
 
+    /* Initialize wordlist */
+    ret.lenght = 0;
+    ret.words = NULL;
+
     fp = fopen(filename, "r");
     if (fp == NULL) {
         log_error("Error opening file. (%s)", filename);
