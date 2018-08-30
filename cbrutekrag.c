@@ -241,6 +241,11 @@ int main(int argc, char** argv)
     printf("Total attemps: %d\n", total);
     printf("Max threads: %d\n\n", THREADS);
 
+    if (total == 0) {
+        log_error("No work to do.");
+        exit(EXIT_FAILURE);
+    }
+
     if (output_filename != NULL) {
         output = fopen(output_filename, "a");
         if (output == NULL) {
