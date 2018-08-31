@@ -31,7 +31,6 @@ wordlist_t wordlist_load(char *filename)
 {
     FILE *fp;
     wordlist_t ret;
-    char **words = NULL;
     ssize_t read;
     char *temp = 0;
     size_t len;
@@ -48,18 +47,26 @@ wordlist_t wordlist_load(char *filename)
 
     for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
         strtok(temp, "\n");
-        if (words == NULL) {
-            words = malloc(sizeof(temp));
-            *words = strdup(temp);
-        } else {
-            words = realloc(words, sizeof(temp) * (i + 1));
-            *(words + i) = strdup(temp);
-        }
-        ret.lenght = i + 1;
+        wordlist_add(&ret, temp);
     }
     fclose(fp);
 
-    ret.words = words;
-
     return ret;
+}
+
+int wordlist_add(wordlist_t *wordlist, const char *string) {
+    char **words = wordlist->words;
+
+    if (words == NULL) {
+        words = malloc(sizeof(string));
+        *words = strdup(string);
+    } else {
+        words = realloc(words, sizeof(string) * (wordlist->lenght + 1));
+        *(words + wordlist->lenght) = strdup(string);
+    }
+
+    wordlist->lenght = wordlist->lenght + 1;
+    wordlist->words = words;
+
+    return 0;
 }
