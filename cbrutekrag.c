@@ -82,7 +82,7 @@ void print_banner()
 void usage(const char *p)
 {
     printf("\nusage: %s [-h] [-v] [-T TARGETS.lst] [-C combinations.lst]\n"
-            "\t\t[-t THREADS] [-o OUTPUT.txt]\n\n", p);
+            "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
 int try_login(const char *hostname, const char *username, const char *password)
@@ -225,15 +225,29 @@ int main(int argc, char** argv)
     }
     print_banner();
 
-    if (hostnames_filename == NULL) {
+    /* Targets */
+    wordlist_t hostnames;
+    hostnames.lenght = 0;
+    hostnames.words = NULL;
+
+    while (optind < argc) {
+        wordlist_append_range(&hostnames, argv[optind]);
+        optind++;
+    }
+    if (hostnames.words == NULL && hostnames_filename == NULL) {
         hostnames_filename = strdup("hostnames.txt");
     }
+    if (hostnames_filename != NULL) {
+        wordlist_append_from_file(&hostnames, hostnames_filename);
+    }
+
+    /* Load username/password combinations */
     if (combos_filename == NULL) {
         combos_filename = strdup("combos.txt");
     }
-
-    wordlist_t hostnames = wordlist_load(hostnames_filename);
     wordlist_t combos = wordlist_load(combos_filename);
+
+    /* Calculate total attemps */
     total = hostnames.lenght * combos.lenght;
 
     printf("\nAmount of username/password combinations: %zu\n", combos.lenght);
@@ -246,6 +260,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    /* Output file */
     if (output_filename != NULL) {
         output = fopen(output_filename, "a");
         if (output == NULL) {
@@ -254,6 +269,7 @@ int main(int argc, char** argv)
         }
     }
 
+    /* Bruteforce */
     pid_t pid = 0;
     int p = 0;
     int count = 0;

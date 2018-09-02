@@ -4,7 +4,7 @@ CFLAGS	+= -Wall -g -std=gnu99 -O3
 LDFLAGS	+= -lssh
 
 NAME	= cbrutekrag
-SRCS	= cbrutekrag.c log.c str.c wordlist.c
+SRCS	= cbrutekrag.c log.c str.c wordlist.c iprange.c
 OBJS	= $(SRCS:.c=.o)
 
 all: $(NAME)

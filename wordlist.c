@@ -25,6 +25,7 @@ SOFTWARE.
 #include <string.h>
 
 #include "wordlist.h"
+#include "iprange.h"
 #include "log.h"
 
 wordlist_t wordlist_load(char *filename)
@@ -47,14 +48,14 @@ wordlist_t wordlist_load(char *filename)
 
     for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
         strtok(temp, "\n");
-        wordlist_add(&ret, temp);
+        wordlist_append(&ret, temp);
     }
     fclose(fp);
 
     return ret;
 }
 
-int wordlist_add(wordlist_t *wordlist, const char *string) {
+int wordlist_append(wordlist_t *wordlist, const char *string) {
     char **words = wordlist->words;
 
     if (words == NULL) {
@@ -68,5 +69,50 @@ int wordlist_add(wordlist_t *wordlist, const char *string) {
     wordlist->lenght = wordlist->lenght + 1;
     wordlist->words = words;
 
+    return 0;
+}
+
+int wordlist_append_range(wordlist_t *wordlist, const char* range)
+{
+    char *netmask_s;
+    netmask_s = strchr(range, '/');
+
+    if (netmask_s == NULL) {
+        wordlist_append(wordlist, range);
+        return 0;
+    }
+
+    struct in_addr in;
+    in_addr_t lo, hi;
+    network_addr_t netaddr;
+
+    netaddr = str_to_netaddr(range);
+    lo = netaddr.addr;
+    hi = broadcast(netaddr.addr, netaddr.pfx);
+
+    for (in_addr_t x = lo; x < hi; x++) {
+        in.s_addr = htonl(x);
+        wordlist_append(wordlist, inet_ntoa(in));
+    }
+    return 0;
+}
+
+int wordlist_append_from_file(wordlist_t *wordlist, char *filename)
+{
+    FILE *fp;
+    ssize_t read;
+    char *temp = 0;
+    size_t len;
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        log_error("Error opening file. (%s)", filename);
+        return 1;
+    }
+    for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
+        strtok(temp, "\n");
+        wordlist_append_range(wordlist, temp);
+    }
+    fclose(fp);
     return 0;
 }
