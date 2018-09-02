@@ -20,7 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-extern int g_timeout;
+#ifndef BRUTEFORCE_SSH_H
+#define BRUTEFORCE_SSH_H
 
-void print_banner();
-void usage(const char *p);
+int bruteforce_ssh_login(const char *hostname, const char *username,
+    const char *password);
+int bruteforce_ssh_try_login(char *hostname, char *username, char *password,
+    int count, int total, FILE *output);
+
+#endif /* BRUTEFORCE_SSH_H */

