@@ -37,7 +37,7 @@ wordlist_t wordlist_load(char *filename)
     size_t len;
 
     /* Initialize wordlist */
-    ret.lenght = 0;
+    ret.length = 0;
     ret.words = NULL;
 
     fp = fopen(filename, "r");
@@ -62,11 +62,11 @@ int wordlist_append(wordlist_t *wordlist, const char *string) {
         words = malloc(sizeof(string));
         *words = strdup(string);
     } else {
-        words = realloc(words, sizeof(string) * (wordlist->lenght + 1));
-        *(words + wordlist->lenght) = strdup(string);
+        words = realloc(words, sizeof(string) * (wordlist->length + 1));
+        *(words + wordlist->length) = strdup(string);
     }
 
-    wordlist->lenght = wordlist->lenght + 1;
+    wordlist->length = wordlist->length + 1;
     wordlist->words = words;
 
     return 0;

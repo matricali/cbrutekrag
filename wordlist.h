@@ -24,7 +24,7 @@ SOFTWARE.
 #define WORDLIST_H
 
 typedef struct {
-    size_t lenght;
+    size_t length;
     char **words;
 } wordlist_t;
 

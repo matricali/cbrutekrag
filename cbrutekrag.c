@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 
     /* Targets */
     wordlist_t hostnames;
-    hostnames.lenght = 0;
+    hostnames.length = 0;
     hostnames.words = NULL;
 
     while (optind < argc) {
@@ -248,10 +248,10 @@ int main(int argc, char** argv)
     wordlist_t combos = wordlist_load(combos_filename);
 
     /* Calculate total attemps */
-    total = hostnames.lenght * combos.lenght;
+    total = hostnames.length * combos.length;
 
-    printf("\nAmount of username/password combinations: %zu\n", combos.lenght);
-    printf("Number of targets: %zu\n", hostnames.lenght);
+    printf("\nAmount of username/password combinations: %zu\n", combos.length);
+    printf("Number of targets: %zu\n", hostnames.length);
     printf("Total attemps: %d\n", total);
     printf("Max threads: %d\n\n", THREADS);
 
@@ -274,7 +274,7 @@ int main(int argc, char** argv)
     int p = 0;
     int count = 0;
 
-    for (int x = 0; x < combos.lenght; x++) {
+    for (int x = 0; x < combos.length; x++) {
         char **login_data = str_split(combos.words[x], ' ');
         if (login_data == NULL) {
             continue;
@@ -282,7 +282,7 @@ int main(int argc, char** argv)
         if (strcmp(login_data[1], g_blankpass_placeholder) == 0) {
             login_data[1] = strdup("");
         }
-        for (int y = 0; y < hostnames.lenght; y++) {
+        for (int y = 0; y < hostnames.length; y++) {
 
             if (p >= THREADS){
                 waitpid(-1, NULL, 0);
