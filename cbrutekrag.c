@@ -24,46 +24,16 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <libssh/libssh.h>
-#include <sys/ioctl.h>
 
 #include "cbrutekrag.h"
 #include "log.h"
 #include "str.h"
 #include "wordlist.h"
+#include "progressbar.h"
 
 int g_verbose = 0;
 int g_timeout = 3;
 char *g_blankpass_placeholder = "$BLANKPASS";
-
-void update_progress(int count, int total, char* suffix, int bar_len)
-{
-    if (g_verbose) {
-        return;
-    }
-
-    struct winsize w;
-    ioctl(0, TIOCGWINSZ, &w);
-
-    int max_cols = w.ws_col;
-
-    if (bar_len < 0) bar_len = max_cols - 80;
-    if (suffix == NULL) suffix = "";
-
-    int filled_len = bar_len * count / total;
-    int empty_len = bar_len - filled_len;
-    float percents = 100.0f * count / total;
-    int fill = max_cols - bar_len - strlen(suffix) - 16;
-
-    if (bar_len > 0) {
-        printf("\033[37m[");
-        if (filled_len > 0) printf("\033[32m%s", str_repeat("=", filled_len));
-        if (empty_len > 0) printf("\033[37m%s", str_repeat("-", empty_len));
-        printf("\033[37m]\033[0m");
-    }
-    if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
-    if (fill > 0) printf("%s\r", str_repeat(" ", fill));
-    fflush(stdout);
-}
 
 void print_banner()
 {
@@ -164,10 +134,11 @@ int try_login(const char *hostname, const char *username, const char *password)
 
 int brute(char *hostname, char *username, char *password, int count, int total, FILE *output)
 {
-    char bar_suffix[50];
-    sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
-
-    update_progress(count, total, bar_suffix, -1);
+    if (! g_verbose) {
+        char bar_suffix[50];
+        sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
+        progressbar_render(count, total, bar_suffix, -1);
+    }
     int ret = try_login(hostname, username, password);
     if (ret == 0) {
         log_debug("LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
@@ -317,8 +288,10 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
-    update_progress(count, total, NULL, -1);
-    printf("\f");
+    if (! g_verbose) {
+        progressbar_render(count, total, NULL, -1);
+        printf("\f");
+    }
 
     exit(EXIT_SUCCESS);
 }

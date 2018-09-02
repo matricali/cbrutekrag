@@ -20,6 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-void print_banner();
-void usage(const char *p);
-int try_login(const char *hostname, const char *username, const char *password);
+#ifndef PROGRESSBAR_H
+#define PROGRESSBAR_H
+
+void progressbar_render(int count, int total, char* suffix, int bar_len);
+
+#endif /* PROGRESSBAR_H */
