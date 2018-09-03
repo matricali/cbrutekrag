@@ -30,6 +30,7 @@ SOFTWARE.
 #include "log.h"
 #include "str.h"
 #include "wordlist.h"
+#include "detection.h"
 #include "progressbar.h"
 
 int g_verbose = 0;
@@ -45,7 +46,7 @@ void print_banner()
         "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
         "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
         "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "              \033[0m\033[1mOpenSSH Brute force tool 0.3.0\033[0m\033[92m        __/ |\n"
+        "              \033[0m\033[1mOpenSSH Brute force tool 0.4.0\033[0m\033[92m        __/ |\n"
         "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n"
     );
 }
@@ -61,12 +62,13 @@ int main(int argc, char** argv)
     int opt;
     int total = 0;
     int THREADS = 1;
+    int PERFORM_SCAN = 0;
     char *hostnames_filename = NULL;
     char *combos_filename = NULL;
     char *output_filename = NULL;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "T:C:t:o:vh")) != -1) {
+    while ((opt = getopt(argc, argv, "T:C:t:o:svh")) != -1) {
         switch (opt) {
             case 'v':
                 g_verbose = 1;
@@ -83,11 +85,15 @@ int main(int argc, char** argv)
             case 'o':
                 output_filename = optarg;
                 break;
+            case 's':
+                PERFORM_SCAN = 1;
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
                 printf("  -h                This help\n"
                         "  -v                Verbose mode\n"
+                        "  -s                Scan mode\n"
                         "  -T <targets>      Targets file\n"
                         "  -C <combinations> Username and password file\n"
                         "  -t <threads>      Max threads\n"
@@ -142,6 +148,18 @@ int main(int argc, char** argv)
             log_error("Error opening output file. (%s)", output_filename);
             exit(EXIT_FAILURE);
         }
+    }
+
+    /* Port scan and honeypot detection */
+    if (PERFORM_SCAN) {
+        printf("Starting servers discoverage process...\n\n");
+        detection_start(&hostnames, &hostnames, THREADS);
+        printf("\n\nNumber of targets after filtering: %zu\n", hostnames.length);
+    }
+
+    if (THREADS > hostnames.length) {
+        printf("Decreasing max threads to %zu.\n", hostnames.length);
+        THREADS = hostnames.length;
     }
 
     /* Bruteforce */
