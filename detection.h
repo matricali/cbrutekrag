@@ -27,6 +27,6 @@ SOFTWARE.
 
 int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int tm);
 void *detection_process(void *ptr);
-void detection_start(wordlist_t *source, wordlist_t *target, int max_threads);
+void detection_start(unsigned int port, wordlist_t *source, wordlist_t *target, int max_threads);
 
 #endif /* DETECTION_H */

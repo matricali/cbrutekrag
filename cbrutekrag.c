@@ -46,14 +46,14 @@ void print_banner()
         "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
         "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
         "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "              \033[0m\033[1mOpenSSH Brute force tool 0.4.0\033[0m\033[92m        __/ |\n"
+        "              \033[0m\033[1mOpenSSH Brute force tool 0.5.0\033[0m\033[92m        __/ |\n"
         "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n"
     );
 }
 
 void usage(const char *p)
 {
-    printf("\nusage: %s [-h] [-v] [-T TARGETS.lst] [-C combinations.lst]\n"
+    printf("\nusage: %s [-h] [-v] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
             "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
@@ -66,12 +66,16 @@ int main(int argc, char** argv)
     char *hostnames_filename = NULL;
     char *combos_filename = NULL;
     char *output_filename = NULL;
+    int port = 22;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "T:C:t:o:svh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:T:C:t:o:svh")) != -1) {
         switch (opt) {
             case 'v':
                 g_verbose = 1;
+                break;
+            case 'p':
+                port = atoi(optarg);
                 break;
             case 'T':
                 hostnames_filename = optarg;
@@ -94,6 +98,7 @@ int main(int argc, char** argv)
                 printf("  -h                This help\n"
                         "  -v                Verbose mode\n"
                         "  -s                Scan mode\n"
+                        "  -p <port>         Port (default: 22)\n"
                         "  -T <targets>      Targets file\n"
                         "  -C <combinations> Username and password file\n"
                         "  -t <threads>      Max threads\n"
@@ -105,6 +110,11 @@ int main(int argc, char** argv)
         }
     }
     print_banner();
+
+    if (port < 1 || port > 65535) {
+        log_error("Invalid port. (%d)", port);
+        exit(EXIT_FAILURE);
+    }
 
     /* Targets */
     wordlist_t hostnames;
@@ -133,6 +143,7 @@ int main(int argc, char** argv)
 
     printf("\nAmount of username/password combinations: %zu\n", combos.length);
     printf("Number of targets: %zu\n", hostnames.length);
+    printf("Port: %d\n", port);
     printf("Total attemps: %d\n", total);
     printf("Max threads: %d\n\n", THREADS);
 
@@ -153,7 +164,7 @@ int main(int argc, char** argv)
     /* Port scan and honeypot detection */
     if (PERFORM_SCAN) {
         printf("Starting servers discoverage process...\n\n");
-        detection_start(&hostnames, &hostnames, THREADS);
+        detection_start(port, &hostnames, &hostnames, THREADS);
         printf("\n\nNumber of targets after filtering: %zu\n", hostnames.length);
     }
 
@@ -183,8 +194,9 @@ int main(int argc, char** argv)
             }
 
             log_debug(
-                "HOSTNAME=%s\tUSERNAME=%s\tPASSWORD=%s",
+                "HOSTNAME=%s:%d\tUSERNAME=%s\tPASSWORD=%s",
                 hostnames.words[y],
+                port,
                 login_data[0],
                 login_data[1]
             );
@@ -194,7 +206,7 @@ int main(int argc, char** argv)
             if (pid) {
                 p++;
             } else if(pid == 0) {
-                bruteforce_ssh_try_login(hostnames.words[y], login_data[0],
+                bruteforce_ssh_try_login(hostnames.words[y], port, login_data[0],
                     login_data[1], count, total, output);
                 exit(EXIT_SUCCESS);
             } else {

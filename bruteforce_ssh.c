@@ -29,11 +29,10 @@ SOFTWARE.
 
 int g_timeout;
 
-int bruteforce_ssh_login(const char *hostname, const char *username, const char *password)
+int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *username, const char *password)
 {
     ssh_session my_ssh_session;
     int verbosity = 0;
-    int port = 22;
 
     if (g_verbose) {
         verbosity = SSH_LOG_PROTOCOL;
@@ -64,8 +63,9 @@ int bruteforce_ssh_login(const char *hostname, const char *username, const char 
         ssh_free(my_ssh_session);
         if (g_verbose) {
             log_error(
-                "Error connecting to %s: %s.",
+                "Error connecting to %s:%d %s.",
                 hostname,
+                port,
                 ssh_get_error(my_ssh_session)
             );
         }
@@ -106,22 +106,22 @@ int bruteforce_ssh_login(const char *hostname, const char *username, const char 
     return -1;
 }
 
-int bruteforce_ssh_try_login(char *hostname, char *username, char *password, int count, int total, FILE *output)
+int bruteforce_ssh_try_login(const char *hostname, const int port, const char *username, const char *password, int count, int total, FILE *output)
 {
     if (! g_verbose) {
         char bar_suffix[50];
-        sprintf(bar_suffix, "[%d] %s %s %s", count, hostname, username, password);
+        sprintf(bar_suffix, "[%d] %s:%d %s %s", count, hostname, port, username, password);
         progressbar_render(count, total, bar_suffix, -1);
     }
-    int ret = bruteforce_ssh_login(hostname, username, password);
+    int ret = bruteforce_ssh_login(hostname, port, username, password);
     if (ret == 0) {
-        log_debug("LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
+        log_debug("LOGIN OK!\t%s:%d\t%s\t%s", hostname, port, username, password);
         if (output != NULL) {
-            log_output(output, "LOGIN OK!\t%s\t%s\t%s", hostname, username, password);
+            log_output(output, "LOGIN OK!\t%s:%d\t%s\t%s", hostname, port, username, password);
         }
         return 0;
     } else {
-        log_debug("LOGIN FAIL\t%s\t%s\t%s", hostname, username, password);
+        log_debug("LOGIN FAIL\t%s:%d\t%s\t%s", hostname, port, username, password);
     }
     return -1;
 }

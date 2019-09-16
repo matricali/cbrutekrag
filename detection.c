@@ -37,6 +37,11 @@ SOFTWARE.
 
 #define BUF_SIZE 1024
 
+struct detection_args {
+    int port;
+    wordlist_t *source;
+};
+
 int scan_counter = 0;
 wordlist_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -194,18 +199,20 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
 
 void *detection_process(void *ptr)
 {
-    wordlist_t *targets = (wordlist_t *) ptr;
+    struct detection_args *args = (struct detection_args *) ptr;
+    wordlist_t *targets = args->source;
     while (scan_counter < targets->length - 1) {
         pthread_mutex_lock(&mutex);
         scan_counter++;
         if (! g_verbose) {
             char str[36];
-            snprintf(str, 36, "[%d/%zu] %zu OK - %s:22", scan_counter, targets->length, filtered.length, targets->words[scan_counter-1]);
+            snprintf(str, 36, "[%d/%zu] %zu OK - %s:%d", scan_counter, targets->length, filtered.length,
+                targets->words[scan_counter-1], args->port);
             progressbar_render(scan_counter, targets->length, str, -1);
         }
         pthread_mutex_unlock(&mutex);
 
-        if (detection_detect_ssh(targets->words[scan_counter-1], 22, 1) == 0) {
+        if (detection_detect_ssh(targets->words[scan_counter-1], args->port, 1) == 0) {
             pthread_mutex_lock(&mutex);
             wordlist_append(&filtered, targets->words[scan_counter-1]);
             pthread_mutex_unlock(&mutex);
@@ -215,16 +222,25 @@ void *detection_process(void *ptr)
     return NULL;
 }
 
-void detection_start(wordlist_t *source, wordlist_t *target, int max_threads)
+void detection_start(unsigned int port, wordlist_t *source, wordlist_t *target, int max_threads)
 {
     filtered.length = 0;
     filtered.words = NULL;
 
     pthread_t scan_threads[max_threads];
     int ret;
+    struct detection_args *args = (struct detection_args *) malloc(sizeof(struct detection_args));
+
+    if (args == NULL) {
+        log_error("Cannot allocate memory.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    args->port = port;
+    args->source = source;
 
     for (int i = 0; i < max_threads; i++) {
-        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void *) source))) {
+        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void *) args))) {
             log_error("Thread creation failed: %d\n", ret);
         }
     }
@@ -236,4 +252,5 @@ void detection_start(wordlist_t *source, wordlist_t *target, int max_threads)
     }
 
     *target = filtered;
+    free(args);
 }
