@@ -20,7 +20,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifndef CBRUTEKRAG_H
+#define CBRUTEKRAG_H
+
+#define CBRUTEKRAG_VERBOSE_MODE 0x1
+#define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
+
 extern int g_timeout;
 
 void print_banner();
 void usage(const char *p);
+
+#endif /* CBRUTEKRAG_H */

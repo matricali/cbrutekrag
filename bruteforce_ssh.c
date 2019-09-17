@@ -34,7 +34,7 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     ssh_session my_ssh_session;
     int verbosity = 0;
 
-    if (g_verbose) {
+    if (g_verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
         verbosity = SSH_LOG_PROTOCOL;
     } else {
         verbosity = SSH_LOG_NOLOG;
@@ -61,7 +61,7 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     r = ssh_connect(my_ssh_session);
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
-        if (g_verbose) {
+        if (g_verbose & CBRUTEKRAG_VERBOSE_MODE) {
             log_error(
                 "Error connecting to %s:%d %s.",
                 hostname,

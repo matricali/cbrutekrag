@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Support for custom port (argument: -p <PORT>) both on scan and bruteforce phases
+- Support for custom port (argument: -p <PORT>) both on scan and bruteforce phases.
+
+### Changed
+- Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
 
 ## [0.4.0] - 2018-09-02
 ### Added

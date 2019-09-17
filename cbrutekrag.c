@@ -69,10 +69,13 @@ int main(int argc, char** argv)
     int port = 22;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "p:T:C:t:o:svh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:T:C:t:o:svVh")) != -1) {
         switch (opt) {
             case 'v':
-                g_verbose = 1;
+                g_verbose |= CBRUTEKRAG_VERBOSE_MODE;
+                break;
+            case 'V':
+                g_verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
                 break;
             case 'p':
                 port = atoi(optarg);
@@ -97,6 +100,7 @@ int main(int argc, char** argv)
                 usage(argv[0]);
                 printf("  -h                This help\n"
                         "  -v                Verbose mode\n"
+                        "  -V                Verbose mode (sshlib)\n"
                         "  -s                Scan mode\n"
                         "  -p <port>         Port (default: 22)\n"
                         "  -T <targets>      Targets file\n"
