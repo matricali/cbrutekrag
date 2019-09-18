@@ -35,16 +35,18 @@ $ cbrutekrag -h
 
 
 usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]
-[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
+		[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
 
--h                This help
--v                Verbose mode
--s                Scan mode
--p <port>         Port (default: 22)
--T <targets>      Targets file
--C <combinations> Username and password file
--t <threads>      Max threads
--o <output>       Output log file
+  -h                This help
+  -v                Verbose mode
+  -V                Verbose mode (sshlib)
+  -s                Scan mode
+  -D                Dry run
+  -p <port>         Port (default: 22)
+  -T <targets>      Targets file
+  -C <combinations> Username and password file
+  -t <threads>      Max threads
+  -o <output>       Output log file
 ```
 
 ## Example usages

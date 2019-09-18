@@ -35,6 +35,7 @@ SOFTWARE.
 
 int g_verbose = 0;
 int g_timeout = 3;
+int g_dryrun = 0;
 char *g_blankpass_placeholder = "$BLANKPASS";
 
 void print_banner()
@@ -53,7 +54,7 @@ void print_banner()
 
 void usage(const char *p)
 {
-    printf("\nusage: %s [-h] [-v] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
+    printf("\nusage: %s [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
             "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
@@ -69,7 +70,7 @@ int main(int argc, char** argv)
     int port = 22;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "p:T:C:t:o:svVh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVh")) != -1) {
         switch (opt) {
             case 'v':
                 g_verbose |= CBRUTEKRAG_VERBOSE_MODE;
@@ -95,6 +96,9 @@ int main(int argc, char** argv)
             case 's':
                 PERFORM_SCAN = 1;
                 break;
+            case 'D':
+                g_dryrun = 1;
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
@@ -102,6 +106,7 @@ int main(int argc, char** argv)
                         "  -v                Verbose mode\n"
                         "  -V                Verbose mode (sshlib)\n"
                         "  -s                Scan mode\n"
+                        "  -D                Dry run\n"
                         "  -p <port>         Port (default: 22)\n"
                         "  -T <targets>      Targets file\n"
                         "  -C <combinations> Username and password file\n"
@@ -168,7 +173,9 @@ int main(int argc, char** argv)
     /* Port scan and honeypot detection */
     if (PERFORM_SCAN) {
         printf("Starting servers discoverage process...\n\n");
-        detection_start(port, &hostnames, &hostnames, THREADS);
+        if (! g_dryrun) {
+            detection_start(port, &hostnames, &hostnames, THREADS);
+        }
         printf("\n\nNumber of targets after filtering: %zu\n", hostnames.length);
     }
 
@@ -210,8 +217,10 @@ int main(int argc, char** argv)
             if (pid) {
                 p++;
             } else if(pid == 0) {
-                bruteforce_ssh_try_login(hostnames.words[y], port, login_data[0],
-                    login_data[1], count, total, output);
+                if (! g_dryrun) {
+                    bruteforce_ssh_try_login(hostnames.words[y], port, login_data[0],
+                        login_data[1], count, total, output);
+                }
                 exit(EXIT_SUCCESS);
             } else {
                 log_error("Fork failed!");
