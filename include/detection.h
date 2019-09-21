@@ -23,6 +23,7 @@ SOFTWARE.
 #ifndef DETECTION_H
 #define DETECTION_H
 
+#include "cbrutekrag.h"
 #include "target.h"
 
 typedef struct {

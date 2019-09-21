@@ -23,6 +23,8 @@ SOFTWARE.
 #ifndef BRUTEFORCE_SSH_H
 #define BRUTEFORCE_SSH_H
 
+#include <libssh/libssh.h>
+
 #include "cbrutekrag.h"
 #include "target.h"
 #include "wordlist.h"
@@ -36,5 +38,6 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     const char* password);
 int bruteforce_ssh_try_login(btkg_context_t* context, const char* hostname, const int port, const char* username,
     const char* password, int count, int total, FILE* output);
+int bruteforce_ssh_execute_command(ssh_session session, const char* command);
 
 #endif /* BRUTEFORCE_SSH_H */

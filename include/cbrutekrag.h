@@ -32,6 +32,7 @@ typedef struct {
     int verbose;
     int dry_run;
     int perform_scan;
+    char* command;
 } btkg_context_t;
 
 void print_banner();
