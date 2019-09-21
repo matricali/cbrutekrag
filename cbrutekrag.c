@@ -37,6 +37,7 @@ int g_verbose = 0;
 int g_timeout = 3;
 int g_dryrun = 0;
 char *g_blankpass_placeholder = "$BLANKPASS";
+char *g_command = NULL;
 
 void print_banner()
 {
@@ -55,7 +56,7 @@ void print_banner()
 void usage(const char *p)
 {
     printf("\nusage: %s [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
-            "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
+            "\t\t[-t THREADS] [-o OUTPUT.txt] [-X COMMAND] [TARGETS...]\n\n", p);
 }
 
 int main(int argc, char** argv)
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     int port = 22;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:T:C:t:o:X:DsvVh")) != -1) {
         switch (opt) {
             case 'v':
                 g_verbose |= CBRUTEKRAG_VERBOSE_MODE;
@@ -99,6 +100,9 @@ int main(int argc, char** argv)
             case 'D':
                 g_dryrun = 1;
                 break;
+            case 'X':
+                g_command = strdup(optarg);
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
@@ -111,7 +115,8 @@ int main(int argc, char** argv)
                         "  -T <targets>      Targets file\n"
                         "  -C <combinations> Username and password file\n"
                         "  -t <threads>      Max threads\n"
-                        "  -o <output>       Output log file\n");
+                        "  -o <output>       Output log file\n"
+                        "  -X <command>      Remote command execution\n");
                 exit(EXIT_SUCCESS);
             default:
                 usage(argv[0]);

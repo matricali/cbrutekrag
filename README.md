@@ -35,7 +35,7 @@ $ cbrutekrag -h
 
 
 usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]
-		[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
+      		[-t THREADS] [-o OUTPUT.txt] [-X COMMAND] [TARGETS...]
 
   -h                This help
   -v                Verbose mode
@@ -47,6 +47,7 @@ usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.l
   -C <combinations> Username and password file
   -t <threads>      Max threads
   -o <output>       Output log file
+  -X <command>      Remote command execution
 ```
 
 ## Example usages
@@ -54,4 +55,7 @@ usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.l
 
 # Many targets, many pre-made combinations of user and password separated by space.
 cbrutekrag -T targets.txt -C combinations.txt -o result.log
+
+# Scans 192.168.100.0/24 using 24 threads, then bruteforce discovered ssh servers and execute command if we can log into.
+cbrutekrag -s -o result.log -t 24 -C combos.txt -X "touch THIS_HOST_HAS_BEEN_COMPROMISED" 192.168.100.0/24
 ```

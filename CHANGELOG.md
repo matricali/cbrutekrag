@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Support for custom port (argument: -p <PORT>) both on scan and bruteforce phases.
-- Dry-run (argument: -D)
+- Dry-run (argument: -D).
+- Remote command execution (argument: -X <command>).
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).

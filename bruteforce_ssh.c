@@ -26,8 +26,10 @@ SOFTWARE.
 #include "cbrutekrag.h"
 #include "progressbar.h"
 #include "log.h"
+#include "bruteforce_ssh.h"
 
 int g_timeout;
+char *g_command;
 
 int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *username, const char *password)
 {
@@ -73,6 +75,9 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     }
 
     r = ssh_userauth_none(my_ssh_session, username);
+    if (r == SSH_AUTH_SUCCESS &&  g_command != NULL) {
+        bruteforce_ssh_execute_command(my_ssh_session, g_command);
+    }
     if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
         ssh_disconnect(my_ssh_session);
         ssh_free(my_ssh_session);
@@ -86,6 +91,9 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     if (method & SSH_AUTH_METHOD_NONE) {
         r = ssh_userauth_none(my_ssh_session, NULL);
         if (r == SSH_AUTH_SUCCESS) {
+            if (g_command != NULL) {
+                bruteforce_ssh_execute_command(my_ssh_session, g_command);
+            }
             ssh_disconnect(my_ssh_session);
             ssh_free(my_ssh_session);
             return r;
@@ -95,6 +103,9 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     if (method & SSH_AUTH_METHOD_PASSWORD) {
         r = ssh_userauth_password(my_ssh_session, NULL, password);
         if (r == SSH_AUTH_SUCCESS) {
+            if (g_command != NULL) {
+                bruteforce_ssh_execute_command(my_ssh_session, g_command);
+            }
             ssh_disconnect(my_ssh_session);
             ssh_free(my_ssh_session);
             return r;
@@ -106,7 +117,7 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     return -1;
 }
 
-int bruteforce_ssh_try_login(const char *hostname, const int port, const char *username, const char *password, int count, int total, FILE *output)
+int bruteforce_ssh_try_login(const char *hostname, unsigned int port, const char *username, const char *password, int count, int total, FILE *output)
 {
     if (! g_verbose) {
         char bar_suffix[50];
@@ -124,4 +135,35 @@ int bruteforce_ssh_try_login(const char *hostname, const int port, const char *u
         log_debug("LOGIN FAIL\t%s:%d\t%s\t%s", hostname, port, username, password);
     }
     return -1;
+}
+
+int bruteforce_ssh_execute_command(ssh_session session, const char *command)
+{
+    ssh_channel channel;
+    int ret;
+
+    channel = ssh_channel_new(session);
+
+    if (channel == NULL) {
+        return SSH_ERROR;
+    }
+
+    ret = ssh_channel_open_session(channel);
+    if (ret != SSH_OK) {
+        log_error("Cannot open channel.");
+        ssh_channel_free(channel);
+        return ret;
+    }
+
+    ret = ssh_channel_request_exec(channel, command);
+    if (ret != SSH_OK) {
+        log_error("Cannot execute command.");
+        ssh_channel_close(channel);
+        ssh_channel_free(channel);
+        return ret;
+    }
+
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
+    return ret;
 }

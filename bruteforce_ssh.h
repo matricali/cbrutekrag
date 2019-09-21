@@ -23,9 +23,12 @@ SOFTWARE.
 #ifndef BRUTEFORCE_SSH_H
 #define BRUTEFORCE_SSH_H
 
+#include <libssh/libssh.h>
+
 int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *username,
     const char *password);
 int bruteforce_ssh_try_login(const char *hostname, unsigned int port, const char *username, const char *password,
     int count, int total, FILE *output);
+int bruteforce_ssh_execute_command(ssh_session session, const char *command);
 
 #endif /* BRUTEFORCE_SSH_H */
