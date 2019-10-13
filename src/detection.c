@@ -33,17 +33,13 @@ SOFTWARE.
 #include "log.h"
 #include "cbrutekrag.h"
 #include "wordlist.h"
+#include "target.h"
 #include "progressbar.h"
 
 #define BUF_SIZE 1024
 
-struct detection_args {
-    int port;
-    wordlist_t *source;
-};
-
 int scan_counter = 0;
-wordlist_t filtered;
+btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int tm)
@@ -84,7 +80,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
 
         getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
         if (so_error != 0) {
-            log_debug("%s:%d - Error connecting to the server! (%s)", serverAddr, serverPort, strerror(so_error));
+            log_debug("[!] %s:%d - Error connecting to the server! (%s)", serverAddr, serverPort, strerror(so_error));
             close(sockfd);
             sockfd = 0;
             return -1;
@@ -130,7 +126,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     // RECIBIR BANNER
     ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (ret < 0) {
-        log_error("%s:%d - Error receiving banner!", serverAddr, serverPort);
+        log_error("[!] %s:%d - Error receiving banner!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -148,7 +144,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     ret = sendto(sockfd, pkt1, sizeof(pkt1), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
-        log_error("%s:%d - Error sending data pkt1!!", serverAddr, serverPort);
+        log_error("[!] %s:%d - Error sending data pkt1!!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -158,7 +154,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     ret = sendto(sockfd, pkt2, sizeof(pkt2), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
-        log_error("%s:%d - Error sending data pkt2!!", serverAddr, serverPort);
+        log_error("[!] %s:%d - Error sending data pkt2!!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -168,7 +164,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     ret = sendto(sockfd, pkt3, sizeof(pkt3), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
-        log_error("%s:%d - Error sending data pkt3!!", serverAddr, serverPort);
+        log_error("[!] %s:%d - Error sending data pkt3!!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -177,7 +173,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     log_debug("[>] %s:%d - Receiving...", serverAddr, serverPort);
     ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (ret < 0) {
-        log_error("%s:%d - Error receiving response!!", serverAddr, serverPort);
+        log_error("[!] %s:%d - Error receiving response!!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -186,6 +182,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     close(sockfd);
     sockfd = 0;
 
+    strtok(buffer, "\n");
     log_debug("[+] %s:%d - Received: %s", serverAddr, serverPort, buffer);
 
     if (strstr(buffer, search) != NULL) {
@@ -199,22 +196,23 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
 
 void *detection_process(void *ptr)
 {
-    struct detection_args *args = (struct detection_args *) ptr;
-    wordlist_t *targets = args->source;
-    while (scan_counter < targets->length - 1) {
+    btkg_target_list_t *target_list = (btkg_target_list_t *) ptr;
+
+    while (scan_counter < target_list->length - 1) {
+        btkg_target_t current_target = target_list->targets[scan_counter];
         pthread_mutex_lock(&mutex);
         scan_counter++;
         if (! g_verbose) {
             char str[36];
-            snprintf(str, 36, "[%d/%zu] %zu OK - %s:%d", scan_counter, targets->length, filtered.length,
-                targets->words[scan_counter-1], args->port);
-            progressbar_render(scan_counter, targets->length, str, -1);
+            snprintf(str, 36, "[%d/%zu] %zu OK - %s:%d", scan_counter, target_list->length, filtered.length,
+                current_target.host, current_target.port);
+            progressbar_render(scan_counter, target_list->length, str, -1);
         }
         pthread_mutex_unlock(&mutex);
 
-        if (detection_detect_ssh(targets->words[scan_counter-1], args->port, 1) == 0) {
+        if (detection_detect_ssh(current_target.host, current_target.port, 1) == 0) {
             pthread_mutex_lock(&mutex);
-            wordlist_append(&filtered, targets->words[scan_counter-1]);
+            btkg_target_list_append(&filtered, current_target);
             pthread_mutex_unlock(&mutex);
         }
     }
@@ -222,25 +220,15 @@ void *detection_process(void *ptr)
     return NULL;
 }
 
-void detection_start(unsigned int port, wordlist_t *source, wordlist_t *target, int max_threads)
+void detection_start(btkg_target_list_t *source, btkg_target_list_t *target, int max_threads)
 {
-    filtered.length = 0;
-    filtered.words = NULL;
+    btkg_target_list_init(&filtered);
 
     pthread_t scan_threads[max_threads];
     int ret;
-    struct detection_args *args = (struct detection_args *) malloc(sizeof(struct detection_args));
-
-    if (args == NULL) {
-        log_error("Cannot allocate memory.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    args->port = port;
-    args->source = source;
 
     for (int i = 0; i < max_threads; i++) {
-        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void *) args))) {
+        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void *) source))) {
             log_error("Thread creation failed: %d\n", ret);
         }
     }
@@ -252,5 +240,4 @@ void detection_start(unsigned int port, wordlist_t *source, wordlist_t *target, 
     }
 
     *target = filtered;
-    free(args);
 }

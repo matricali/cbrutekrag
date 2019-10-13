@@ -4,7 +4,7 @@ CFLAGS	+= -Wall -g -std=gnu99 -O3 -Iinclude
 LDFLAGS	+= -lpthread -lssh
 
 NAME	= cbrutekrag
-SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c
+SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c target.c
 OBJS	:= $(SRCS:%.c=obj/%.o)
 
 all: dirs $(NAME)

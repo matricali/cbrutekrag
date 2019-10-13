@@ -30,6 +30,7 @@ SOFTWARE.
 #include "log.h"
 #include "str.h"
 #include "wordlist.h"
+#include "target.h"
 #include "detection.h"
 #include "progressbar.h"
 
@@ -120,25 +121,24 @@ int main(int argc, char** argv)
     }
     print_banner();
 
-    if (port < 1 || port > 65535) {
+    if (! btkg_target_port_is_valid(port)) {
         log_error("Invalid port. (%d)", port);
         exit(EXIT_FAILURE);
     }
 
     /* Targets */
-    wordlist_t hostnames;
-    hostnames.length = 0;
-    hostnames.words = NULL;
+    btkg_target_list_t target_list;
+    btkg_target_list_init(&target_list);
 
     while (optind < argc) {
-        wordlist_append_range(&hostnames, argv[optind]);
+        btkg_target_list_append_range(&target_list, argv[optind], port);
         optind++;
     }
-    if (hostnames.words == NULL && hostnames_filename == NULL) {
+    if (target_list.targets == NULL && hostnames_filename == NULL) {
         hostnames_filename = strdup("hostnames.txt");
     }
     if (hostnames_filename != NULL) {
-        wordlist_append_from_file(&hostnames, hostnames_filename);
+        btkg_target_list_load(&target_list, hostnames_filename);
     }
 
     /* Load username/password combinations */
@@ -148,10 +148,10 @@ int main(int argc, char** argv)
     wordlist_t combos = wordlist_load(combos_filename);
 
     /* Calculate total attemps */
-    total = hostnames.length * combos.length;
+    total = target_list.length * combos.length;
 
     printf("\nAmount of username/password combinations: %zu\n", combos.length);
-    printf("Number of targets: %zu\n", hostnames.length);
+    printf("Number of targets: %zu\n", target_list.length);
     printf("Port: %d\n", port);
     printf("Total attemps: %d\n", total);
     printf("Max threads: %d\n\n", THREADS);
@@ -174,14 +174,14 @@ int main(int argc, char** argv)
     if (PERFORM_SCAN) {
         printf("Starting servers discoverage process...\n\n");
         if (! g_dryrun) {
-            detection_start(port, &hostnames, &hostnames, THREADS);
+            detection_start(&target_list, &target_list, THREADS);
         }
-        printf("\n\nNumber of targets after filtering: %zu\n", hostnames.length);
+        printf("\n\nNumber of targets after filtering: %zu\n", target_list.length);
     }
 
-    if (THREADS > hostnames.length) {
-        printf("Decreasing max threads to %zu.\n", hostnames.length);
-        THREADS = hostnames.length;
+    if (THREADS > target_list.length) {
+        printf("Decreasing max threads to %zu.\n", target_list.length);
+        THREADS = target_list.length;
     }
 
     /* Bruteforce */
@@ -197,17 +197,19 @@ int main(int argc, char** argv)
         if (strcmp(login_data[1], g_blankpass_placeholder) == 0) {
             login_data[1] = strdup("");
         }
-        for (int y = 0; y < hostnames.length; y++) {
+        for (int y = 0; y < target_list.length; y++) {
 
             if (p >= THREADS){
                 waitpid(-1, NULL, 0);
                 p--;
             }
 
+            btkg_target_t current_target = target_list.targets[y];
+
             log_debug(
                 "HOSTNAME=%s:%d\tUSERNAME=%s\tPASSWORD=%s",
-                hostnames.words[y],
-                port,
+                current_target.host,
+                current_target.port,
                 login_data[0],
                 login_data[1]
             );
@@ -218,7 +220,7 @@ int main(int argc, char** argv)
                 p++;
             } else if(pid == 0) {
                 if (! g_dryrun) {
-                    bruteforce_ssh_try_login(hostnames.words[y], port, login_data[0],
+                    bruteforce_ssh_try_login(current_target.host, current_target.port, login_data[0],
                         login_data[1], count, total, output);
                 }
                 exit(EXIT_SUCCESS);
