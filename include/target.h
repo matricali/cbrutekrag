@@ -20,13 +20,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef DETECTION_H
-#define DETECTION_H
+#ifndef TARGET_H
+#define TARGET_H
 
-#include "target.h"
+typedef struct {
+    char *host;
+    unsigned int port;
+} btkg_target_t;
 
-int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int tm);
-void *detection_process(void *ptr);
-void detection_start(btkg_target_list_t *source, btkg_target_list_t *target, int max_threads);
+typedef struct {
+    size_t length;
+    btkg_target_t *targets;
+} btkg_target_list_t;
 
-#endif /* DETECTION_H */
+int btkg_target_port_is_valid(int port);
+void btkg_target_list_init(btkg_target_list_t *target_list);
+void btkg_target_list_append(btkg_target_list_t *target_list, btkg_target_t target);
+void btkg_target_list_append_range(btkg_target_list_t *target_list, const char* range, unsigned int port);
+void btkg_target_list_load(btkg_target_list_t *target_list, char *filename);
+btkg_target_t target_parse(const char *line);
+
+#endif /* TARGET_H */
