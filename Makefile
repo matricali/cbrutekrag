@@ -1,16 +1,24 @@
 CC	= gcc
 
-CFLAGS	+= -Wall -g -std=gnu99 -O3
+CFLAGS	+= -Wall -g -std=gnu99 -O3 -Iinclude
 LDFLAGS	+= -lpthread -lssh
 
 NAME	= cbrutekrag
-SRCS	= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c
-OBJS	= $(SRCS:.c=.o)
+SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c
+OBJS	:= $(SRCS:%.c=obj/%.o)
 
-all: $(NAME)
+all: dirs $(NAME)
+
+dirs:
+	mkdir -p obj
 
 $(NAME): $(OBJS)
-	$(CC) -o $(NAME) $(OBJS) $(LDFLAGS)
+	@$(CC) $(OBJS) $(LDFLAGS) -o $@
+	@echo "Linking complete!"
+
+$(OBJS): obj/%.o : src/%.c
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "Compiled "$<" successfully!"
 
 clean:
 	rm -f $(OBJS)
