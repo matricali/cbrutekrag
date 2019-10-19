@@ -201,8 +201,12 @@ void *detection_process(void *ptr)
 {
     struct detection_args *args = (struct detection_args *) ptr;
     wordlist_t *targets = args->source;
-    while (scan_counter < targets->length - 1) {
+    while (1) {
         pthread_mutex_lock(&mutex);
+        if (scan_counter >= targets->length - 1) {
+            pthread_mutex_unlock(&mutex);
+            break;
+        }
         scan_counter++;
         if (! g_verbose) {
             char str[36];
