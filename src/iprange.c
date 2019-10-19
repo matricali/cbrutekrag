@@ -86,6 +86,7 @@ network_addr_t str_to_netaddr(const char *ipstr) {
     if ((prefixstr = strchr(ipstr, '/'))) {
         *prefixstr = '\0';
         prefixstr++;
+        errno = 0;
         prefix = strtol(prefixstr, (char **) NULL, 10);
         if (errno || (*prefixstr == '\0') || (prefix < 0) || (prefix > 32)) {
             fprintf(stderr, "Invalid prefix /%s...!\n", prefixstr);
