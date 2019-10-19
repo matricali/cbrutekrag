@@ -24,8 +24,6 @@ SOFTWARE.
 #include <string.h>
 #include <sys/ioctl.h>
 
-#include "str.h"
-
 /**
  * Render progress bar like this:
  * |███░░░░░░░░░░░░░░░░░░░░░|  14.51%   [37] 192.168.100.37 root root
@@ -51,13 +49,29 @@ void progressbar_render(int count, int total, char* suffix, int bar_len)
     float percents = 100.0f * count / total;
     int fill = max_cols - bar_len - strlen(suffix) - 16;
 
+    printf("\b%c[2K\r", 27);
     if (bar_len > 0) {
         printf("\033[37m|");
-        if (filled_len > 0) printf("\033[32m%s", str_repeat("█", filled_len));
-        if (empty_len > 0) printf("\033[37m%s", str_repeat("░", empty_len));
+        if (filled_len > 0) {
+            printf("\033[32m");
+            for (int i = 0; i < filled_len; ++i) {
+                printf("\u2588");
+            }
+        }
+        if (empty_len > 0) {
+            printf("\033[37m");
+            for (int i = 0; i < empty_len; ++i) {
+                printf("\u2591");
+            }
+        }
         printf("\033[37m|\033[0m");
     }
     if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
-    if (fill > 0) printf("%s\r", str_repeat(" ", fill));
+    if (fill > 0) {
+        for (int i = 0; i < fill; ++i) {
+            printf(" ");
+        }
+    }
+    printf("\r");
     fflush(stdout);
 }
