@@ -42,11 +42,28 @@ void print_output(int level, const char *file, int line, const char *head,
     char s[20];
 
     s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
-    fprintf(stream, "%s[%s] ", head, s);
+    fprintf(stream, "\033[2K\r%s[%s] ", head, s);
 
     va_start(arg, format);
     vfprintf(stream, format, arg);
     va_end (arg);
     fprintf(stream, "%s\n", tail);
+    fflush(stream);
+}
+
+void log_output(FILE *stream, const char *format, ...)
+{
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+
+    va_list arg;
+    char s[20];
+
+    s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+    fprintf(stream, "%s ", s);
+
+    va_start(arg, format);
+    vfprintf(stream, format, arg);
+    va_end (arg);
     fflush(stream);
 }
