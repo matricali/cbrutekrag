@@ -52,6 +52,10 @@ wordlist_t wordlist_load(char *filename)
     }
     fclose(fp);
 
+    if (temp != NULL) {
+        free(temp);
+    }
+
     return ret;
 }
 
