@@ -134,9 +134,14 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         sockfd = 0;
         return -1;
     }
-    banner = malloc(sizeof(char) * 1024);
-    banner = strdup(strtok(buffer, "\n"));
-    log_debug("[?] %s:%d - %s", serverAddr, serverPort, banner);
+
+    buffer[strcspn(buffer, "\n")] = 0;
+    banner = calloc(strlen(buffer), 1);
+    if (banner == NULL) {
+        log_error("calloc failed");
+        exit(EXIT_FAILURE);
+    }
+    strcpy(banner, buffer);
 
     char *pkt1 = "SSH-2.0-OpenSSH_7.5";
     char *pkt2 = "\n";
