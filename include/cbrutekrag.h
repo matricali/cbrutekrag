@@ -27,6 +27,7 @@ SOFTWARE.
 #define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
 
 extern int g_timeout;
+extern int g_progress_bar;
 
 void print_banner();
 void usage(const char *p);

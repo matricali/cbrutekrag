@@ -67,7 +67,6 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     addr.sin_port = htons(serverPort);
     addr.sin_addr.s_addr = inet_addr(serverAddr);
 
-    log_debug("[-] %s:%d - Connecting...", serverAddr, serverPort);
     ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));
 
     FD_ZERO(&fdset);
@@ -84,7 +83,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
 
         getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
         if (so_error != 0) {
-            log_debug("%s:%d - Error connecting to the server! (%s)", serverAddr, serverPort, strerror(so_error));
+            log_debug("[!] %s:%d - Error connecting to the server! (%s)", serverAddr, serverPort, strerror(so_error));
             close(sockfd);
             sockfd = 0;
             return -1;
@@ -130,7 +129,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     // RECIBIR BANNER
     ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (ret < 0) {
-        log_error("%s:%d - Error receiving banner!", serverAddr, serverPort);
+        log_debug("%s:%d - Error receiving banner!", serverAddr, serverPort);
         close(sockfd);
         sockfd = 0;
         return -1;
@@ -144,7 +143,6 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     char *pkt3 = "asd\n      ";
     char *search = "Protocol mismatch.";
 
-    log_debug("[<] %s:%d - Sending pkt1: %s", serverAddr, serverPort, strtok(pkt1, "\n"));
     ret = sendto(sockfd, pkt1, sizeof(pkt1), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
@@ -154,7 +152,6 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         return -1;
     }
 
-    log_debug("[<] %s:%d - Sending pkt2: %s", serverAddr, serverPort, pkt2);
     ret = sendto(sockfd, pkt2, sizeof(pkt2), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
@@ -164,7 +161,6 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         return -1;
     }
 
-    log_debug("[<] %s:%d - Sending pkt3: %s", serverAddr, serverPort, pkt3);
     ret = sendto(sockfd, pkt3, sizeof(pkt3), 0, (struct sockaddr *) &addr, sizeof(addr));
 
     if (ret < 0) {
@@ -174,7 +170,6 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         return -1;
     }
 
-    log_debug("[>] %s:%d - Receiving...", serverAddr, serverPort);
     ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
     if (ret < 0) {
         log_error("%s:%d - Error receiving response!!", serverAddr, serverPort);
@@ -186,15 +181,13 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     close(sockfd);
     sockfd = 0;
 
-    log_debug("[+] %s:%d - Received: %s", serverAddr, serverPort, buffer);
-
     if (strstr(buffer, search) != NULL) {
-        log_debug("[+] %s:%d - %s\n", serverAddr, serverPort, banner);
+        log_debug("[+] %s:%d - %s", serverAddr, serverPort, banner);
         return 0;
     }
 
-    log_error("[!] %s:%d - POSSIBLE HONEYPOT!\n", serverAddr, serverPort);
-    return 1;
+    log_warn("[!] %s:%d - \033[91m(POSSIBLE HONEYPOT!)\033[0m %s\n", serverAddr, serverPort, banner);
+    return 0;
 }
 
 void *detection_process(void *ptr)
@@ -208,9 +201,9 @@ void *detection_process(void *ptr)
             break;
         }
         scan_counter++;
-        if (! g_verbose) {
-            char str[36];
-            snprintf(str, 36, "[%d/%zu] %zu OK - %s:%d", scan_counter, targets->length, filtered.length,
+        if (g_progress_bar) {
+            char str[40];
+            snprintf(str, 40, "[%d/%zu] %zu OK - %s:%d", scan_counter, targets->length, filtered.length,
                 targets->words[scan_counter-1], args->port);
             progressbar_render(scan_counter, targets->length, str, -1);
         }
@@ -254,6 +247,8 @@ void detection_start(unsigned int port, wordlist_t *source, wordlist_t *target, 
             pthread_join(scan_threads[i], NULL);
         }
     }
+
+    if (g_progress_bar) progressbar_render(1, 1, NULL, -1);
 
     *target = filtered;
     free(args);

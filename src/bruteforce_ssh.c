@@ -63,7 +63,7 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
         ssh_free(my_ssh_session);
         if (g_verbose & CBRUTEKRAG_VERBOSE_MODE) {
             log_error(
-                "Error connecting to %s:%d %s.",
+                "[!] Error connecting to %s:%d %s.",
                 hostname,
                 port,
                 ssh_get_error(my_ssh_session)
@@ -108,20 +108,22 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
 
 int bruteforce_ssh_try_login(const char *hostname, const int port, const char *username, const char *password, int count, int total, FILE *output)
 {
-    if (! g_verbose) {
+    int ret = bruteforce_ssh_login(hostname, port, username, password);
+
+    if (ret == 0) {
+        log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port, username, password);
+        if (output != NULL) {
+            log_output(output, "\t%s:%d\t%s\t%s\n", hostname, port, username, password);
+        }
+    } else {
+        log_debug("\033[38m[-]\033[0m %s:%d %s %s", hostname, port, username, password);
+    }
+
+    if (g_progress_bar) {
         char bar_suffix[50];
         sprintf(bar_suffix, "[%d] %s:%d %s %s", count, hostname, port, username, password);
         progressbar_render(count, total, bar_suffix, -1);
     }
-    int ret = bruteforce_ssh_login(hostname, port, username, password);
-    if (ret == 0) {
-        log_debug("LOGIN OK!\t%s:%d\t%s\t%s", hostname, port, username, password);
-        if (output != NULL) {
-            log_output(output, "LOGIN OK!\t%s:%d\t%s\t%s", hostname, port, username, password);
-        }
-        return 0;
-    } else {
-        log_debug("LOGIN FAIL\t%s:%d\t%s\t%s", hostname, port, username, password);
-    }
-    return -1;
+
+    return ret;
 }

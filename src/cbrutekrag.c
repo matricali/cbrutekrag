@@ -36,6 +36,7 @@ SOFTWARE.
 int g_verbose = 0;
 int g_timeout = 3;
 int g_dryrun = 0;
+int g_progress_bar = 0;
 char *g_blankpass_placeholder = "$BLANKPASS";
 
 void print_banner()
@@ -54,7 +55,7 @@ void print_banner()
 
 void usage(const char *p)
 {
-    printf("\nusage: %s [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
+    printf("\nusage: %s [-h] [-v] [-D] [-P] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
             "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     int port = 22;
     FILE *output = NULL;
 
-    while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVh")) != -1) {
+    while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVPh")) != -1) {
         switch (opt) {
             case 'v':
                 g_verbose |= CBRUTEKRAG_VERBOSE_MODE;
@@ -99,6 +100,9 @@ int main(int argc, char** argv)
             case 'D':
                 g_dryrun = 1;
                 break;
+            case 'P':
+                g_progress_bar = 1;
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
@@ -107,6 +111,7 @@ int main(int argc, char** argv)
                         "  -V                Verbose mode (sshlib)\n"
                         "  -s                Scan mode\n"
                         "  -D                Dry run\n"
+                        "  -P                Progress bar\n"
                         "  -p <port>         Port (default: 22)\n"
                         "  -T <targets>      Targets file\n"
                         "  -C <combinations> Username and password file\n"
@@ -205,14 +210,6 @@ int main(int argc, char** argv)
                 p--;
             }
 
-            log_debug(
-                "HOSTNAME=%s:%d\tUSERNAME=%s\tPASSWORD=%s",
-                hostnames.words[y],
-                port,
-                login_data[0],
-                login_data[1]
-            );
-
             pid = fork();
 
             if (pid) {
@@ -237,7 +234,7 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
-    if (! g_verbose) {
+    if (g_progress_bar) {
         progressbar_render(count, total, NULL, -1);
         printf("\f");
     }
