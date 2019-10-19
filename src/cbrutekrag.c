@@ -146,6 +146,7 @@ int main(int argc, char** argv)
         combos_filename = strdup("combos.txt");
     }
     wordlist_t combos = wordlist_load(combos_filename);
+    free(combos_filename);
 
     /* Calculate total attemps */
     total = hostnames.length * combos.length;
