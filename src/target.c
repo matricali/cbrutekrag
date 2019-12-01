@@ -156,5 +156,8 @@ void btkg_target_list_load(btkg_target_list_t *target_list, char *filename)
         btkg_target_list_append_range(target_list, ret.host, ret.port);
     }
 
+    free(temp);
+    temp = NULL;
+
     fclose(fp);
 }
