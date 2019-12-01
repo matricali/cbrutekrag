@@ -138,7 +138,14 @@ int main(int argc, char** argv)
     btkg_target_list_init(&target_list);
 
     while (optind < argc) {
-        btkg_target_list_append_range(&target_list, argv[optind], port);
+        btkg_target_t ret = target_parse(argv[optind]);
+
+        if (ret.host == NULL) {
+            log_error("WARNING: An error ocurred parsing target '%s' on argument #%d", argv[optind], optind);
+            continue;
+        }
+
+        btkg_target_list_append_range(&target_list, ret.host, ret.port);
         optind++;
     }
     if (target_list.targets == NULL && hostnames_filename == NULL) {
