@@ -47,7 +47,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     struct sockaddr_in addr;
     int sockfd, ret;
     char buffer[BUF_SIZE];
-    char *banner = NULL;
+    char *banner = "";
     fd_set fdset;
 
     sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -132,12 +132,14 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     }
 
     buffer[strcspn(buffer, "\n")] = 0;
-    banner = calloc(strlen(buffer), 1);
-    if (banner == NULL) {
-        log_error("calloc failed");
-        exit(EXIT_FAILURE);
+    if (strlen(buffer) > 0) {
+        banner = calloc(strlen(buffer), 1);
+        if (banner == NULL) {
+            log_error("calloc failed");
+            exit(EXIT_FAILURE);
+        }
+        strncpy(banner, buffer, strlen(buffer));
     }
-    strcpy(banner, buffer);
 
     char *pkt1 = "SSH-2.0-OpenSSH_7.5";
     char *pkt2 = "\n";
