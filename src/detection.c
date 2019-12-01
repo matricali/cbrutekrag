@@ -236,8 +236,9 @@ void detection_start(btkg_target_list_t *source, btkg_target_list_t *target, int
     }
 
     for (int i = 0; i < max_threads; i++) {
-        if (scan_threads[i] != NULL) {
-            pthread_join(scan_threads[i], NULL);
+        ret = pthread_join(scan_threads[i], NULL);
+        if (ret != 0) {
+            log_error("Cannot join thread no: %d\n", ret);
         }
     }
 

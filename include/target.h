@@ -38,6 +38,6 @@ void btkg_target_list_init(btkg_target_list_t *target_list);
 void btkg_target_list_append(btkg_target_list_t *target_list, btkg_target_t target);
 void btkg_target_list_append_range(btkg_target_list_t *target_list, const char* range, unsigned int port);
 void btkg_target_list_load(btkg_target_list_t *target_list, char *filename);
-btkg_target_t target_parse(const char *line);
+btkg_target_t target_parse(char *line);
 
 #endif /* TARGET_H */

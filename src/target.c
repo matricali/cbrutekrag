@@ -48,7 +48,7 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 /**
  * Split target into btkg_target_t structure
  */
-btkg_target_t target_parse(const char *line)
+btkg_target_t target_parse(char *line)
 {
     btkg_target_t ret = { .host = NULL, .port = 22};
     char *ptr = strtok(line, ":");

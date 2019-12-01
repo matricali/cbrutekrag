@@ -24,6 +24,8 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h> /* fork */
+#include <sys/wait.h> /* waitpid */
 
 #include "cbrutekrag.h"
 #include "bruteforce_ssh.h"
