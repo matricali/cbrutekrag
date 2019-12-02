@@ -140,6 +140,7 @@ int main(int argc, char** argv)
         }
 
         btkg_target_list_append_range(&target_list, ret.host, ret.port);
+        free(ret.host);
         optind++;
     }
     if (target_list.targets == NULL && hostnames_filename == NULL) {
