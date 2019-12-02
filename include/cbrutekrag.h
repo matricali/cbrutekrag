@@ -35,6 +35,6 @@ typedef struct {
 } btkg_context_t;
 
 void print_banner();
-void usage(const char *p);
+void usage(const char* p);
 
 #endif /* CBRUTEKRAG_H */

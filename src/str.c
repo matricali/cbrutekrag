@@ -20,10 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "str.h"
 
@@ -56,7 +56,7 @@ char** str_split(char* a_str, const char a_delim)
     result = malloc(sizeof(char*) * count);
 
     if (result) {
-        size_t idx  = 0;
+        size_t idx = 0;
         char* token = strtok(a_str, delim);
 
         while (token) {
@@ -71,11 +71,13 @@ char** str_split(char* a_str, const char a_delim)
     return result;
 }
 
-const char *str_repeat(char *str, size_t times)
+const char* str_repeat(char* str, size_t times)
 {
-    if (times < 1) return NULL;
-    char *ret = malloc(sizeof(str) * times + 1);
-    if (ret == NULL) return NULL;
+    if (times < 1)
+        return NULL;
+    char* ret = malloc(sizeof(str) * times + 1);
+    if (ret == NULL)
+        return NULL;
     strcpy(ret, str);
     while (--times > 0) {
         strcat(ret, str);

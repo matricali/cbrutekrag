@@ -20,20 +20,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "wordlist.h"
 #include "iprange.h"
 #include "log.h"
+#include "wordlist.h"
 
-wordlist_t wordlist_load(char *filename)
+wordlist_t wordlist_load(char* filename)
 {
-    FILE *fp;
+    FILE* fp;
     wordlist_t ret;
     ssize_t read;
-    char *temp = 0;
+    char* temp = 0;
     size_t len;
 
     /* Initialize wordlist */
@@ -59,8 +59,9 @@ wordlist_t wordlist_load(char *filename)
     return ret;
 }
 
-int wordlist_append(wordlist_t *wordlist, const char *string) {
-    char **words = wordlist->words;
+int wordlist_append(wordlist_t* wordlist, const char* string)
+{
+    char** words = wordlist->words;
 
     if (words == NULL) {
         words = malloc(sizeof(string));
@@ -76,9 +77,9 @@ int wordlist_append(wordlist_t *wordlist, const char *string) {
     return 0;
 }
 
-int wordlist_append_range(wordlist_t *wordlist, const char* range)
+int wordlist_append_range(wordlist_t* wordlist, const char* range)
 {
-    char *netmask_s;
+    char* netmask_s;
     netmask_s = strchr(range, '/');
 
     if (netmask_s == NULL) {
@@ -101,11 +102,11 @@ int wordlist_append_range(wordlist_t *wordlist, const char* range)
     return 0;
 }
 
-int wordlist_append_from_file(wordlist_t *wordlist, char *filename)
+int wordlist_append_from_file(wordlist_t* wordlist, char* filename)
 {
-    FILE *fp;
+    FILE* fp;
     ssize_t read;
-    char *temp = 0;
+    char* temp = 0;
     size_t len;
 
     fp = fopen(filename, "r");

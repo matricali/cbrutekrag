@@ -24,20 +24,20 @@ SOFTWARE.
 #define TARGET_H
 
 typedef struct {
-    char *host;
+    char* host;
     unsigned int port;
 } btkg_target_t;
 
 typedef struct {
     size_t length;
-    btkg_target_t *targets;
+    btkg_target_t* targets;
 } btkg_target_list_t;
 
 int btkg_target_port_is_valid(int port);
-void btkg_target_list_init(btkg_target_list_t *target_list);
-void btkg_target_list_append(btkg_target_list_t *target_list, btkg_target_t target);
-void btkg_target_list_append_range(btkg_target_list_t *target_list, const char* range, unsigned int port);
-void btkg_target_list_load(btkg_target_list_t *target_list, char *filename);
-btkg_target_t target_parse(char *line);
+void btkg_target_list_init(btkg_target_list_t* target_list);
+void btkg_target_list_append(btkg_target_list_t* target_list, btkg_target_t target);
+void btkg_target_list_append_range(btkg_target_list_t* target_list, const char* range, unsigned int port);
+void btkg_target_list_load(btkg_target_list_t* target_list, char* filename);
+btkg_target_t target_parse(char* line);
 
 #endif /* TARGET_H */

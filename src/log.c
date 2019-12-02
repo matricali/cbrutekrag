@@ -20,23 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdio.h> /* fprintf, vfprintf, stderr */
 #include <stdarg.h> /* va_list, va_start, va_end */
+#include <stdio.h> /* fprintf, vfprintf, stderr */
 #include <time.h> /* time_t, time, tm, localtime, strftime */
 
-#include "log.h"
 #include "cbrutekrag.h" /* CBRUTEKRAG_VERBOSE_MODE */
+#include "log.h"
 
 int g_verbose;
 
-void print_output(int level, const char *file, int line, const char *head,
-    const char *tail, FILE *stream, const char *format, ...)
+void print_output(int level, const char* file, int line, const char* head,
+    const char* tail, FILE* stream, const char* format, ...)
 {
-    if (level == LOG_DEBUG && ! (g_verbose & CBRUTEKRAG_VERBOSE_MODE)) {
+    if (level == LOG_DEBUG && !(g_verbose & CBRUTEKRAG_VERBOSE_MODE)) {
         return;
     }
     time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
+    struct tm* tm = localtime(&t);
 
     va_list arg;
     char s[20];
@@ -46,15 +46,15 @@ void print_output(int level, const char *file, int line, const char *head,
 
     va_start(arg, format);
     vfprintf(stream, format, arg);
-    va_end (arg);
+    va_end(arg);
     fprintf(stream, "%s\n", tail);
     fflush(stream);
 }
 
-void log_output(FILE *stream, const char *format, ...)
+void log_output(FILE* stream, const char* format, ...)
 {
     time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
+    struct tm* tm = localtime(&t);
 
     va_list arg;
     char s[20];
@@ -64,6 +64,6 @@ void log_output(FILE *stream, const char *format, ...)
 
     va_start(arg, format);
     vfprintf(stream, format, arg);
-    va_end (arg);
+    va_end(arg);
     fflush(stream);
 }

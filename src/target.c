@@ -20,13 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "target.h"
-#include "log.h"
 #include "iprange.h"
+#include "log.h"
+#include "target.h"
 
 /**
  * Check if given port is valid
@@ -39,7 +39,7 @@ int btkg_target_port_is_valid(int port)
 /**
  * Initialize btkg_target_list_t
  */
-void btkg_target_list_init(btkg_target_list_t *target_list)
+void btkg_target_list_init(btkg_target_list_t* target_list)
 {
     target_list->length = 0;
     target_list->targets = NULL;
@@ -48,12 +48,12 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 /**
  * Split target into btkg_target_t structure
  */
-btkg_target_t target_parse(char *line)
+btkg_target_t target_parse(char* line)
 {
-    btkg_target_t ret = { .host = NULL, .port = 22};
-    char *ptr = strtok(line, ":");
+    btkg_target_t ret = { .host = NULL, .port = 22 };
+    char* ptr = strtok(line, ":");
 
-    char *host = NULL;
+    char* host = NULL;
     int port = 0;
 
     if (ptr != NULL) {
@@ -62,7 +62,7 @@ btkg_target_t target_parse(char *line)
 
         if (ptr != NULL) {
             port = atoi(ptr);
-            if (! btkg_target_port_is_valid(port)) {
+            if (!btkg_target_port_is_valid(port)) {
                 log_error("WARNING: Invalid port (%d)", port);
                 return ret;
             }
@@ -77,9 +77,9 @@ btkg_target_t target_parse(char *line)
 /**
  * Append btkg_target_t into given btkg_target_list_t
  */
-void btkg_target_list_append(btkg_target_list_t *target_list, btkg_target_t target)
+void btkg_target_list_append(btkg_target_list_t* target_list, btkg_target_t target)
 {
-    btkg_target_t *targets = target_list->targets;
+    btkg_target_t* targets = target_list->targets;
 
     if (targets == NULL) {
         targets = malloc(sizeof(target));
@@ -96,9 +96,9 @@ void btkg_target_list_append(btkg_target_list_t *target_list, btkg_target_t targ
 /**
  * Parse CIDR block and appends as many btkg_target_t as needed into the given btkg_target_list_t
  */
-void btkg_target_list_append_range(btkg_target_list_t *target_list, const char* range, unsigned int port)
+void btkg_target_list_append_range(btkg_target_list_t* target_list, const char* range, unsigned int port)
 {
-    char *netmask_s;
+    char* netmask_s;
     netmask_s = strchr(range, '/');
 
     if (netmask_s == NULL) {
@@ -130,11 +130,11 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list, const char* 
 /**
  * Loads targets from a given file and append them into the given btkg_target_list_t
  */
-void btkg_target_list_load(btkg_target_list_t *target_list, char *filename)
+void btkg_target_list_load(btkg_target_list_t* target_list, char* filename)
 {
-    FILE *fp;
+    FILE* fp;
     ssize_t read;
-    char *temp = 0;
+    char* temp = 0;
     size_t len;
 
     fp = fopen(filename, "r");

@@ -20,21 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
-#include "log.h"
 #include "cbrutekrag.h"
-#include "wordlist.h"
-#include "target.h"
+#include "detection.h"
+#include "log.h"
 #include "progressbar.h"
+#include "target.h"
+#include "wordlist.h"
 
 #define BUF_SIZE 1024
 
@@ -42,12 +43,12 @@ int scan_counter = 0;
 btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int tm)
+int detection_detect_ssh(char* serverAddr, unsigned int serverPort, unsigned int tm)
 {
     struct sockaddr_in addr;
     int sockfd, ret;
     char buffer[BUF_SIZE];
-    char *banner = "";
+    char* banner = "";
     fd_set fdset;
 
     sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -63,7 +64,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     addr.sin_port = htons(serverPort);
     addr.sin_addr.s_addr = inet_addr(serverAddr);
 
-    ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));
+    ret = connect(sockfd, (struct sockaddr*)&addr, sizeof(addr));
 
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
@@ -102,10 +103,10 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     arg &= (~O_NONBLOCK);
 
     if ((ret = fcntl(sockfd, F_SETFL, arg)) < 0) {
-       log_error("Error fcntl(..., F_SETFL) (%s)\n", strerror(ret));
-       close(sockfd);
-       sockfd = 0;
-       return -1;
+        log_error("Error fcntl(..., F_SETFL) (%s)\n", strerror(ret));
+        close(sockfd);
+        sockfd = 0;
+        return -1;
     }
 
     log_debug("[+] %s:%d - Connected.", serverAddr, serverPort);
@@ -115,10 +116,10 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     timeout.tv_sec = tm;
     timeout.tv_usec = 0;
 
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
-                sizeof(timeout));
-    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,
-                sizeof(timeout));
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout,
+        sizeof(timeout));
+    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout,
+        sizeof(timeout));
 
     memset(buffer, 0, BUF_SIZE);
 
@@ -141,12 +142,12 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         strncpy(banner, buffer, strlen(buffer));
     }
 
-    char *pkt1 = "SSH-2.0-OpenSSH_7.5";
-    char *pkt2 = "\n";
-    char *pkt3 = "asd\n      ";
-    char *search = "Protocol mismatch.";
+    char* pkt1 = "SSH-2.0-OpenSSH_7.5";
+    char* pkt2 = "\n";
+    char* pkt3 = "asd\n      ";
+    char* search = "Protocol mismatch.";
 
-    ret = sendto(sockfd, pkt1, sizeof(pkt1), 0, (struct sockaddr *) &addr, sizeof(addr));
+    ret = sendto(sockfd, pkt1, sizeof(pkt1), 0, (struct sockaddr*)&addr, sizeof(addr));
 
     if (ret < 0) {
         log_error("[!] %s:%d - Error sending data pkt1!!", serverAddr, serverPort);
@@ -155,7 +156,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         return -1;
     }
 
-    ret = sendto(sockfd, pkt2, sizeof(pkt2), 0, (struct sockaddr *) &addr, sizeof(addr));
+    ret = sendto(sockfd, pkt2, sizeof(pkt2), 0, (struct sockaddr*)&addr, sizeof(addr));
 
     if (ret < 0) {
         log_error("[!] %s:%d - Error sending data pkt2!!", serverAddr, serverPort);
@@ -164,7 +165,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
         return -1;
     }
 
-    ret = sendto(sockfd, pkt3, sizeof(pkt3), 0, (struct sockaddr *) &addr, sizeof(addr));
+    ret = sendto(sockfd, pkt3, sizeof(pkt3), 0, (struct sockaddr*)&addr, sizeof(addr));
 
     if (ret < 0) {
         log_error("[!] %s:%d - Error sending data pkt3!!", serverAddr, serverPort);
@@ -193,7 +194,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
     return 0;
 }
 
-void *detection_process(void *ptr)
+void* detection_process(void* ptr)
 {
     btkg_detection_args_t* args = (btkg_detection_args_t*)ptr;
     btkg_target_list_t* target_list = args->target_list;

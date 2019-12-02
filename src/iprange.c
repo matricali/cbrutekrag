@@ -17,9 +17,9 @@
 
 #include "iprange.h"
 
-#include <stdio.h>
-#include <errno.h> /* errno */
 #include <arpa/inet.h> /* ntohl */
+#include <errno.h> /* errno */
+#include <stdio.h>
 #include <stdlib.h> /* exit */
 #include <string.h> /* strchr */
 
@@ -28,7 +28,8 @@
  * @param ipstr
  * @return
  */
-in_addr_t a_to_hl(const char *ipstr) {
+in_addr_t a_to_hl(const char* ipstr)
+{
     struct in_addr in;
 
     if (!inet_aton(ipstr, &in)) {
@@ -44,11 +45,12 @@ in_addr_t a_to_hl(const char *ipstr) {
  * @param prefix
  * @return
  */
-in_addr_t netmask(int prefix) {
+in_addr_t netmask(int prefix)
+{
     if (prefix == 0) {
-        return ( ~((in_addr_t) - 1));
+        return (~((in_addr_t)-1));
     } else {
-        return ( ~((1 << (32 - prefix)) - 1));
+        return (~((1 << (32 - prefix)) - 1));
     }
 }
 
@@ -58,8 +60,9 @@ in_addr_t netmask(int prefix) {
  * @param prefix
  * @return
  */
-in_addr_t network(in_addr_t addr, int prefix) {
-    return ( addr & netmask(prefix));
+in_addr_t network(in_addr_t addr, int prefix)
+{
+    return (addr & netmask(prefix));
 }
 
 /**
@@ -68,8 +71,9 @@ in_addr_t network(in_addr_t addr, int prefix) {
  * @param prefix
  * @return
  */
-in_addr_t broadcast(in_addr_t addr, int prefix) {
-    return ( addr | ~netmask(prefix));
+in_addr_t broadcast(in_addr_t addr, int prefix)
+{
+    return (addr | ~netmask(prefix));
 }
 
 /**
@@ -78,23 +82,24 @@ in_addr_t broadcast(in_addr_t addr, int prefix) {
  * @param ipstr
  * @return
  */
-network_addr_t str_to_netaddr(const char *ipstr) {
+network_addr_t str_to_netaddr(const char* ipstr)
+{
     long int prefix = 32;
-    char *prefixstr;
+    char* prefixstr;
     network_addr_t netaddr;
 
     if ((prefixstr = strchr(ipstr, '/'))) {
         *prefixstr = '\0';
         prefixstr++;
         errno = 0;
-        prefix = strtol(prefixstr, (char **) NULL, 10);
+        prefix = strtol(prefixstr, (char**)NULL, 10);
         if (errno || (*prefixstr == '\0') || (prefix < 0) || (prefix > 32)) {
             fprintf(stderr, "Invalid prefix /%s...!\n", prefixstr);
             exit(1);
         }
     }
 
-    netaddr.pfx = (int) prefix;
+    netaddr.pfx = (int)prefix;
     netaddr.addr = network(a_to_hl(ipstr), prefix);
 
     return (netaddr);

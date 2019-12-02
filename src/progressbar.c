@@ -41,8 +41,10 @@ void progressbar_render(int count, int total, char* suffix, int bar_len)
 
     int max_cols = w.ws_col;
 
-    if (bar_len < 0) bar_len = max_cols - 80;
-    if (suffix == NULL) suffix = "";
+    if (bar_len < 0)
+        bar_len = max_cols - 80;
+    if (suffix == NULL)
+        suffix = "";
 
     int filled_len = bar_len * count / total;
     int empty_len = bar_len - filled_len;
@@ -66,7 +68,8 @@ void progressbar_render(int count, int total, char* suffix, int bar_len)
         }
         printf("\033[37m|\033[0m");
     }
-    if (max_cols > 60) printf("  %.2f%%   %s", percents, suffix);
+    if (max_cols > 60)
+        printf("  %.2f%%   %s", percents, suffix);
     if (fill > 0) {
         for (int i = 0; i < fill; ++i) {
             printf(" ");

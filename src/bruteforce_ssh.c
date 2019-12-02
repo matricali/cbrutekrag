@@ -20,12 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdio.h>
 #include <libssh/libssh.h>
+#include <stdio.h>
 
 #include "cbrutekrag.h"
-#include "progressbar.h"
 #include "log.h"
+#include "progressbar.h"
 
 int g_timeout;
 
@@ -63,12 +63,7 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
         if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
-            log_error(
-                "[!] Error connecting to %s:%d %s.",
-                hostname,
-                port,
-                ssh_get_error(my_ssh_session)
-            );
+            log_error("[!] Error connecting to %s:%d %s.", hostname, port, ssh_get_error(my_ssh_session));
         }
         return -1;
     }

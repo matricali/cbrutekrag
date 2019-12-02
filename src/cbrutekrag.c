@@ -46,14 +46,13 @@ void print_banner()
         "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
         "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
         "              \033[0m\033[1mOpenSSH Brute force tool 0.5.0\033[0m\033[92m        __/ |\n"
-        "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n"
-    );
+        "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n");
 }
 
-void usage(const char *p)
+void usage(const char* p)
 {
     printf("\nusage: %s [-h] [-v] [-D] [-P] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
-            "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
+           "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
 int main(int argc, char** argv)
@@ -105,16 +104,16 @@ int main(int argc, char** argv)
                 print_banner();
                 usage(argv[0]);
                 printf("  -h                This help\n"
-                        "  -v                Verbose mode\n"
-                        "  -V                Verbose mode (sshlib)\n"
-                        "  -s                Scan mode\n"
-                        "  -D                Dry run\n"
-                        "  -P                Progress bar\n"
-                        "  -p <port>         Port (default: 22)\n"
-                        "  -T <targets>      Targets file\n"
-                        "  -C <combinations> Username and password file\n"
-                        "  -t <threads>      Max threads\n"
-                        "  -o <output>       Output log file\n");
+                       "  -v                Verbose mode\n"
+                       "  -V                Verbose mode (sshlib)\n"
+                       "  -s                Scan mode\n"
+                       "  -D                Dry run\n"
+                       "  -P                Progress bar\n"
+                       "  -p <port>         Port (default: 22)\n"
+                       "  -T <targets>      Targets file\n"
+                       "  -C <combinations> Username and password file\n"
+                       "  -t <threads>      Max threads\n"
+                       "  -o <output>       Output log file\n");
                 exit(EXIT_SUCCESS);
             default:
                 usage(argv[0]);
@@ -123,7 +122,7 @@ int main(int argc, char** argv)
     }
     print_banner();
 
-    if (! btkg_target_port_is_valid(port)) {
+    if (!btkg_target_port_is_valid(port)) {
         log_error("Invalid port. (%d)", port);
         exit(EXIT_FAILURE);
     }
@@ -198,7 +197,7 @@ int main(int argc, char** argv)
     int count = 0;
 
     for (int x = 0; x < combos.length; x++) {
-        char **login_data = str_split(combos.words[x], ' ');
+        char** login_data = str_split(combos.words[x], ' ');
         if (login_data == NULL) {
             continue;
         }
@@ -207,7 +206,7 @@ int main(int argc, char** argv)
         }
         for (int y = 0; y < target_list.length; y++) {
 
-            if (p >= THREADS){
+            if (p >= THREADS) {
                 waitpid(-1, NULL, 0);
                 p--;
             }
