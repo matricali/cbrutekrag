@@ -29,12 +29,13 @@ SOFTWARE.
 
 int g_timeout;
 
-int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *username, const char *password)
+int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned int port, const char* username,
+    const char* password)
 {
     ssh_session my_ssh_session;
     int verbosity = 0;
 
-    if (g_verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
+    if (context->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
         verbosity = SSH_LOG_PROTOCOL;
     } else {
         verbosity = SSH_LOG_NOLOG;
@@ -61,7 +62,7 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     r = ssh_connect(my_ssh_session);
     if (r != SSH_OK) {
         ssh_free(my_ssh_session);
-        if (g_verbose & CBRUTEKRAG_VERBOSE_MODE) {
+        if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
             log_error(
                 "[!] Error connecting to %s:%d %s.",
                 hostname,
@@ -106,9 +107,10 @@ int bruteforce_ssh_login(const char *hostname, unsigned int port, const char *us
     return -1;
 }
 
-int bruteforce_ssh_try_login(const char *hostname, const int port, const char *username, const char *password, int count, int total, FILE *output)
+int bruteforce_ssh_try_login(btkg_context_t* context, const char* hostname, const int port, const char* username,
+    const char* password, int count, int total, FILE* output)
 {
-    int ret = bruteforce_ssh_login(hostname, port, username, password);
+    int ret = bruteforce_ssh_login(context, hostname, port, username, password);
 
     if (ret == 0) {
         log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port, username, password);
@@ -119,7 +121,7 @@ int bruteforce_ssh_try_login(const char *hostname, const int port, const char *u
         log_debug("\033[38m[-]\033[0m %s:%d %s %s", hostname, port, username, password);
     }
 
-    if (g_progress_bar) {
+    if (context->progress_bar) {
         char bar_suffix[50];
         sprintf(bar_suffix, "[%d] %s:%d %s %s", count, hostname, port, username, password);
         progressbar_render(count, total, bar_suffix, -1);

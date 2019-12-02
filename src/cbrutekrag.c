@@ -20,27 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
-#include <unistd.h> /* fork */
 #include <sys/wait.h> /* waitpid */
+#include <unistd.h> /* fork */
 
-#include "cbrutekrag.h"
 #include "bruteforce_ssh.h"
-#include "log.h"
-#include "str.h"
-#include "wordlist.h"
-#include "target.h"
+#include "cbrutekrag.h"
 #include "detection.h"
+#include "log.h"
 #include "progressbar.h"
-
-int g_verbose = 0;
-int g_timeout = 3;
-int g_dryrun = 0;
-int g_progress_bar = 0;
-char *g_blankpass_placeholder = "$BLANKPASS";
+#include "str.h"
+#include "target.h"
+#include "wordlist.h"
 
 void print_banner()
 {
@@ -67,20 +61,21 @@ int main(int argc, char** argv)
     int opt;
     int total = 0;
     int THREADS = 1;
-    int PERFORM_SCAN = 0;
-    char *hostnames_filename = NULL;
-    char *combos_filename = NULL;
-    char *output_filename = NULL;
+    char* hostnames_filename = NULL;
+    char* combos_filename = NULL;
+    char* output_filename = NULL;
     int port = 22;
-    FILE *output = NULL;
+    FILE* output = NULL;
+    char* g_blankpass_placeholder = "$BLANKPASS";
+    btkg_context_t context = { 3, 0 };
 
     while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVPh")) != -1) {
         switch (opt) {
             case 'v':
-                g_verbose |= CBRUTEKRAG_VERBOSE_MODE;
+                context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
                 break;
             case 'V':
-                g_verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
+                context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
                 break;
             case 'p':
                 port = atoi(optarg);
@@ -98,13 +93,13 @@ int main(int argc, char** argv)
                 output_filename = optarg;
                 break;
             case 's':
-                PERFORM_SCAN = 1;
+                context.perform_scan = 1;
                 break;
             case 'D':
-                g_dryrun = 1;
+                context.dry_run = 1;
                 break;
             case 'P':
-                g_progress_bar = 1;
+                context.progress_bar = 1;
                 break;
             case 'h':
                 print_banner();
@@ -186,11 +181,9 @@ int main(int argc, char** argv)
     }
 
     /* Port scan and honeypot detection */
-    if (PERFORM_SCAN) {
+    if (context.perform_scan) {
         printf("Starting servers discoverage process...\n\n");
-        if (! g_dryrun) {
-            detection_start(&target_list, &target_list, THREADS);
-        }
+        detection_start(&context, &target_list, &target_list, THREADS);
         printf("\n\nNumber of targets after filtering: %zu\n", target_list.length);
     }
 
@@ -225,9 +218,9 @@ int main(int argc, char** argv)
 
             if (pid) {
                 p++;
-            } else if(pid == 0) {
-                if (! g_dryrun) {
-                    bruteforce_ssh_try_login(current_target.host, current_target.port, login_data[0],
+            } else if (pid == 0) {
+                if (!context.dry_run) {
+                    bruteforce_ssh_try_login(&context, current_target.host, current_target.port, login_data[0],
                         login_data[1], count, total, output);
                 }
                 exit(EXIT_SUCCESS);
@@ -247,7 +240,7 @@ int main(int argc, char** argv)
         fclose(output);
     }
 
-    if (g_progress_bar) {
+    if (context.progress_bar) {
         progressbar_render(count, total, NULL, -1);
         printf("\f");
     }

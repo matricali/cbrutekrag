@@ -195,7 +195,8 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort, unsigned int
 
 void *detection_process(void *ptr)
 {
-    btkg_target_list_t *target_list = (btkg_target_list_t *) ptr;
+    btkg_detection_args_t* args = (btkg_detection_args_t*)ptr;
+    btkg_target_list_t* target_list = args->target_list;
 
     while (1) {
         pthread_mutex_lock(&mutex);
@@ -206,13 +207,21 @@ void *detection_process(void *ptr)
         scan_counter++;
         btkg_target_t current_target = target_list->targets[scan_counter];
 
-        if (g_progress_bar) {
+        if (args->context->progress_bar) {
             char str[40];
             snprintf(str, 40, "[%d/%zu] %zu OK - %s:%d", scan_counter, target_list->length, filtered.length,
                 current_target.host, current_target.port);
             progressbar_render(scan_counter, target_list->length, str, -1);
         }
         pthread_mutex_unlock(&mutex);
+
+        if (args->context->dry_run) {
+            pthread_mutex_lock(&mutex);
+            log_info("Scanning %s:%d", current_target.host, current_target.port);
+            btkg_target_list_append(&filtered, current_target);
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
 
         if (detection_detect_ssh(current_target.host, current_target.port, 1) == 0) {
             pthread_mutex_lock(&mutex);
@@ -224,15 +233,20 @@ void *detection_process(void *ptr)
     return NULL;
 }
 
-void detection_start(btkg_target_list_t *source, btkg_target_list_t *target, int max_threads)
+void detection_start(btkg_context_t* context, btkg_target_list_t* source, btkg_target_list_t* target, int max_threads)
 {
     btkg_target_list_init(&filtered);
+    btkg_detection_args_t args;
+
+    memset(&args, 0, sizeof(btkg_detection_args_t));
+    args.context = context;
+    args.target_list = source;
 
     pthread_t scan_threads[max_threads];
     int ret;
 
     for (int i = 0; i < max_threads; i++) {
-        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void *) source))) {
+        if ((ret = pthread_create(&scan_threads[i], NULL, &detection_process, (void*)&args))) {
             log_error("Thread creation failed: %d\n", ret);
         }
     }
@@ -244,7 +258,8 @@ void detection_start(btkg_target_list_t *source, btkg_target_list_t *target, int
         }
     }
 
-    if (g_progress_bar) progressbar_render(1, 1, NULL, -1);
+    if (context->progress_bar)
+        progressbar_render(1, 1, NULL, -1);
 
     *target = filtered;
 }

@@ -23,8 +23,6 @@ SOFTWARE.
 #ifndef LOGGER_H
 #define LOGGER_H
 
-extern int g_verbose;
-
 enum { LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_FATAL };
 
 #define log_error(...) print_output(LOG_ERROR, __FILE__, __LINE__, \

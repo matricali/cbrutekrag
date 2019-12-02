@@ -26,8 +26,13 @@ SOFTWARE.
 #define CBRUTEKRAG_VERBOSE_MODE 0x1
 #define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
 
-extern int g_timeout;
-extern int g_progress_bar;
+typedef struct {
+    int timeout;
+    int progress_bar;
+    int verbose;
+    int dry_run;
+    int perform_scan;
+} btkg_context_t;
 
 void print_banner();
 void usage(const char *p);
