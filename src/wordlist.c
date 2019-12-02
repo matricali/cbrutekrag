@@ -120,3 +120,11 @@ int wordlist_append_from_file(wordlist_t *wordlist, char *filename)
     fclose(fp);
     return 0;
 }
+
+void wordlist_destroy(wordlist_t* wordlist)
+{
+    for (int i = 0; i < wordlist->length; ++i) {
+        free(wordlist->words[i]);
+    }
+    free(wordlist->words);
+}

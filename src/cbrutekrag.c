@@ -241,6 +241,8 @@ int main(int argc, char** argv)
 
     pid = 0;
 
+    wordlist_destroy(&combos);
+
     if (output != NULL) {
         fclose(output);
     }

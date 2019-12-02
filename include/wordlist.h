@@ -32,5 +32,6 @@ wordlist_t wordlist_load(char *filename);
 int wordlist_append(wordlist_t *wordlist, const char *string);
 int wordlist_append_range(wordlist_t *wordlist, const char* range);
 int wordlist_append_from_file(wordlist_t *wordlist, char *filename);
+void wordlist_destroy(wordlist_t* wordlist);
 
 #endif /* WORDLIST_H */
