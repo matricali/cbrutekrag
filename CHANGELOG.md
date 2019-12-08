@@ -10,12 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dry-run (argument: -D)
 - Added the initial basis to support different ports on different targets
 - Now is possible to specify the port on targets list (ex: 10.10.1.10:2222) (see #5)
+- Shows time elapsed on each phase.
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
 
 ### Removed
 - Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)
+
+### Fixed
+- Wait until all forks finished her work.
 
 ## [0.4.0] - 2018-09-02
 ### Added

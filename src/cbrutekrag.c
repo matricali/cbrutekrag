@@ -25,6 +25,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h> /* waitpid */
+#include <time.h> /* clock */
 #include <unistd.h> /* fork */
 
 #include "bruteforce_ssh.h"
@@ -66,6 +67,8 @@ int main(int argc, char** argv)
     FILE* output = NULL;
     char* g_blankpass_placeholder = "$BLANKPASS";
     btkg_context_t context = { 3, 0 };
+    struct timespec start, finish;
+    double elapsed;
 
     while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
         switch (opt) {
@@ -171,9 +174,14 @@ int main(int argc, char** argv)
 
     /* Port scan and honeypot detection */
     if (context.perform_scan) {
-        printf("Starting servers discoverage process...\n\n");
+        log_info("Starting servers discoverage process...");
+        clock_gettime(CLOCK_MONOTONIC, &start);
         detection_start(&context, &target_list, &target_list, THREADS);
-        printf("\n\nNumber of targets after filtering: %zu\n", target_list.length);
+        clock_gettime(CLOCK_MONOTONIC, &finish);
+        elapsed = (finish.tv_sec - start.tv_sec);
+        elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+        log_info("Detection process took %f seconds.", elapsed);
+        log_info("Number of targets after filtering: %zu.", target_list.length);
     }
 
     if (THREADS > target_list.length) {
@@ -185,6 +193,9 @@ int main(int argc, char** argv)
     pid_t pid = 0;
     int p = 0;
     int count = 0;
+
+    log_info("Starting brute-force process...");
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
     for (int x = 0; x < combos.length; x++) {
         char** login_data = str_split(combos.words[x], ' ');
@@ -221,17 +232,28 @@ int main(int argc, char** argv)
         }
     }
 
+    // Wait until all forks finished her work
+    while (p > 0) {
+        waitpid(-1, NULL, 0);
+        --p;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &finish);
+    elapsed = (finish.tv_sec - start.tv_sec);
+    elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+    if (context.progress_bar) {
+        progressbar_render(count, total, NULL, -1);
+    }
+
+    log_info("Brute-force process took %f seconds.", elapsed);
+
     pid = 0;
 
     wordlist_destroy(&combos);
 
     if (output != NULL) {
         fclose(output);
-    }
-
-    if (context.progress_bar) {
-        progressbar_render(count, total, NULL, -1);
-        printf("\f");
     }
 
     exit(EXIT_SUCCESS);
