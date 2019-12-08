@@ -103,6 +103,9 @@ int main(int argc, char** argv)
             case 'X':
                 context.command = strdup(optarg);
                 break;
+            case 'X':
+                g_command = strdup(optarg);
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
