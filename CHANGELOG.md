@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the initial basis to support different ports on different targets
 - Now is possible to specify the port on targets list (ex: 10.10.1.10:2222) (see #5)
 - Shows time elapsed on each phase.
+- Increase the maximum file descriptor number that can be opened by this process.
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
+- The default maximum number of threads is calculated automatically.
 
 ### Removed
 - Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)

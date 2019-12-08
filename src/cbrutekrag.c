@@ -24,9 +24,11 @@ SOFTWARE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h> /* waitpid */
 #include <time.h> /* clock */
 #include <unistd.h> /* fork */
+
+#include <sys/resource.h>
+#include <sys/wait.h> /* waitpid */
 
 #include "bruteforce_ssh.h"
 #include "cbrutekrag.h"
@@ -60,15 +62,27 @@ int main(int argc, char** argv)
 {
     int opt;
     int total = 0;
-    int THREADS = 1;
     char* hostnames_filename = NULL;
     char* combos_filename = NULL;
     char* output_filename = NULL;
     FILE* output = NULL;
     char* g_blankpass_placeholder = "$BLANKPASS";
-    btkg_context_t context = { 3, 0 };
+    btkg_context_t context = { 3, 1, 0 };
     struct timespec start, finish;
     double elapsed;
+    struct rlimit limit;
+
+    /* Increase the maximum file descriptor number that can be opened by this process. */
+    getrlimit(RLIMIT_NOFILE, &limit);
+    limit.rlim_cur = limit.rlim_max;
+    setrlimit(RLIMIT_NOFILE, &limit);
+
+    /* Calculate maximun number of threads. */
+    context.max_threads = limit.rlim_cur - 8;
+
+    if (context.max_threads > 1024) {
+        context.max_threads = 1024;
+    }
 
     while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
         switch (opt) {
@@ -85,7 +99,7 @@ int main(int argc, char** argv)
                 combos_filename = optarg;
                 break;
             case 't':
-                THREADS = atoi(optarg);
+                context.max_threads = atoi(optarg);
                 break;
             case 'o':
                 output_filename = optarg;
@@ -156,7 +170,7 @@ int main(int argc, char** argv)
     printf("\nAmount of username/password combinations: %zu\n", combos.length);
     printf("Number of targets: %zu\n", target_list.length);
     printf("Total attemps: %d\n", total);
-    printf("Max threads: %d\n\n", THREADS);
+    printf("Max threads: %d\n\n", context.max_threads);
 
     if (total == 0) {
         log_error("No work to do.");
@@ -176,7 +190,7 @@ int main(int argc, char** argv)
     if (context.perform_scan) {
         log_info("Starting servers discoverage process...");
         clock_gettime(CLOCK_MONOTONIC, &start);
-        detection_start(&context, &target_list, &target_list, THREADS);
+        detection_start(&context, &target_list, &target_list, context.max_threads);
         clock_gettime(CLOCK_MONOTONIC, &finish);
         elapsed = (finish.tv_sec - start.tv_sec);
         elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
@@ -184,9 +198,9 @@ int main(int argc, char** argv)
         log_info("Number of targets after filtering: %zu.", target_list.length);
     }
 
-    if (THREADS > target_list.length) {
+    if (context.max_threads > target_list.length) {
         log_info("Decreasing max threads to %zu.", target_list.length);
-        THREADS = target_list.length;
+        context.max_threads = target_list.length;
     }
 
     /* Bruteforce */
@@ -207,7 +221,7 @@ int main(int argc, char** argv)
         }
         for (int y = 0; y < target_list.length; y++) {
 
-            if (p >= THREADS) {
+            if (p >= context.max_threads) {
                 waitpid(-1, NULL, 0);
                 p--;
             }

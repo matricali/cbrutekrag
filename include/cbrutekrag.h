@@ -28,6 +28,7 @@ SOFTWARE.
 
 typedef struct {
     int timeout;
+    int max_threads;
     int progress_bar;
     int verbose;
     int dry_run;
