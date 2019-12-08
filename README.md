@@ -10,7 +10,7 @@ Penetration tests on SSH servers using dictionary attacks. Written in _C_.
 >cbrutekrag and its owners can't be held responsible for misuse by users.   
 >Users have to act as permitted by local law rules.
 
-## Requeriments
+## Requirements
 * `gcc` compiler
 * `libssh`
 
