@@ -190,7 +190,7 @@ int detection_detect_ssh(char* serverAddr, unsigned int serverPort, unsigned int
         return 0;
     }
 
-    log_warn("[!] %s:%d - \033[91m(POSSIBLE HONEYPOT!)\033[0m %s\n", serverAddr, serverPort, banner);
+    log_warn("[!] %s:%d - \033[91m(POSSIBLE HONEYPOT!)\033[0m %s", serverAddr, serverPort, banner);
     return 0;
 }
 

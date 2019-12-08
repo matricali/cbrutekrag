@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     }
 
     if (THREADS > target_list.length) {
-        printf("Decreasing max threads to %zu.\n", target_list.length);
+        log_info("Decreasing max threads to %zu.", target_list.length);
         THREADS = target_list.length;
     }
 
