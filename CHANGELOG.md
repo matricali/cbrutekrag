@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
 
+### Removed
+- Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)
+
 ## [0.4.0] - 2018-09-02
 ### Added
 - Multithreaded port scan, discard targets from batch if the port is closed (argument: -s).

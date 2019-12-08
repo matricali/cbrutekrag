@@ -34,7 +34,7 @@ $ cbrutekrag -h
       (c) Copyright 2014-2019 Jorge Matricali  |___/
 
 
-usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]
+usage: ./cbrutekrag [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]
 		[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
 
   -h                This help
@@ -42,7 +42,7 @@ usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.l
   -V                Verbose mode (sshlib)
   -s                Scan mode
   -D                Dry run
-  -p <port>         Port (default: 22)
+  -P                Progress bar
   -T <targets>      Targets file
   -C <combinations> Username and password file
   -t <threads>      Max threads
@@ -51,7 +51,20 @@ usage: ./cbrutekrag [-h] [-v] [-D] [-p PORT] [-T TARGETS.lst] [-C combinations.l
 
 ## Example usages
 ```bash
-
-# Many targets, many pre-made combinations of user and password separated by space.
 cbrutekrag -T targets.txt -C combinations.txt -o result.log
+cbrutekrag -s -t 8 -C combinations.txt -o result.log 192.168.1.0/24
+```
+
+### Supported targets syntax
+
+* 192.168.0.1
+* 10.0.0.0/8
+* 192.168.100.0/24:2222
+* 127.0.0.1:2222
+
+### Combinations file format
+```
+root root
+root password
+root $BLANKPASS$
 ```

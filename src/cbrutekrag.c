@@ -51,7 +51,7 @@ void print_banner()
 
 void usage(const char* p)
 {
-    printf("\nusage: %s [-h] [-v] [-D] [-P] [-p PORT] [-T TARGETS.lst] [-C combinations.lst]\n"
+    printf("\nusage: %s [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
            "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
 }
 
@@ -63,21 +63,17 @@ int main(int argc, char** argv)
     char* hostnames_filename = NULL;
     char* combos_filename = NULL;
     char* output_filename = NULL;
-    int port = 22;
     FILE* output = NULL;
     char* g_blankpass_placeholder = "$BLANKPASS";
     btkg_context_t context = { 3, 0 };
 
-    while ((opt = getopt(argc, argv, "p:T:C:t:o:DsvVPh")) != -1) {
+    while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
         switch (opt) {
             case 'v':
                 context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
                 break;
             case 'V':
                 context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
-                break;
-            case 'p':
-                port = atoi(optarg);
                 break;
             case 'T':
                 hostnames_filename = optarg;
@@ -109,7 +105,6 @@ int main(int argc, char** argv)
                        "  -s                Scan mode\n"
                        "  -D                Dry run\n"
                        "  -P                Progress bar\n"
-                       "  -p <port>         Port (default: 22)\n"
                        "  -T <targets>      Targets file\n"
                        "  -C <combinations> Username and password file\n"
                        "  -t <threads>      Max threads\n"
@@ -121,11 +116,6 @@ int main(int argc, char** argv)
         }
     }
     print_banner();
-
-    if (!btkg_target_port_is_valid(port)) {
-        log_error("Invalid port. (%d)", port);
-        exit(EXIT_FAILURE);
-    }
 
     /* Targets */
     btkg_target_list_t target_list;
@@ -162,7 +152,6 @@ int main(int argc, char** argv)
 
     printf("\nAmount of username/password combinations: %zu\n", combos.length);
     printf("Number of targets: %zu\n", target_list.length);
-    printf("Port: %d\n", port);
     printf("Total attemps: %d\n", total);
     printf("Max threads: %d\n\n", THREADS);
 
