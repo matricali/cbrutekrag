@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added the initial basis to support different ports on different targets
 - Now is possible to specify the port on targets list (ex: 10.10.1.10:2222) (see #5)
 - Shows time elapsed on each phase.
+- Remote command execution (argument: -X <command>).
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).

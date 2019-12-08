@@ -53,7 +53,8 @@ void print_banner()
 void usage(const char* p)
 {
     printf("\nusage: %s [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
-           "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
+           "\t\t[-t THREADS] [-o OUTPUT.txt] [-X COMMAND] [TARGETS...]\n\n",
+        p);
 }
 
 int main(int argc, char** argv)
@@ -70,8 +71,8 @@ int main(int argc, char** argv)
     struct timespec start, finish;
     double elapsed;
 
-    while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
-        switch (opt) {
+    while ((opt = getopt(argc, argv, "T:C:t:o:X:DsvVPh")) != -1) {
+            switch (opt) {
             case 'v':
                 context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
                 break;
@@ -99,6 +100,9 @@ int main(int argc, char** argv)
             case 'P':
                 context.progress_bar = 1;
                 break;
+            case 'X':
+                context.command = strdup(optarg);
+                break;
             case 'h':
                 print_banner();
                 usage(argv[0]);
@@ -111,7 +115,8 @@ int main(int argc, char** argv)
                        "  -T <targets>      Targets file\n"
                        "  -C <combinations> Username and password file\n"
                        "  -t <threads>      Max threads\n"
-                       "  -o <output>       Output log file\n");
+                       "  -o <output>       Output log file\n"
+                       "  -X <command>      Remote command execution\n");
                 exit(EXIT_SUCCESS);
             default:
                 usage(argv[0]);
