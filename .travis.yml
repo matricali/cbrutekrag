@@ -1,10 +1,14 @@
 sudo: required
+
 services:
 - docker
+
 cache:
   directories:
   - "$HOME/.cache"
+
 language: C
+
 env:
   matrix:
   - OS=el DIST=6
@@ -19,6 +23,12 @@ env:
   - OS=debian DIST=stretch
   - OS=ubuntu DIST=xenial ARCH=i386
   - OS=debian DIST=jessie ARCH=i386
+
+jobs:
+  allow_failures:
+  - env: OS=debian DIST=wheezy
+  - env: OS=debian DIST=jessie ARCH=i386
+
 script:
 - git describe --long
 - git clone https://github.com/packpack/packpack.git packpack
@@ -32,4 +42,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    repo: jorge-matricali/cbrutekrag
+    repo: matricali/cbrutekrag
