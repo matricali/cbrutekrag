@@ -26,7 +26,6 @@ env:
 
 jobs:
   allow_failures:
-  - env: OS=debian DIST=wheezy
   - env: OS=debian DIST=jessie ARCH=i386
 
 script:
