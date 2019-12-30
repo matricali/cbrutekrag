@@ -4,8 +4,8 @@ Release: 1%{?dist}
 Summary: SSH bruteforce tool
 Group: Applications/Databases
 License: MIT
-URL: https://github.com/jorge-matricali/cbrutekrag
-Source0: https://github.com/jorge-matricali/cbrutekrag/archive/%{version}/%{name}-%{version}.tar.gz
+URL: https://github.com/matricali/cbrutekrag
+Source0: https://github.com/matricali/cbrutekrag/archive/%{version}/%{name}-%{version}.tar.gz
 BuildRequires: gcc
 BuildRequires: libssh-devel
 BuildRequires: make
