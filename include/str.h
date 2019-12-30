@@ -25,7 +25,7 @@ SOFTWARE.
 
 #include <stdlib.h>
 
-char** str_split(char* a_str, const char a_delim);
-const char* str_repeat(char* str, size_t times);
+char **str_split(char *a_str, const char a_delim);
+const char *str_repeat(char *str, size_t times);
 
 #endif /* STR_H */

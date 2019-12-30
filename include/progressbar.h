@@ -23,6 +23,6 @@ SOFTWARE.
 #ifndef PROGRESSBAR_H
 #define PROGRESSBAR_H
 
-void progressbar_render(int count, int total, char* suffix, int bar_len);
+void progressbar_render(int count, int total, char *suffix, int bar_len);
 
 #endif /* PROGRESSBAR_H */

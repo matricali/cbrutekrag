@@ -27,15 +27,15 @@ SOFTWARE.
 #define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
 
 typedef struct {
-    int timeout;
-    int max_threads;
-    int progress_bar;
-    int verbose;
-    int dry_run;
-    int perform_scan;
+	int timeout;
+	int max_threads;
+	int progress_bar;
+	int verbose;
+	int dry_run;
+	int perform_scan;
 } btkg_context_t;
 
 void print_banner();
-void usage(const char* p);
+void usage(const char *p);
 
 #endif /* CBRUTEKRAG_H */

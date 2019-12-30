@@ -28,8 +28,8 @@
 #include <arpa/inet.h> /* in_addr_t */
 
 typedef struct network_addr {
-    in_addr_t addr;
-    int pfx;
+	in_addr_t addr;
+	int pfx;
 } network_addr_t;
 
 /**
@@ -37,7 +37,7 @@ typedef struct network_addr {
  * @param ipstr
  * @return
  */
-in_addr_t a_to_hl(const char* ipstr);
+in_addr_t a_to_hl(const char *ipstr);
 
 /**
  * Compute netmask address given prefix
@@ -68,6 +68,6 @@ in_addr_t broadcast(in_addr_t addr, int prefix);
  * @param ipstr
  * @return
  */
-network_addr_t str_to_netaddr(const char* ipstr);
+network_addr_t str_to_netaddr(const char *ipstr);
 
 #endif /* IPRANGE_H */

@@ -20,15 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <arpa/inet.h>
 #include <fcntl.h>
-#include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <unistd.h>
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "cbrutekrag.h"
 #include "detection.h"
@@ -199,7 +200,7 @@ void* detection_process(void* ptr)
     btkg_detection_args_t* args = (btkg_detection_args_t*)ptr;
     btkg_target_list_t* target_list = args->target_list;
 
-    while (1) {
+    for (;;) {
         pthread_mutex_lock(&mutex);
         if (scan_counter >= target_list->length - 1) {
             pthread_mutex_unlock(&mutex);

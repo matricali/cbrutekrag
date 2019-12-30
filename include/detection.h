@@ -26,12 +26,16 @@ SOFTWARE.
 #include "target.h"
 
 typedef struct {
-    btkg_context_t* context;
-    btkg_target_list_t* target_list;
+	btkg_context_t *context;
+	btkg_target_list_t *target_list;
 } btkg_detection_args_t;
 
-int detection_detect_ssh(char* serverAddr, unsigned int serverPort, unsigned int tm);
-void* detection_process(void* ptr);
-void detection_start(btkg_context_t* context, btkg_target_list_t* source, btkg_target_list_t* target, int max_threads);
+int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
+			 unsigned int tm);
+
+void *detection_process(void *ptr);
+
+void detection_start(btkg_context_t *context, btkg_target_list_t *source,
+		     btkg_target_list_t *target, int max_threads);
 
 #endif /* DETECTION_H */

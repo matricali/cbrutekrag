@@ -246,7 +246,7 @@ int main(int argc, char** argv)
         }
     }
 
-    // Wait until all forks finished her work
+    /* Wait until all forks finished her work*/
     while (p > 0) {
         waitpid(-1, NULL, 0);
         --p;

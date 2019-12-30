@@ -28,13 +28,17 @@ SOFTWARE.
 #include "wordlist.h"
 
 typedef struct {
-    btkg_target_list_t* targets;
-    wordlist_t* combinations;
+	btkg_target_list_t *targets;
+	wordlist_t *combinations;
 } btkg_bruteforce_args_t;
 
-int bruteforce_ssh_login(btkg_context_t* context, const char* hostname, unsigned int port, const char* username,
-    const char* password);
-int bruteforce_ssh_try_login(btkg_context_t* context, const char* hostname, const int port, const char* username,
-    const char* password, int count, int total, FILE* output);
+int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
+			 unsigned int port, const char *username,
+			 const char *password);
+
+int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
+			     const int port, const char *username,
+			     const char *password, int count, int total,
+			     FILE *output);
 
 #endif /* BRUTEFORCE_SSH_H */
