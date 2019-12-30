@@ -78,11 +78,8 @@ int main(int argc, char **argv)
 	setrlimit(RLIMIT_NOFILE, &limit);
 
 	/* Calculate maximun number of threads. */
-	context.max_threads = limit.rlim_cur - 8;
-
-	if (context.max_threads > 1024) {
-		context.max_threads = 1024;
-	}
+	context.max_threads =
+		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
 	while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
 		switch (opt) {
@@ -180,6 +177,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	if (context.max_threads > target_list.length) {
+		log_info("Decreasing max threads to %zu.", target_list.length);
+		context.max_threads = target_list.length;
+	}
+
 	/* Output file */
 	if (output_filename != NULL) {
 		output = fopen(output_filename, "a");
@@ -202,6 +204,11 @@ int main(int argc, char **argv)
 		log_info("Detection process took %f seconds.", elapsed);
 		log_info("Number of targets after filtering: %zu.",
 			 target_list.length);
+	}
+
+	if (target_list.length == 0) {
+		log_info("No work to do.");
+		exit(EXIT_SUCCESS);
 	}
 
 	if (context.max_threads > target_list.length) {
