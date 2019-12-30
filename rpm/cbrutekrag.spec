@@ -22,12 +22,15 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR="%{buildroot}" PREFIX="" BINDIR="%{_bindir}" MANDIR="%{_mandir}/man1" DATADIR="%{_datadir}/%{name}"
+mkdir -p %{buildroot}%{_mandir}/man1
+cp docs/man/cbrutekrag.1 %{buildroot}%{_mandir}/man1/cbrutekrag.1
 
 %files
 %doc README.md
 %{!?_licensedir:%global license %doc}
 %license LICENSE.txt
 %{_bindir}/cbrutekrag
+%{_mandir}/man1/cbrutekrag.1*
 
 %changelog
 * Sat Aug 25 2018 Jorge Matricali <jorgematricali@gmail.com> 0:1.0-0

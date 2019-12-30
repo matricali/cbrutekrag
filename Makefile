@@ -1,6 +1,6 @@
 CC	= gcc
 
-CFLAGS	+= -Wall -std=gnu99 -O3 -Iinclude
+CFLAGS	+= -Wall -std=gnu99 -O3 -Iinclude -g
 LDFLAGS	+= -lpthread -lssh -lrt
 
 NAME	= cbrutekrag

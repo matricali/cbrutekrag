@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Now is possible to specify the port on targets list (ex: 10.10.1.10:2222) (see #5)
 - Shows time elapsed on each phase.
 - Increase the maximum file descriptor number that can be opened by this process.
+- manpages (`man cbrutekrag`)
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
