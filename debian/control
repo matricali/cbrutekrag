@@ -4,12 +4,12 @@ Section: net
 Maintainer: Jorge Matricali <jorgematricali@gmail.com>
 Build-Depends: debhelper (>= 9), libssh-dev
 Standards-Version: 4.2.0
-Homepage: https://github.com/jorge-matricali/cbrutekrag
-Vcs-Git: git://github.com/jorge-matricali/cbrutekrag.git
-Vcs-Browser: https://github.com/jorge-matricali/cbrutekrag
+Homepage: https://github.com/matricali/cbrutekrag
+Vcs-Git: git://github.com/matricali/cbrutekrag.git
+Vcs-Browser: https://github.com/matricali/cbrutekrag
 
 Package: cbrutekrag
-Architecture: all
+Architecture: i386 amd64
 Depends: libssh-4 (>= 0.5.0), ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Description: SSH bruteforce tool

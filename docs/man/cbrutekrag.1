@@ -1,0 +1,53 @@
+.Dd December 8, 2019
+.Dt CBRUTEKRAG 1    \" Program name and manual section number
+.Os
+.Sh NAME            \" Section Header - required - don't modify
+.Nm cbrutekrag
+.Nd Penetration tests on SSH servers using dictionary attacks. Written in C.
+https://github.com/matricali/cbrutekrag
+.Sh SYNOPSIS                \" Section Header - required - don't modify
+.Nm
+.Op Fl DsvVPh               \" [-DsvVPh]
+.Op Fl t Ar threads         \" [-t threads]
+.Op Fl T Ar combinations    \" [-T targets]
+.Op Fl C Ar combinations    \" [-C combinations]
+.Op Fl o Ar output          \" [-C combinations]
+.Op Ar targets ...             \" [targets ...]
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+.Bl -tag -width "                 "  \" Begins a tagged list
+.It Fl h                 \"-a flag as a list item
+Shows help screen
+.It Fl v
+Verbose mode
+.It Fl V
+Verbose mode (sshlib)
+.It Fl s
+Scan mode
+.It Fl D
+Dry run
+.It Fl P
+Show progress bar
+.It Fl T Ar targets
+Targets file
+.It Fl C Ar combinations
+Username and password file
+.It Fl t Ar threads
+Max threads
+.It Fl o Ar output
+Output log filename
+.El                      \" Ends the list
+.Sh SEE ALSO
+.Xr ssh 1 ,
+.Xr ssh_config 5 ,
+.Xr sshd 8
+.\" .Sh BUGS              \" Document known, unremedied bugs
+.\" .Sh HISTORY           \" Document history if command behaves in a unique manner
+.Sh AUTHOR
+.Nm
+was written by Jorge Matricali <jorgematricali@gmail.com>.
+.Pp
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free
+Documentation License, Version 1.1 or any later version
+published by the Free Software Foundation; with no Invariant
+Sections, no Front-Cover Texts and no Back-Cover Texts.
