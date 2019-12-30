@@ -41,234 +41,240 @@ SOFTWARE.
 
 void print_banner()
 {
-    printf(
-        "\033[92m           _                _       _\n"
-        "          | |              | |     | |\n"
-        "\033[37m      ___\033[92m | |__  _ __ _   _| |_ ___| | ___ __ __ _  __ _\n"
-        "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
-        "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
-        "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
-        "              \033[0m\033[1mOpenSSH Brute force tool 0.5.0\033[0m\033[92m        __/ |\n"
-        "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n");
+	printf("\033[92m           _                _       _\n"
+	       "          | |              | |     | |\n"
+	       "\033[37m      ___\033[92m | |__  _ __ _   _| |_ ___| | ___ __ __ _  __ _\n"
+	       "\033[37m     / __|\033[92m| '_ \\| '__| | | | __/ _ \\ |/ / '__/ _` |/ _` |\n"
+	       "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
+	       "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
+	       "              \033[0m\033[1mOpenSSH Brute force tool 0.5.0\033[0m\033[92m        __/ |\n"
+	       "          \033[0m(c) Copyright 2014-2018 Jorge Matricali\033[92m  |___/\033[0m\n\n");
 }
 
-void usage(const char* p)
+void usage(const char *p)
 {
-    printf("\nusage: %s [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
-           "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n", p);
+	printf("\nusage: %s [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
+	       "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n",
+	       p);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    int opt;
-    int total = 0;
-    char* hostnames_filename = NULL;
-    char* combos_filename = NULL;
-    char* output_filename = NULL;
-    FILE* output = NULL;
-    char* g_blankpass_placeholder = "$BLANKPASS";
-    btkg_context_t context = { 3, 1, 0 };
-    struct timespec start, finish;
-    double elapsed;
-    struct rlimit limit;
+	int opt;
+	int total = 0;
+	char *hostnames_filename = NULL;
+	char *combos_filename = NULL;
+	char *output_filename = NULL;
+	FILE *output = NULL;
+	char *g_blankpass_placeholder = "$BLANKPASS";
+	btkg_context_t context = { 3, 1, 0 };
+	struct timespec start, finish;
+	double elapsed;
+	struct rlimit limit;
 
-    /* Increase the maximum file descriptor number that can be opened by this process. */
-    getrlimit(RLIMIT_NOFILE, &limit);
-    limit.rlim_cur = limit.rlim_max;
-    setrlimit(RLIMIT_NOFILE, &limit);
+	/* Increase the maximum file descriptor number that can be opened by this process. */
+	getrlimit(RLIMIT_NOFILE, &limit);
+	limit.rlim_cur = limit.rlim_max;
+	setrlimit(RLIMIT_NOFILE, &limit);
 
-    /* Calculate maximun number of threads. */
-    context.max_threads = limit.rlim_cur - 8;
+	/* Calculate maximun number of threads. */
+	context.max_threads = limit.rlim_cur - 8;
 
-    if (context.max_threads > 1024) {
-        context.max_threads = 1024;
-    }
+	if (context.max_threads > 1024) {
+		context.max_threads = 1024;
+	}
 
-    while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
-        switch (opt) {
-            case 'v':
-                context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
-                break;
-            case 'V':
-                context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
-                break;
-            case 'T':
-                hostnames_filename = optarg;
-                break;
-            case 'C':
-                combos_filename = optarg;
-                break;
-            case 't':
-                context.max_threads = atoi(optarg);
-                break;
-            case 'o':
-                output_filename = optarg;
-                break;
-            case 's':
-                context.perform_scan = 1;
-                break;
-            case 'D':
-                context.dry_run = 1;
-                break;
-            case 'P':
-                context.progress_bar = 1;
-                break;
-            case 'h':
-                print_banner();
-                usage(argv[0]);
-                printf("  -h                This help\n"
-                       "  -v                Verbose mode\n"
-                       "  -V                Verbose mode (sshlib)\n"
-                       "  -s                Scan mode\n"
-                       "  -D                Dry run\n"
-                       "  -P                Progress bar\n"
-                       "  -T <targets>      Targets file\n"
-                       "  -C <combinations> Username and password file\n"
-                       "  -t <threads>      Max threads\n"
-                       "  -o <output>       Output log file\n");
-                exit(EXIT_SUCCESS);
-            default:
-                usage(argv[0]);
-                exit(EXIT_FAILURE);
-        }
-    }
-    print_banner();
+	while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
+		switch (opt) {
+			case 'v':
+				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
+				break;
+			case 'V':
+				context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
+				break;
+			case 'T':
+				hostnames_filename = optarg;
+				break;
+			case 'C':
+				combos_filename = optarg;
+				break;
+			case 't':
+				context.max_threads = atoi(optarg);
+				break;
+			case 'o':
+				output_filename = optarg;
+				break;
+			case 's':
+				context.perform_scan = 1;
+				break;
+			case 'D':
+				context.dry_run = 1;
+				break;
+			case 'P':
+				context.progress_bar = 1;
+				break;
+			case 'h':
+				print_banner();
+				usage(argv[0]);
+				printf("  -h                This help\n"
+				       "  -v                Verbose mode\n"
+				       "  -V                Verbose mode (sshlib)\n"
+				       "  -s                Scan mode\n"
+				       "  -D                Dry run\n"
+				       "  -P                Progress bar\n"
+				       "  -T <targets>      Targets file\n"
+				       "  -C <combinations> Username and password file\n"
+				       "  -t <threads>      Max threads\n"
+				       "  -o <output>       Output log file\n");
+				exit(EXIT_SUCCESS);
+			default:
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+		}
+	}
+	print_banner();
 
-    /* Targets */
-    btkg_target_list_t target_list;
-    btkg_target_list_init(&target_list);
+	/* Targets */
+	btkg_target_list_t target_list;
+	btkg_target_list_init(&target_list);
 
-    while (optind < argc) {
-        btkg_target_t ret = target_parse(argv[optind]);
+	while (optind < argc) {
+		btkg_target_t ret = target_parse(argv[optind]);
 
-        if (ret.host == NULL) {
-            log_error("WARNING: An error ocurred parsing target '%s' on argument #%d", argv[optind], optind);
-            continue;
-        }
+		if (ret.host == NULL) {
+			log_error(
+				"WARNING: An error ocurred parsing target '%s' on argument #%d",
+				argv[optind], optind);
+			continue;
+		}
 
-        btkg_target_list_append_range(&target_list, ret.host, ret.port);
-        free(ret.host);
-        optind++;
-    }
-    if (target_list.targets == NULL && hostnames_filename == NULL) {
-        hostnames_filename = strdup("hostnames.txt");
-    }
-    if (hostnames_filename != NULL) {
-        btkg_target_list_load(&target_list, hostnames_filename);
-    }
+		btkg_target_list_append_range(&target_list, ret.host, ret.port);
+		free(ret.host);
+		optind++;
+	}
 
-    /* Load username/password combinations */
-    if (combos_filename == NULL) {
-        combos_filename = strdup("combos.txt");
-    }
-    wordlist_t combos = wordlist_load(combos_filename);
-    free(combos_filename);
+	if (target_list.targets == NULL && hostnames_filename == NULL)
+		hostnames_filename = strdup("hostnames.txt");
 
-    /* Calculate total attemps */
-    total = target_list.length * combos.length;
+	if (hostnames_filename != NULL)
+		btkg_target_list_load(&target_list, hostnames_filename);
 
-    printf("\nAmount of username/password combinations: %zu\n", combos.length);
-    printf("Number of targets: %zu\n", target_list.length);
-    printf("Total attemps: %d\n", total);
-    printf("Max threads: %d\n\n", context.max_threads);
+	if (combos_filename == NULL)
+		combos_filename = strdup("combos.txt");
 
-    if (total == 0) {
-        log_error("No work to do.");
-        exit(EXIT_FAILURE);
-    }
+	/* Load username/password combinations */
+	wordlist_t combos = wordlist_load(combos_filename);
+	free(combos_filename);
 
-    /* Output file */
-    if (output_filename != NULL) {
-        output = fopen(output_filename, "a");
-        if (output == NULL) {
-            log_error("Error opening output file. (%s)", output_filename);
-            exit(EXIT_FAILURE);
-        }
-    }
+	/* Calculate total attemps */
+	total = target_list.length * combos.length;
 
-    /* Port scan and honeypot detection */
-    if (context.perform_scan) {
-        log_info("Starting servers discoverage process...");
-        clock_gettime(CLOCK_MONOTONIC, &start);
-        detection_start(&context, &target_list, &target_list, context.max_threads);
-        clock_gettime(CLOCK_MONOTONIC, &finish);
-        elapsed = (finish.tv_sec - start.tv_sec);
-        elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
-        log_info("Detection process took %f seconds.", elapsed);
-        log_info("Number of targets after filtering: %zu.", target_list.length);
-    }
+	printf("\nAmount of username/password combinations: %zu\n",
+	       combos.length);
+	printf("Number of targets: %zu\n", target_list.length);
+	printf("Total attemps: %d\n", total);
+	printf("Max threads: %d\n\n", context.max_threads);
 
-    if (context.max_threads > target_list.length) {
-        log_info("Decreasing max threads to %zu.", target_list.length);
-        context.max_threads = target_list.length;
-    }
+	if (total == 0) {
+		log_error("No work to do.");
+		exit(EXIT_FAILURE);
+	}
 
-    /* Bruteforce */
-    pid_t pid = 0;
-    int p = 0;
-    int count = 0;
+	/* Output file */
+	if (output_filename != NULL) {
+		output = fopen(output_filename, "a");
+		if (output == NULL) {
+			log_error("Error opening output file. (%s)",
+				  output_filename);
+			exit(EXIT_FAILURE);
+		}
+	}
 
-    log_info("Starting brute-force process...");
-    clock_gettime(CLOCK_MONOTONIC, &start);
+	/* Port scan and honeypot detection */
+	if (context.perform_scan) {
+		log_info("Starting servers discoverage process...");
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		detection_start(&context, &target_list, &target_list,
+				context.max_threads);
+		clock_gettime(CLOCK_MONOTONIC, &finish);
+		elapsed = (finish.tv_sec - start.tv_sec);
+		elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+		log_info("Detection process took %f seconds.", elapsed);
+		log_info("Number of targets after filtering: %zu.",
+			 target_list.length);
+	}
 
-    for (int x = 0; x < combos.length; x++) {
-        char** login_data = str_split(combos.words[x], ' ');
-        if (login_data == NULL) {
-            continue;
-        }
-        if (strcmp(login_data[1], g_blankpass_placeholder) == 0) {
-            login_data[1] = strdup("");
-        }
-        for (int y = 0; y < target_list.length; y++) {
+	if (context.max_threads > target_list.length) {
+		log_info("Decreasing max threads to %zu.", target_list.length);
+		context.max_threads = target_list.length;
+	}
 
-            if (p >= context.max_threads) {
-                waitpid(-1, NULL, 0);
-                p--;
-            }
+	/* Bruteforce */
+	pid_t pid = 0;
+	int p = 0;
+	int count = 0;
 
-            btkg_target_t current_target = target_list.targets[y];
+	log_info("Starting brute-force process...");
+	clock_gettime(CLOCK_MONOTONIC, &start);
 
-            pid = fork();
+	for (int x = 0; x < combos.length; x++) {
+		char **login_data = str_split(combos.words[x], ' ');
+		if (login_data == NULL)
+			continue;
 
-            if (pid) {
-                p++;
-            } else if (pid == 0) {
-                if (!context.dry_run) {
-                    bruteforce_ssh_try_login(&context, current_target.host, current_target.port, login_data[0],
-                        login_data[1], count, total, output);
-                }
-                exit(EXIT_SUCCESS);
-            } else {
-                log_error("Fork failed!");
-            }
+		if (strcmp(login_data[1], g_blankpass_placeholder) == 0)
+			login_data[1] = strdup("");
 
-            count++;
-        }
-    }
+		for (int y = 0; y < target_list.length; y++) {
+			if (p >= context.max_threads) {
+				waitpid(-1, NULL, 0);
+				p--;
+			}
 
-    /* Wait until all forks finished her work*/
-    while (p > 0) {
-        waitpid(-1, NULL, 0);
-        --p;
-    }
+			btkg_target_t current_target = target_list.targets[y];
 
-    clock_gettime(CLOCK_MONOTONIC, &finish);
-    elapsed = (finish.tv_sec - start.tv_sec);
-    elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+			pid = fork();
 
-    if (context.progress_bar) {
-        progressbar_render(count, total, NULL, -1);
-    }
+			if (pid) {
+				p++;
+			} else if (pid == 0) {
+				if (!context.dry_run) {
+					bruteforce_ssh_try_login(
+						&context, current_target.host,
+						current_target.port,
+						login_data[0], login_data[1],
+						count, total, output);
+				}
+				exit(EXIT_SUCCESS);
+			} else {
+				log_error("Fork failed!");
+			}
 
-    log_info("Brute-force process took %f seconds.", elapsed);
+			count++;
+		}
+	}
 
-    pid = 0;
+	/* Wait until all forks finished her work*/
+	while (p > 0) {
+		waitpid(-1, NULL, 0);
+		--p;
+	}
 
-    wordlist_destroy(&combos);
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+	elapsed = (finish.tv_sec - start.tv_sec);
+	elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
 
-    if (output != NULL) {
-        fclose(output);
-    }
+	if (context.progress_bar)
+		progressbar_render(count, total, NULL, -1);
 
-    exit(EXIT_SUCCESS);
+	log_info("Brute-force process took %f seconds.", elapsed);
+
+	pid = 0;
+
+	wordlist_destroy(&combos);
+
+	if (output != NULL)
+		fclose(output);
+
+	exit(EXIT_SUCCESS);
 }

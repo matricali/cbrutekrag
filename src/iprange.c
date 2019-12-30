@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "iprange.h"
-
-#include <arpa/inet.h> /* ntohl */
 #include <errno.h> /* errno */
 #include <stdio.h>
 #include <stdlib.h> /* exit */
 #include <string.h> /* strchr */
+
+#include <arpa/inet.h> /* ntohl */
+
+#include "iprange.h"
 
 /**
  * Convert an A.B.C.D address into a 32-bit host-order value
