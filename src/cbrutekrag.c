@@ -22,6 +22,7 @@ SOFTWARE.
 
 #include <execinfo.h> /* backtrace, backtrace_symbols_fd */
 #include <getopt.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,16 +110,16 @@ int main(int argc, char **argv)
 				context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
 				break;
 			case 'T':
-				hostnames_filename = optarg;
+				hostnames_filename = strdup(optarg);
 				break;
 			case 'C':
-				combos_filename = optarg;
+				combos_filename = strdup(optarg);
 				break;
 			case 't':
 				context.max_threads = atoi(optarg);
 				break;
 			case 'o':
-				output_filename = optarg;
+				output_filename = strdup(optarg);
 				break;
 			case 's':
 				context.perform_scan = 1;
@@ -172,8 +173,10 @@ int main(int argc, char **argv)
 	if (target_list.targets == NULL && hostnames_filename == NULL)
 		hostnames_filename = strdup("hostnames.txt");
 
-	if (hostnames_filename != NULL)
+	if (hostnames_filename != NULL) {
 		btkg_target_list_load(&target_list, hostnames_filename);
+		free(hostnames_filename);
+	}
 
 	if (combos_filename == NULL)
 		combos_filename = strdup("combos.txt");
