@@ -1,7 +1,7 @@
 CC	= gcc
 
 CFLAGS	+= -Wall -std=gnu99 -O3 -Iinclude -g
-LDFLAGS	+= -lpthread -lssh -lrt
+LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
 
 NAME	= cbrutekrag
 SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c target.c

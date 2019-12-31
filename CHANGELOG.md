@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shows time elapsed on each phase.
 - Increase the maximum file descriptor number that can be opened by this process.
 - manpages (`man cbrutekrag`)
+- Debug bracktrace symbols
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).

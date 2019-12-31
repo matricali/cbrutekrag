@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <execinfo.h> /* backtrace, backtrace_symbols_fd */
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ SOFTWARE.
 #include <time.h> /* clock */
 #include <unistd.h> /* fork */
 
-#include <sys/resource.h>
+#include <sys/resource.h> /* rlimit */
 #include <sys/wait.h> /* waitpid */
 
 #include "bruteforce_ssh.h"
@@ -58,6 +59,18 @@ void usage(const char *p)
 	       p);
 }
 
+void err_handler(int sig)
+{
+	void *array[10];
+	size_t size;
+
+	size = backtrace(array, 10);
+
+	log_error("Error: signal %d:\n", sig);
+	backtrace_symbols_fd(array, size, STDERR_FILENO);
+	exit(EXIT_FAILURE);
+}
+
 int main(int argc, char **argv)
 {
 	int opt;
@@ -71,6 +84,9 @@ int main(int argc, char **argv)
 	struct timespec start, finish;
 	double elapsed;
 	struct rlimit limit;
+
+	/* Error handler */
+	signal(SIGSEGV, err_handler);
 
 	/* Increase the maximum file descriptor number that can be opened by this process. */
 	getrlimit(RLIMIT_NOFILE, &limit);
