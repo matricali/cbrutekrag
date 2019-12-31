@@ -88,6 +88,9 @@ int main(int argc, char **argv)
 	/* Error handler */
 	signal(SIGSEGV, err_handler);
 
+	/* Ignore SIGPIPE */
+	signal(SIGPIPE, SIG_IGN);
+
 	/* Increase the maximum file descriptor number that can be opened by this process. */
 	getrlimit(RLIMIT_NOFILE, &limit);
 	limit.rlim_cur = limit.rlim_max;
