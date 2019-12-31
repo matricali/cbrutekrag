@@ -28,7 +28,7 @@ SOFTWARE.
 #include "log.h"
 #include "wordlist.h"
 
-wordlist_t wordlist_load(char *filename)
+wordlist_t wordlist_load(const char *filename)
 {
 	FILE *fp;
 	wordlist_t ret;

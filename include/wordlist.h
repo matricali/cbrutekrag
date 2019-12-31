@@ -28,7 +28,7 @@ typedef struct {
 	char **words;
 } wordlist_t;
 
-wordlist_t wordlist_load(char *filename);
+wordlist_t wordlist_load(const char *filename);
 
 int wordlist_append(wordlist_t *wordlist, const char *string);
 
