@@ -33,6 +33,7 @@ typedef struct {
 	int verbose;
 	int dry_run;
 	int perform_scan;
+	int non_openssh;
 } btkg_context_t;
 
 void print_banner();

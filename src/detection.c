@@ -45,7 +45,7 @@ btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
-			 unsigned int tm)
+			 unsigned int tm, int flags)
 {
 	struct sockaddr_in addr;
 	int sockfd, ret;
@@ -149,6 +149,19 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 		strncpy(banner, buffer, banner_len);
 	}
 
+	log_debug("%s:%d - %s", serverAddr, serverPort, banner);
+	if (strstr(banner, "SSH-2.0-OpenSSH") != banner) {
+		/* It's not a OpenSSH server */
+		log_warn("[!] %s:%d - %s "
+			 "\033[91mIt's not a OpenSSH server\033[0m",
+			 serverAddr, serverPort, banner);
+		if (! flags) {
+			close(sockfd);
+			sockfd = 0;
+			return -1;
+		}
+	}
+
 	char *pkt1 = "SSH-2.0-OpenSSH_7.5";
 	char *pkt2 = "\n";
 	char *pkt3 = "asd\n      ";
@@ -246,7 +259,8 @@ void *detection_process(void *ptr)
 		}
 
 		if (detection_detect_ssh(current_target.host,
-					 current_target.port, 1) == 0) {
+					 current_target.port, 1,
+					 context->non_openssh) == 0) {
 			pthread_mutex_lock(&mutex);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);

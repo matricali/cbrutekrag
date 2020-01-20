@@ -103,8 +103,11 @@ int main(int argc, char **argv)
 	context.max_threads =
 		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
-	while ((opt = getopt(argc, argv, "T:C:t:o:DsvVPh")) != -1) {
+	while ((opt = getopt(argc, argv, "aT:C:t:o:DsvVPh")) != -1) {
 		switch (opt) {
+			case 'a':
+				context.non_openssh = 1;
+				break;
 			case 'v':
 				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
 				g_verbose = context.verbose;
@@ -145,7 +148,8 @@ int main(int argc, char **argv)
 				       "  -T <targets>      Targets file\n"
 				       "  -C <combinations> Username and password file\n"
 				       "  -t <threads>      Max threads\n"
-				       "  -o <output>       Output log file\n");
+				       "  -o <output>       Output log file\n"
+				       "  -a                Accepts non OpenSSH servers\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);

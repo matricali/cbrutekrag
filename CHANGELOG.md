@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Increase the maximum file descriptor number that can be opened by this process.
 - manpages (`man cbrutekrag`)
 - Debug bracktrace symbols
+- Ignore non OpenSSH servers as default (argument flag -a to accept)
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
