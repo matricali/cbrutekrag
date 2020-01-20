@@ -214,13 +214,13 @@ void *detection_process(void *ptr)
 
 	for (;;) {
 		pthread_mutex_lock(&mutex);
-		if (scan_counter >= target_list->length - 1) {
+		if (scan_counter >= target_list->length) {
 			pthread_mutex_unlock(&mutex);
 			break;
 		}
-		scan_counter++;
 		btkg_target_t current_target =
 			target_list->targets[scan_counter];
+		scan_counter++;
 
 		if (args->context->progress_bar) {
 			char str[40];
