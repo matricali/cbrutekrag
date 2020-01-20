@@ -213,6 +213,7 @@ void *detection_process(void *ptr)
 {
 	btkg_detection_args_t *args = (btkg_detection_args_t *)ptr;
 	btkg_target_list_t *target_list = args->target_list;
+	btkg_context_t *context = args->context;
 
 	for (;;) {
 		pthread_mutex_lock(&mutex);
@@ -224,7 +225,7 @@ void *detection_process(void *ptr)
 			target_list->targets[scan_counter];
 		scan_counter++;
 
-		if (args->context->progress_bar) {
+		if (context->progress_bar) {
 			char str[40];
 			snprintf(str, 40, "[%d/%zu] %zu OK - %s:%d",
 				 scan_counter, target_list->length,
@@ -235,7 +236,7 @@ void *detection_process(void *ptr)
 		}
 		pthread_mutex_unlock(&mutex);
 
-		if (args->context->dry_run) {
+		if (context->dry_run) {
 			pthread_mutex_lock(&mutex);
 			log_info("Scanning %s:%d", current_target.host,
 				 current_target.port);
