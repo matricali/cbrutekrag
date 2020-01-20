@@ -41,6 +41,8 @@ SOFTWARE.
 #include "target.h"
 #include "wordlist.h"
 
+int g_verbose = 0;
+
 void print_banner()
 {
 	printf("\033[92m           _                _       _\n"
@@ -105,6 +107,7 @@ int main(int argc, char **argv)
 		switch (opt) {
 			case 'v':
 				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
+				g_verbose = context.verbose;
 				break;
 			case 'V':
 				context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
