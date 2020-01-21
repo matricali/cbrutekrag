@@ -39,6 +39,7 @@ SOFTWARE.
 #include "wordlist.h"
 
 #define BUF_SIZE 1024
+#define BANNER_LEN 256
 
 int scan_counter = 0;
 btkg_target_list_t filtered;
@@ -50,7 +51,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 	struct sockaddr_in addr;
 	int sockfd, ret;
 	char buffer[BUF_SIZE];
-	char *banner = "";
+	char banner[BANNER_LEN];
 	size_t banner_len;
 	fd_set fdset;
 
@@ -129,6 +130,7 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 	memset(buffer, 0, BUF_SIZE);
 
 	// RECIBIR BANNER
+	banner[0] = 0;
 	ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
 	if (ret < 0) {
 		log_debug("%s:%d - Error receiving banner!", serverAddr,
@@ -138,15 +140,12 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 		return -1;
 	}
 
-	buffer[strcspn(buffer, "\r\n")] = 0;
-	banner_len = strlen(buffer);
+	banner_len = strcspn(buffer, "\r\n");
 	if (banner_len > 0) {
-		banner = calloc(banner_len, 1);
-		if (banner == NULL) {
-			log_error("calloc failed");
-			exit(EXIT_FAILURE);
-		}
+		if (banner_len > BANNER_LEN)
+			banner_len = BANNER_LEN;
 		strncpy(banner, buffer, banner_len);
+		banner[banner_len] = 0;
 	}
 
 	if (strstr(banner, "SSH-") != banner) {
