@@ -149,6 +149,16 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 		strncpy(banner, buffer, banner_len);
 	}
 
+	if (strstr(banner, "SSH-") != banner) {
+		/* It's not a SSH server */
+		log_warn("[!] %s:%d - "
+			 "\033[91mIt's not a SSH server (tcpwrapped)\033[0m skipping.",
+			 serverAddr, serverPort);
+		close(sockfd);
+		sockfd = 0;
+		return -1;
+	}
+
 	log_debug("%s:%d - %s", serverAddr, serverPort, banner);
 	if (strstr(banner, "SSH-2.0-OpenSSH") != banner) {
 		/* It's not a OpenSSH server */
