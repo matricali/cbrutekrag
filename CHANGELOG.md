@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
 - The default maximum number of threads is calculated automatically.
 - Allow servers detected as honeypot (argument flag -A)
+- Improved detection of non-eligible servers.
 
 ### Removed
 - Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Wait until all forks finished her work.
 - Ignore SIGPIPE
+- Fixed false positives in servers which login are interactive.
 
 ## [0.4.0] - 2018-09-02
 ### Added

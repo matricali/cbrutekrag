@@ -72,32 +72,38 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 		return -1;
 	}
 
-	r = ssh_userauth_none(my_ssh_session, username);
-	if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
+	r = ssh_userauth_none(my_ssh_session, NULL);
+
+	if (r == SSH_AUTH_SUCCESS) {
+		log_debug("[!] %s:%d - Server without authentication.",
+			  hostname, port);
 		ssh_disconnect(my_ssh_session);
 		ssh_free(my_ssh_session);
-		return r;
+
+		return -1;
+	}
+
+	if (r == SSH_AUTH_ERROR) {
+		log_debug(
+			"[!] %s:%d - ssh_userauth_none(): A serious error happened.",
+			hostname, port);
+		ssh_disconnect(my_ssh_session);
+		ssh_free(my_ssh_session);
+
+		return -1;
 	}
 
 	int method = 0;
 
 	method = ssh_userauth_list(my_ssh_session, NULL);
 
-	if (method & SSH_AUTH_METHOD_NONE) {
-		r = ssh_userauth_none(my_ssh_session, NULL);
-		if (r == SSH_AUTH_SUCCESS) {
-			ssh_disconnect(my_ssh_session);
-			ssh_free(my_ssh_session);
-			return r;
-		}
-	}
-
 	if (method & SSH_AUTH_METHOD_PASSWORD) {
 		r = ssh_userauth_password(my_ssh_session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
 			ssh_disconnect(my_ssh_session);
 			ssh_free(my_ssh_session);
-			return r;
+
+			return 0;
 		}
 	}
 
