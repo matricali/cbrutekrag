@@ -165,11 +165,12 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 			 "\033[91mIt's not a OpenSSH server\033[0m%s",
 			 serverAddr, serverPort, banner,
 			 (ctx->non_openssh != 1) ? " skipping." : ".");
-		if (ctx->non_openssh != 1) {
-			close(sockfd);
-			sockfd = 0;
+
+		close(sockfd);
+		sockfd = 0;
+
+		if (ctx->non_openssh != 1)
 			return -1;
-		}
 	} else {
 		/* We'll check if it's a REAL OpenSSH Server */
 		char *pkt1 = "SSH-2.0-OpenSSH_7.5";
