@@ -20,8 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <libssh/libssh.h>
 #include <stdio.h>
+
+#include <libssh/libssh.h>
 
 #include "cbrutekrag.h"
 #include "log.h"

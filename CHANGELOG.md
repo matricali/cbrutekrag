@@ -16,10 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debug bracktrace symbols
 - Ignore as default non OpenSSH servers (argument flag -a to accept)
 - Detects and skip NON SSH servers (tcpwrapped).
+- Ignoring servers that don't support password authentication.
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
 - The default maximum number of threads is calculated automatically.
+- Allow servers detected as honeypot (argument flag -A)
 
 ### Removed
 - Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)

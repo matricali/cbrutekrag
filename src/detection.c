@@ -31,6 +31,8 @@ SOFTWARE.
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include <libssh/libssh.h>
+
 #include "cbrutekrag.h"
 #include "detection.h"
 #include "log.h"
@@ -44,6 +46,70 @@ SOFTWARE.
 int scan_counter = 0;
 btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+const long timeout = 5;
+
+int detection_login_methods(btkg_context_t *context, const char *hostname,
+			    uint16_t port)
+{
+	ssh_session session;
+	int verbosity = 0;
+
+	if (context->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
+		verbosity = SSH_LOG_PROTOCOL;
+	} else {
+		verbosity = SSH_LOG_NOLOG;
+	}
+
+	session = ssh_new();
+
+	if (session == NULL) {
+		log_error("Cant create SSH session.");
+		return -1;
+	}
+
+	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
+	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+	ssh_options_set(session, SSH_OPTIONS_PORT, &port);
+#if LIBSSH_VERSION_MAYOR > 0 ||                                                \
+	(LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
+	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
+	ssh_options_set(session, SSH_OPTIONS_HOSTKEYS, "none");
+#endif
+	ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &timeout);
+	ssh_options_set(session, SSH_OPTIONS_USER, NULL);
+
+	int r;
+	r = ssh_connect(session);
+	if (r != SSH_OK) {
+		ssh_free(session);
+		if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
+			log_error("[!] Error connecting to %s:%d %s.", hostname,
+				  port, ssh_get_error(session));
+		}
+		return -1;
+	}
+
+	r = ssh_userauth_none(session, NULL);
+	if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
+		ssh_disconnect(session);
+		ssh_free(session);
+		return r;
+	}
+
+	int method = 0;
+
+	method = ssh_userauth_list(session, NULL);
+
+	if (method & SSH_AUTH_METHOD_PASSWORD) {
+		ssh_disconnect(session);
+		ssh_free(session);
+		return 0;
+	}
+
+	ssh_disconnect(session);
+	ssh_free(session);
+	return -1;
+}
 
 int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 			 uint16_t serverPort, unsigned int tm)
@@ -233,6 +299,13 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 			if (ctx->allow_honeypots != 1)
 				return -1;
 		}
+	}
+
+	if (detection_login_methods(ctx, serverAddr, serverPort) != 0) {
+		log_warn("[!] %s:%d - %s \033[91mThe server doesn't "
+			 "accept password authentication method\033[0m",
+			 serverAddr, serverPort, banner);
+		return -1;
 	}
 
 	return 0;
