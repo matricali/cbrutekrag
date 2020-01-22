@@ -90,10 +90,25 @@ int detection_login_methods(btkg_context_t *context, const char *hostname,
 	}
 
 	r = ssh_userauth_none(session, NULL);
-	if (r == SSH_AUTH_SUCCESS || r == SSH_AUTH_ERROR) {
+
+	if (r == SSH_AUTH_SUCCESS) {
+		log_debug(
+			"[!] %s:%d - Server without authentication. (not eligible)",
+			hostname, port);
 		ssh_disconnect(session);
 		ssh_free(session);
-		return r;
+
+		return -1;
+	}
+
+	if (r == SSH_AUTH_ERROR) {
+		log_debug(
+			"[!] %s:%d - ssh_userauth_none(): A serious error happened. (not eligible)",
+			hostname, port);
+		ssh_disconnect(session);
+		ssh_free(session);
+
+		return -1;
 	}
 
 	int method = 0;
