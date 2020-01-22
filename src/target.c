@@ -31,7 +31,7 @@ SOFTWARE.
 /**
  * Check if given port is valid
  */
-int btkg_target_port_is_valid(int port)
+int btkg_target_port_is_valid(const uint16_t port)
 {
 	return port >= 1 && port <= 65535;
 }
@@ -54,7 +54,7 @@ btkg_target_t target_parse(char *line)
 	char *ptr = strtok(line, ":");
 
 	char *host = NULL;
-	int port = 0;
+	uint16_t port = 0;
 
 	if (ptr != NULL) {
 		host = strdup(ptr);
@@ -99,7 +99,7 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
  * Parse CIDR block and appends as many btkg_target_t as needed into the given btkg_target_list_t
  */
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
-				   const char *range, unsigned int port)
+				   const char *range, uint16_t port)
 {
 	char *netmask_s;
 	netmask_s = strchr(range, '/');

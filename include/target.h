@@ -25,7 +25,7 @@ SOFTWARE.
 
 typedef struct {
 	char *host;
-	unsigned int port;
+	uint16_t port;
 } btkg_target_t;
 
 typedef struct {
@@ -33,7 +33,7 @@ typedef struct {
 	btkg_target_t *targets;
 } btkg_target_list_t;
 
-int btkg_target_port_is_valid(int port);
+int btkg_target_port_is_valid(const uint16_t port);
 
 void btkg_target_list_init(btkg_target_list_t *target_list);
 
@@ -41,7 +41,7 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
 			     btkg_target_t target);
 
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
-				   const char *range, unsigned int port);
+				   const char *range, uint16_t port);
 
 void btkg_target_list_load(btkg_target_list_t *target_list, char *filename);
 

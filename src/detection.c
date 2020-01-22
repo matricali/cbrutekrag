@@ -126,8 +126,8 @@ int detection_login_methods(btkg_context_t *context, const char *hostname,
 	return -1;
 }
 
-int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
-			 uint16_t serverPort, unsigned int tm)
+int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
+			 uint16_t port, long tm)
 {
 	struct sockaddr_in addr;
 	int sockfd, ret;
@@ -146,8 +146,8 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(serverPort);
-	addr.sin_addr.s_addr = inet_addr(serverAddr);
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = inet_addr(hostname);
 
 	ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
 
@@ -167,7 +167,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		if (so_error != 0) {
 			log_debug(
 				"[!] %s:%d - Error connecting to the server! (%s)",
-				serverAddr, serverPort, strerror(so_error));
+				hostname, port, strerror(so_error));
 			close(sockfd);
 			sockfd = 0;
 			return -1;
@@ -196,7 +196,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		return -1;
 	}
 
-	log_debug("[+] %s:%d - Connected.", serverAddr, serverPort);
+	log_debug("[+] %s:%d - Connected.", hostname, port);
 
 	/* Send/Receive timeout */
 	struct timeval timeout;
@@ -214,8 +214,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 	banner[0] = 0;
 	ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
 	if (ret < 0) {
-		log_debug("%s:%d - Error receiving banner!", serverAddr,
-			  serverPort);
+		log_debug("%s:%d - Error receiving banner!", hostname, port);
 		close(sockfd);
 		sockfd = 0;
 		return -1;
@@ -234,7 +233,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		log_warn(
 			"[!] %s:%d - "
 			"\033[91mIt's not a SSH server (tcpwrapped)\033[0m skipping.",
-			serverAddr, serverPort);
+			hostname, port);
 		close(sockfd);
 		sockfd = 0;
 		return -1;
@@ -244,7 +243,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		/* It's not a OpenSSH server */
 		log_warn("[!] %s:%d - %s "
 			 "\033[91mIt's not a OpenSSH server\033[0m%s",
-			 serverAddr, serverPort, banner,
+			 hostname, port, banner,
 			 (ctx->non_openssh != 1) ? " skipping." : ".");
 
 		close(sockfd);
@@ -264,7 +263,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 
 		if (ret < 0) {
 			log_error("[!] %s:%d - Error sending data pkt1!!",
-				  serverAddr, serverPort);
+				  hostname, port);
 			close(sockfd);
 			sockfd = 0;
 			return -1;
@@ -275,7 +274,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 
 		if (ret < 0) {
 			log_error("[!] %s:%d - Error sending data pkt2!!",
-				  serverAddr, serverPort);
+				  hostname, port);
 			close(sockfd);
 			sockfd = 0;
 			return -1;
@@ -286,7 +285,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 
 		if (ret < 0) {
 			log_error("[!] %s:%d - Error sending data pkt3!!",
-				  serverAddr, serverPort);
+				  hostname, port);
 			close(sockfd);
 			sockfd = 0;
 			return -1;
@@ -295,7 +294,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
 		if (ret < 0) {
 			log_error("[!] %s:%d - Error receiving response!!",
-				  serverAddr, serverPort);
+				  hostname, port);
 			close(sockfd);
 			sockfd = 0;
 			return -1;
@@ -307,7 +306,7 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		if (strstr(buffer, search) == NULL) {
 			log_warn(
 				"[!] %s:%d - %s \033[91mPOSSIBLE HONEYPOT!\033[0m%s",
-				serverAddr, serverPort, banner,
+				hostname, port, banner,
 				(ctx->allow_honeypots != 1) ? " skipping." :
 							      ".");
 
@@ -316,12 +315,14 @@ int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
 		}
 	}
 
-	if (detection_login_methods(ctx, serverAddr, serverPort) != 0) {
+	if (detection_login_methods(ctx, hostname, port) != 0) {
 		log_warn("[!] %s:%d - %s \033[91mThe server doesn't "
 			 "accept password authentication method\033[0m",
-			 serverAddr, serverPort, banner);
+			 hostname, port, banner);
 		return -1;
 	}
+
+	log_info("[!] %s:%d - %s", hostname, port, banner);
 
 	return 0;
 }

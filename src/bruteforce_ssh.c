@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include <libssh/libssh.h>
@@ -31,7 +32,7 @@ SOFTWARE.
 int g_timeout;
 
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
-			 unsigned int port, const char *username,
+			 uint16_t port, const char *username,
 			 const char *password)
 {
 	ssh_session my_ssh_session;
@@ -113,7 +114,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 }
 
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
-			     const int port, const char *username,
+			     const uint16_t port, const char *username,
 			     const char *password, int count, int total,
 			     FILE *output)
 {

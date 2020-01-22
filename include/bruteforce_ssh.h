@@ -23,6 +23,8 @@ SOFTWARE.
 #ifndef BRUTEFORCE_SSH_H
 #define BRUTEFORCE_SSH_H
 
+#include <stdint.h>
+
 #include "cbrutekrag.h"
 #include "target.h"
 #include "wordlist.h"
@@ -33,11 +35,11 @@ typedef struct {
 } btkg_bruteforce_args_t;
 
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
-			 unsigned int port, const char *username,
+			 uint16_t port, const char *username,
 			 const char *password);
 
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
-			     const int port, const char *username,
+			     const uint16_t port, const char *username,
 			     const char *password, int count, int total,
 			     FILE *output);
 
