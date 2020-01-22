@@ -23,6 +23,8 @@ SOFTWARE.
 #ifndef DETECTION_H
 #define DETECTION_H
 
+#include <stdint.h>
+
 #include "target.h"
 
 typedef struct {
