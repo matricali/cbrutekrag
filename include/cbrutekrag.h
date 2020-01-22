@@ -34,6 +34,7 @@ typedef struct {
 	int dry_run;
 	int perform_scan;
 	int non_openssh;
+	int allow_honeypots;
 } btkg_context_t;
 
 void print_banner();

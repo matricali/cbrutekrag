@@ -30,8 +30,8 @@ typedef struct {
 	btkg_target_list_t *target_list;
 } btkg_detection_args_t;
 
-int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
-			 unsigned int tm, int flags);
+int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
+			 uint16_t serverPort, unsigned int tm);
 
 void *detection_process(void *ptr);
 

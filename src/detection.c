@@ -45,8 +45,8 @@ int scan_counter = 0;
 btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
-			 unsigned int tm, int flags)
+int detection_detect_ssh(btkg_context_t *ctx, char *serverAddr,
+			 uint16_t serverPort, unsigned int tm)
 {
 	struct sockaddr_in addr;
 	int sockfd, ret;
@@ -150,84 +150,90 @@ int detection_detect_ssh(char *serverAddr, unsigned int serverPort,
 
 	if (strstr(banner, "SSH-") != banner) {
 		/* It's not a SSH server */
-		log_warn("[!] %s:%d - "
-			 "\033[91mIt's not a SSH server (tcpwrapped)\033[0m skipping.",
-			 serverAddr, serverPort);
+		log_warn(
+			"[!] %s:%d - "
+			"\033[91mIt's not a SSH server (tcpwrapped)\033[0m skipping.",
+			serverAddr, serverPort);
 		close(sockfd);
 		sockfd = 0;
 		return -1;
 	}
 
-	log_debug("%s:%d - %s", serverAddr, serverPort, banner);
 	if (strstr(banner, "SSH-2.0-OpenSSH") != banner) {
 		/* It's not a OpenSSH server */
 		log_warn("[!] %s:%d - %s "
-			 "\033[91mIt's not a OpenSSH server\033[0m",
-			 serverAddr, serverPort, banner);
-		if (! flags) {
+			 "\033[91mIt's not a OpenSSH server\033[0m%s",
+			 serverAddr, serverPort, banner,
+			 (ctx->non_openssh != 1) ? " skipping." : ".");
+		if (ctx->non_openssh != 1) {
 			close(sockfd);
 			sockfd = 0;
 			return -1;
 		}
-	}
+	} else {
+		/* We'll check if it's a REAL OpenSSH Server */
+		char *pkt1 = "SSH-2.0-OpenSSH_7.5";
+		char *pkt2 = "\n";
+		char *pkt3 = "asd\n      ";
+		char *search = "Protocol mismatch.";
 
-	char *pkt1 = "SSH-2.0-OpenSSH_7.5";
-	char *pkt2 = "\n";
-	char *pkt3 = "asd\n      ";
-	char *search = "Protocol mismatch.";
+		ret = sendto(sockfd, pkt1, sizeof(pkt1), 0,
+			     (struct sockaddr *)&addr, sizeof(addr));
 
-	ret = sendto(sockfd, pkt1, sizeof(pkt1), 0, (struct sockaddr *)&addr,
-		     sizeof(addr));
+		if (ret < 0) {
+			log_error("[!] %s:%d - Error sending data pkt1!!",
+				  serverAddr, serverPort);
+			close(sockfd);
+			sockfd = 0;
+			return -1;
+		}
 
-	if (ret < 0) {
-		log_error("[!] %s:%d - Error sending data pkt1!!", serverAddr,
-			  serverPort);
+		ret = sendto(sockfd, pkt2, sizeof(pkt2), 0,
+			     (struct sockaddr *)&addr, sizeof(addr));
+
+		if (ret < 0) {
+			log_error("[!] %s:%d - Error sending data pkt2!!",
+				  serverAddr, serverPort);
+			close(sockfd);
+			sockfd = 0;
+			return -1;
+		}
+
+		ret = sendto(sockfd, pkt3, sizeof(pkt3), 0,
+			     (struct sockaddr *)&addr, sizeof(addr));
+
+		if (ret < 0) {
+			log_error("[!] %s:%d - Error sending data pkt3!!",
+				  serverAddr, serverPort);
+			close(sockfd);
+			sockfd = 0;
+			return -1;
+		}
+
+		ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
+		if (ret < 0) {
+			log_error("[!] %s:%d - Error receiving response!!",
+				  serverAddr, serverPort);
+			close(sockfd);
+			sockfd = 0;
+			return -1;
+		}
+
 		close(sockfd);
 		sockfd = 0;
-		return -1;
+
+		if (strstr(buffer, search) == NULL) {
+			log_warn(
+				"[!] %s:%d - %s \033[91mPOSSIBLE HONEYPOT!\033[0m%s",
+				serverAddr, serverPort, banner,
+				(ctx->allow_honeypots != 1) ? " skipping." :
+							      ".");
+
+			if (ctx->allow_honeypots != 1)
+				return -1;
+		}
 	}
 
-	ret = sendto(sockfd, pkt2, sizeof(pkt2), 0, (struct sockaddr *)&addr,
-		     sizeof(addr));
-
-	if (ret < 0) {
-		log_error("[!] %s:%d - Error sending data pkt2!!", serverAddr,
-			  serverPort);
-		close(sockfd);
-		sockfd = 0;
-		return -1;
-	}
-
-	ret = sendto(sockfd, pkt3, sizeof(pkt3), 0, (struct sockaddr *)&addr,
-		     sizeof(addr));
-
-	if (ret < 0) {
-		log_error("[!] %s:%d - Error sending data pkt3!!", serverAddr,
-			  serverPort);
-		close(sockfd);
-		sockfd = 0;
-		return -1;
-	}
-
-	ret = recvfrom(sockfd, buffer, BUF_SIZE, 0, NULL, NULL);
-	if (ret < 0) {
-		log_error("[!] %s:%d - Error receiving response!!", serverAddr,
-			  serverPort);
-		close(sockfd);
-		sockfd = 0;
-		return -1;
-	}
-
-	close(sockfd);
-	sockfd = 0;
-
-	if (strstr(buffer, search) != NULL) {
-		log_debug("[+] %s:%d - %s", serverAddr, serverPort, banner);
-		return 0;
-	}
-
-	log_warn("[!] %s:%d - \033[91m(POSSIBLE HONEYPOT!)\033[0m %s",
-		 serverAddr, serverPort, banner);
 	return 0;
 }
 
@@ -267,9 +273,8 @@ void *detection_process(void *ptr)
 			continue;
 		}
 
-		if (detection_detect_ssh(current_target.host,
-					 current_target.port, 1,
-					 context->non_openssh) == 0) {
+		if (detection_detect_ssh(context, current_target.host,
+					 current_target.port, 1) == 0) {
 			pthread_mutex_lock(&mutex);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);

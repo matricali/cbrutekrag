@@ -7,7 +7,7 @@
 https://github.com/matricali/cbrutekrag
 .Sh SYNOPSIS                \" Section Header - required - don't modify
 .Nm
-.Op Fl DasvVPh               \" [-DssvVPh]
+.Op Fl aADsvVPh               \" [-aADsvVPh]
 .Op Fl t Ar threads         \" [-t threads]
 .Op Fl T Ar combinations    \" [-T targets]
 .Op Fl C Ar combinations    \" [-C combinations]
@@ -37,6 +37,8 @@ Max threads
 Output log filename
 .It Fl a
 Accepts non OpenSSH servers.
+.It Fl A
+Allow servers detected as honeypots.
 .El                      \" Ends the list
 .Sh SEE ALSO
 .Xr ssh 1 ,

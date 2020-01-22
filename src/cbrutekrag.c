@@ -57,7 +57,7 @@ void print_banner()
 
 void usage(const char *p)
 {
-	printf("\nusage: %s [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
+	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
 	       "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n",
 	       p);
 }
@@ -103,10 +103,13 @@ int main(int argc, char **argv)
 	context.max_threads =
 		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
-	while ((opt = getopt(argc, argv, "aT:C:t:o:DsvVPh")) != -1) {
+	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPh")) != -1) {
 		switch (opt) {
 			case 'a':
 				context.non_openssh = 1;
+				break;
+			case 'A':
+				context.allow_honeypots = 1;
 				break;
 			case 'v':
 				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
@@ -149,7 +152,8 @@ int main(int argc, char **argv)
 				       "  -C <combinations> Username and password file\n"
 				       "  -t <threads>      Max threads\n"
 				       "  -o <output>       Output log file\n"
-				       "  -a                Accepts non OpenSSH servers\n");
+				       "  -a                Accepts non OpenSSH servers\n"
+				       "  -A                Allow servers detected as honeypots.\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);

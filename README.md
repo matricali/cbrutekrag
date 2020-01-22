@@ -34,7 +34,7 @@ $ cbrutekrag -h
       (c) Copyright 2014-2019 Jorge Matricali  |___/
 
 
-usage: ./cbrutekrag [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]
+usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]
 		[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
 
   -h                This help
@@ -47,6 +47,8 @@ usage: ./cbrutekrag [-h] [-v] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]
   -C <combinations> Username and password file
   -t <threads>      Max threads
   -o <output>       Output log file
+  -a                Accepts non OpenSSH servers
+  -A                Allow servers detected as honeypots.
 ```
 
 ## Example usages
