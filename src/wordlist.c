@@ -47,6 +47,8 @@ wordlist_t wordlist_load(const char *filename)
 	}
 
 	for (int i = 0; (read = getline(&temp, &len, fp)) != -1; i++) {
+		if (read == 1 && temp[0] == '\n')
+			continue;
 		strtok(temp, "\n");
 		wordlist_append(&ret, temp);
 	}

@@ -258,12 +258,16 @@ int main(int argc, char **argv)
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	for (int x = 0; x < combos.length; x++) {
-		char **login_data = str_split(combos.words[x], ' ');
-		if (login_data == NULL)
+		char *username = strtok(combos.words[x], " ");
+		if (username == NULL)
 			continue;
 
-		if (strcmp(login_data[1], g_blankpass_placeholder) == 0)
-			login_data[1] = strdup("");
+		char *password = strtok(NULL, " ");
+		if (password == NULL)
+			continue;
+
+		if (strcmp(password, g_blankpass_placeholder) == 0)
+			password = strdup("");
 
 		for (int y = 0; y < target_list.length; y++) {
 			if (p >= context.max_threads) {
@@ -281,9 +285,8 @@ int main(int argc, char **argv)
 				if (!context.dry_run) {
 					bruteforce_ssh_try_login(
 						&context, current_target.host,
-						current_target.port,
-						login_data[0], login_data[1],
-						count, total, output);
+						current_target.port, username,
+						password, count, total, output);
 				}
 				exit(EXIT_SUCCESS);
 			} else {
