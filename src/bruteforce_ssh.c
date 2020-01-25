@@ -115,7 +115,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 			     const uint16_t port, const char *username,
-			     const char *password, int count, int total,
+			     const char *password, size_t count, size_t total,
 			     FILE *output)
 {
 	int ret = bruteforce_ssh_login(context, hostname, port, username,
@@ -135,7 +135,7 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 
 	if (context->progress_bar) {
 		char bar_suffix[50];
-		sprintf(bar_suffix, "[%d] %s:%d %s %s", count, hostname, port,
+		sprintf(bar_suffix, "[%zu] %s:%d %s %s", count, hostname, port,
 			username, password);
 		progressbar_render(count, total, bar_suffix, -1);
 	}

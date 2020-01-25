@@ -44,6 +44,11 @@ void print_output(int level, const char *file, int line, const char *head,
 	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
 	fprintf(stream, "\033[2K\r%s[%s] ", head, s);
 
+#ifndef DEBUG
+	if (level == LOG_DEBUG)
+#endif
+		fprintf(stream, "%s:%d ", file, line);
+
 	va_start(arg, format);
 	vfprintf(stream, format, arg);
 	va_end(arg);

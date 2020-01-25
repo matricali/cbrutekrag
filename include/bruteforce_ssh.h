@@ -40,7 +40,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 			     const uint16_t port, const char *username,
-			     const char *password, int count, int total,
+			     const char *password, size_t count, size_t total,
 			     FILE *output);
 
 #endif /* BRUTEFORCE_SSH_H */

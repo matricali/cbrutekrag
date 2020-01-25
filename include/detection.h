@@ -38,6 +38,6 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 void *detection_process(void *ptr);
 
 void detection_start(btkg_context_t *context, btkg_target_list_t *source,
-		     btkg_target_list_t *target, int max_threads);
+		     btkg_target_list_t *target, size_t max_threads);
 
 #endif /* DETECTION_H */

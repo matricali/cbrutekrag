@@ -28,7 +28,7 @@ SOFTWARE.
 
 typedef struct {
 	int timeout;
-	int max_threads;
+	size_t max_threads;
 	int progress_bar;
 	int verbose;
 	int dry_run;
@@ -37,7 +37,7 @@ typedef struct {
 	int allow_honeypots;
 } btkg_context_t;
 
-void print_banner();
+void print_banner(void);
 void usage(const char *p);
 
 #endif /* CBRUTEKRAG_H */

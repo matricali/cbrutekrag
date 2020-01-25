@@ -65,7 +65,7 @@ void usage(const char *p)
 void err_handler(int sig)
 {
 	void *array[10];
-	size_t size;
+	int size;
 
 	size = backtrace(array, 10);
 
@@ -77,16 +77,17 @@ void err_handler(int sig)
 int main(int argc, char **argv)
 {
 	int opt;
-	int total = 0;
+	size_t total = 0;
 	char *hostnames_filename = NULL;
 	char *combos_filename = NULL;
 	char *output_filename = NULL;
 	FILE *output = NULL;
 	char *g_blankpass_placeholder = "$BLANKPASS";
-	btkg_context_t context = { 3, 1, 0 };
+	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
 	struct timespec start, finish;
 	double elapsed;
 	struct rlimit limit;
+	int tempint;
 
 	/* Error handler */
 	signal(SIGSEGV, err_handler);
@@ -125,7 +126,13 @@ int main(int argc, char **argv)
 				combos_filename = strdup(optarg);
 				break;
 			case 't':
-				context.max_threads = atoi(optarg);
+				tempint = atoi(optarg);
+				if (tempint < 1) {
+					log_error("Invalid threads size. (%d)",
+						  tempint);
+					exit(EXIT_FAILURE);
+				}
+				context.max_threads = (size_t)tempint;
 				break;
 			case 'o':
 				output_filename = strdup(optarg);
@@ -202,8 +209,8 @@ int main(int argc, char **argv)
 	printf("\nAmount of username/password combinations: %zu\n",
 	       combos.length);
 	printf("Number of targets: %zu\n", target_list.length);
-	printf("Total attemps: %d\n", total);
-	printf("Max threads: %d\n\n", context.max_threads);
+	printf("Total attemps: %zu\n", total);
+	printf("Max threads: %zu\n\n", context.max_threads);
 
 	if (total == 0) {
 		log_error("No work to do.");
@@ -251,13 +258,13 @@ int main(int argc, char **argv)
 
 	/* Bruteforce */
 	pid_t pid = 0;
-	int p = 0;
-	int count = 0;
+	size_t p = 0;
+	size_t count = 0;
 
 	log_info("Starting brute-force process...");
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
-	for (int x = 0; x < combos.length; x++) {
+	for (size_t x = 0; x < combos.length; x++) {
 		char *username = strtok(combos.words[x], " ");
 		if (username == NULL)
 			continue;
@@ -269,7 +276,7 @@ int main(int argc, char **argv)
 		if (strcmp(password, g_blankpass_placeholder) == 0)
 			password = strdup("");
 
-		for (int y = 0; y < target_list.length; y++) {
+		for (size_t y = 0; y < target_list.length; y++) {
 			if (p >= context.max_threads) {
 				waitpid(-1, NULL, 0);
 				p--;

@@ -85,7 +85,7 @@ in_addr_t broadcast(in_addr_t addr, int prefix)
  */
 network_addr_t str_to_netaddr(const char *ipstr)
 {
-	long int prefix = 32;
+	long prefix = 32;
 	char *prefixstr;
 	network_addr_t netaddr;
 
@@ -102,7 +102,7 @@ network_addr_t str_to_netaddr(const char *ipstr)
 	}
 
 	netaddr.pfx = (int)prefix;
-	netaddr.addr = network(a_to_hl(ipstr), prefix);
+	netaddr.addr = network(a_to_hl(ipstr), (int)prefix);
 
 	return (netaddr);
 }

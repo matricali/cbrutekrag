@@ -1,6 +1,6 @@
 CC	= gcc
 
-CFLAGS	+= -Wall -std=gnu99 -O3 -Iinclude -g
+CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=gnu99 -O3 -Iinclude -g
 LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
 
 NAME	= cbrutekrag

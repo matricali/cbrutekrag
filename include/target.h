@@ -33,7 +33,7 @@ typedef struct {
 	btkg_target_t *targets;
 } btkg_target_list_t;
 
-int btkg_target_port_is_valid(const uint16_t port);
+int btkg_target_port_is_valid(const long port);
 
 void btkg_target_list_init(btkg_target_list_t *target_list);
 

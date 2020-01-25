@@ -31,7 +31,7 @@ SOFTWARE.
 /**
  * Check if given port is valid
  */
-int btkg_target_port_is_valid(const uint16_t port)
+int btkg_target_port_is_valid(const long port)
 {
 	return port >= 1 && port <= 65535;
 }
@@ -54,19 +54,20 @@ btkg_target_t target_parse(char *line)
 	char *ptr = strtok(line, ":");
 
 	char *host = NULL;
-	uint16_t port = 0;
+	long port = 0;
 
 	if (ptr != NULL) {
 		host = strdup(ptr);
 		ptr = strtok(NULL, "´");
 
 		if (ptr != NULL) {
-			port = atoi(ptr);
+			char *endptr;
+			port = strtol(ptr, &endptr, 10);
 			if (!btkg_target_port_is_valid(port)) {
-				log_error("WARNING: Invalid port (%d)", port);
+				log_error("WARNING: Invalid port (%s)", ptr);
 				return ret;
 			}
-			ret.port = port;
+			ret.port = (uint16_t)port;
 		}
 		ret.host = host;
 	}

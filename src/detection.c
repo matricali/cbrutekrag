@@ -43,7 +43,7 @@ SOFTWARE.
 #define BUF_SIZE 1024
 #define BANNER_LEN 256
 
-int scan_counter = 0;
+size_t scan_counter = 0;
 btkg_target_list_t filtered;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 const long timeout = 5;
@@ -130,7 +130,8 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 			 uint16_t port, long tm)
 {
 	struct sockaddr_in addr;
-	int sockfd, ret;
+	int sockfd;
+	long ret;
 	char buffer[BUF_SIZE];
 	char banner[BANNER_LEN];
 	size_t banner_len;
@@ -180,7 +181,7 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 
 	// Set to blocking mode again...
 	if ((ret = fcntl(sockfd, F_GETFL, NULL)) < 0) {
-		log_error("Error fcntl(..., F_GETFL) (%s)\n", strerror(ret));
+		log_error("Error fcntl(..., F_GETFL) (%s)\n", strerror((int)ret));
 		close(sockfd);
 		sockfd = 0;
 		return -2;
@@ -190,7 +191,7 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 	arg &= (~O_NONBLOCK);
 
 	if ((ret = fcntl(sockfd, F_SETFL, arg)) < 0) {
-		log_error("Error fcntl(..., F_SETFL) (%s)\n", strerror(ret));
+		log_error("Error fcntl(..., F_SETFL) (%s)\n", strerror((int)ret));
 		close(sockfd);
 		sockfd = 0;
 		return -1;
@@ -345,7 +346,7 @@ void *detection_process(void *ptr)
 
 		if (context->progress_bar) {
 			char str[40];
-			snprintf(str, 40, "[%d/%zu] %zu OK - %s:%d",
+			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
 				 scan_counter, target_list->length,
 				 filtered.length, current_target.host,
 				 current_target.port);
@@ -375,7 +376,7 @@ void *detection_process(void *ptr)
 }
 
 void detection_start(btkg_context_t *context, btkg_target_list_t *source,
-		     btkg_target_list_t *target, int max_threads)
+		     btkg_target_list_t *target, size_t max_threads)
 {
 	btkg_target_list_init(&filtered);
 	btkg_detection_args_t args;
@@ -387,14 +388,14 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 	pthread_t scan_threads[max_threads];
 	int ret;
 
-	for (int i = 0; i < max_threads; i++) {
+	for (size_t i = 0; i < max_threads; i++) {
 		if ((ret = pthread_create(&scan_threads[i], NULL,
 					  &detection_process, (void *)&args))) {
 			log_error("Thread creation failed: %d\n", ret);
 		}
 	}
 
-	for (int i = 0; i < max_threads; i++) {
+	for (size_t i = 0; i < max_threads; i++) {
 		ret = pthread_join(scan_threads[i], NULL);
 		if (ret != 0) {
 			log_error("Cannot join thread no: %d\n", ret);
