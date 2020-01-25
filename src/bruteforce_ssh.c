@@ -137,7 +137,7 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 		char bar_suffix[50];
 		sprintf(bar_suffix, "[%zu] %s:%d %s %s", count, hostname, port,
 			username, password);
-		progressbar_render(count, total, bar_suffix, -1);
+		progressbar_render(count, total, bar_suffix, 0);
 	}
 
 	return ret;

@@ -317,7 +317,7 @@ int main(int argc, char **argv)
 	elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
 
 	if (context.progress_bar)
-		progressbar_render(count, total, NULL, -1);
+		progressbar_render(count, total, NULL, 0);
 
 	log_info("Brute-force process took %f seconds.", elapsed);
 

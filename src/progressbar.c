@@ -42,14 +42,14 @@ void progressbar_render(size_t count, size_t total, char *suffix,
 
 	size_t max_cols = w.ws_col;
 
-	if (bar_len < 0)
+	if (bar_len == 0)
 		bar_len = max_cols - 80;
 	if (suffix == NULL)
 		suffix = "";
 
 	size_t filled_len = bar_len * count / total;
 	size_t empty_len = bar_len - filled_len;
-	float percents = 100.0f * count / total;
+	float percents = 100.0f * (float)(count / total);
 	size_t fill = max_cols - bar_len - strlen(suffix) - 16;
 
 	printf("\b%c[2K\r", 27);
