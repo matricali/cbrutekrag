@@ -15,13 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * File:   iprange.h
- * Author: Jorge Matricali <jorgematricali@gmail.com>
- *
- * Created on 19 de agosto de 2018, 00:57
- */
-
 #ifndef IPRANGE_H
 #define IPRANGE_H
 

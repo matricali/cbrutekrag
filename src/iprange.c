@@ -51,7 +51,7 @@ in_addr_t netmask(int prefix)
 	if (prefix == 0) {
 		return (~((in_addr_t)-1));
 	} else {
-		return (~((1 << (32 - prefix)) - 1));
+		return (~(((in_addr_t)1 << (32 - prefix)) - 1));
 	}
 }
 

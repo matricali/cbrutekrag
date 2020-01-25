@@ -181,7 +181,8 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 
 	// Set to blocking mode again...
 	if ((ret = fcntl(sockfd, F_GETFL, NULL)) < 0) {
-		log_error("Error fcntl(..., F_GETFL) (%s)\n", strerror((int)ret));
+		log_error("Error fcntl(..., F_GETFL) (%s)\n",
+			  strerror((int)ret));
 		close(sockfd);
 		sockfd = 0;
 		return -2;
@@ -191,7 +192,8 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 	arg &= (~O_NONBLOCK);
 
 	if ((ret = fcntl(sockfd, F_SETFL, arg)) < 0) {
-		log_error("Error fcntl(..., F_SETFL) (%s)\n", strerror((int)ret));
+		log_error("Error fcntl(..., F_SETFL) (%s)\n",
+			  strerror((int)ret));
 		close(sockfd);
 		sockfd = 0;
 		return -1;
