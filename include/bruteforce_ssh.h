@@ -26,13 +26,6 @@ SOFTWARE.
 #include <stdint.h>
 
 #include "cbrutekrag.h"
-#include "target.h"
-#include "wordlist.h"
-
-typedef struct {
-	btkg_target_list_t *targets;
-	wordlist_t *combinations;
-} btkg_bruteforce_args_t;
 
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			 uint16_t port, const char *username,

@@ -7,7 +7,6 @@ NAME	= cbrutekrag
 SRCS	:= cbrutekrag.c \
 	log.c \
 	str.c \
-	wordlist.c \
 	iprange.c \
 	progressbar.c \
 	bruteforce_ssh.c \

@@ -38,7 +38,6 @@ SOFTWARE.
 #include "log.h"
 #include "progressbar.h"
 #include "target.h"
-#include "wordlist.h"
 
 #define BUF_SIZE 1024
 #define BANNER_LEN 256
