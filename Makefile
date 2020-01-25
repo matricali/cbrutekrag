@@ -4,7 +4,15 @@ CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=
 LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
 
 NAME	= cbrutekrag
-SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c target.c
+SRCS	:= cbrutekrag.c \
+	log.c \
+	str.c \
+	wordlist.c \
+	iprange.c \
+	progressbar.c \
+	bruteforce_ssh.c \
+	detection.c target.c \
+	credentials.c
 OBJS	:= $(SRCS:%.c=obj/%.o)
 
 all: dirs $(NAME)

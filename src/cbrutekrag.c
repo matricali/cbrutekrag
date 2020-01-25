@@ -34,6 +34,7 @@ SOFTWARE.
 
 #include "bruteforce_ssh.h"
 #include "cbrutekrag.h"
+#include "credentials.h"
 #include "detection.h"
 #include "log.h"
 #include "progressbar.h"
@@ -59,7 +60,7 @@ void print_banner()
 
 void usage(const char *p)
 {
-	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]\n"
+	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]\n"
 	       "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n",
 	       p);
 }
@@ -81,10 +82,9 @@ int main(int argc, char **argv)
 	int opt;
 	size_t total = 0;
 	char *hostnames_filename = NULL;
-	char *combos_filename = NULL;
+	char *credentials_filename = NULL;
 	char *output_filename = NULL;
 	FILE *output = NULL;
-	char *g_blankpass_placeholder = "$BLANKPASS";
 	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
 	struct timespec start, end;
 	double elapsed;
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 				hostnames_filename = strdup(optarg);
 				break;
 			case 'C':
-				combos_filename = strdup(optarg);
+				credentials_filename = strdup(optarg);
 				break;
 			case 't':
 				tempint = atoi(optarg);
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 				       "  -D                Dry run\n"
 				       "  -P                Progress bar\n"
 				       "  -T <targets>      Targets file\n"
-				       "  -C <combinations> Username and password file\n"
+				       "  -C <credentials>  Username and password file\n"
 				       "  -t <threads>      Max threads\n"
 				       "  -o <output>       Output log file\n"
 				       "  -a                Accepts non OpenSSH servers\n"
@@ -198,18 +198,20 @@ int main(int argc, char **argv)
 		free(hostnames_filename);
 	}
 
-	if (combos_filename == NULL)
-		combos_filename = strdup("combos.txt");
+	if (credentials_filename == NULL)
+		credentials_filename = strdup("combos.txt");
 
 	/* Load username/password combinations */
-	wordlist_t combos = wordlist_load(combos_filename);
-	free(combos_filename);
+	btkg_credentials_list_t credentials_list;
+	btkg_credentials_list_init(&credentials_list);
+	btkg_credentials_list_load(&credentials_list, credentials_filename);
+	free(credentials_filename);
 
 	/* Calculate total attemps */
-	total = target_list.length * combos.length;
+	total = target_list.length * credentials_list.length;
 
 	printf("\nAmount of username/password combinations: %zu\n",
-	       combos.length);
+	       credentials_list.length);
 	printf("Number of targets: %zu\n", target_list.length);
 	printf("Total attemps: %zu\n", total);
 	printf("Max threads: %zu\n\n", context.max_threads);
@@ -266,17 +268,9 @@ int main(int argc, char **argv)
 	log_info("Starting brute-force process...");
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
-	for (size_t x = 0; x < combos.length; x++) {
-		char *username = strtok(combos.words[x], " ");
-		if (username == NULL)
-			continue;
-
-		char *password = strtok(NULL, " ");
-		if (password == NULL)
-			continue;
-
-		if (strcmp(password, g_blankpass_placeholder) == 0)
-			password = strdup("");
+	for (size_t x = 0; x < credentials_list.length; x++) {
+		btkg_credentials_t credentials =
+			credentials_list.credentials[x];
 
 		for (size_t y = 0; y < target_list.length; y++) {
 			if (p >= context.max_threads) {
@@ -294,8 +288,10 @@ int main(int argc, char **argv)
 				if (!context.dry_run) {
 					bruteforce_ssh_try_login(
 						&context, current_target.host,
-						current_target.port, username,
-						password, count, total, output);
+						current_target.port,
+						credentials.username,
+						credentials.password, count,
+						total, output);
 				}
 				exit(EXIT_SUCCESS);
 			} else {
@@ -323,7 +319,7 @@ int main(int argc, char **argv)
 
 	pid = 0;
 
-	wordlist_destroy(&combos);
+	btkg_credentials_list_destroy(&credentials_list);
 
 	if (output != NULL)
 		fclose(output);
