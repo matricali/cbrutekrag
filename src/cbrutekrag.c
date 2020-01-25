@@ -41,6 +41,8 @@ SOFTWARE.
 #include "target.h"
 #include "wordlist.h"
 
+#define NANO_PER_SEC 1000000000.0
+
 int g_verbose = 0;
 
 void print_banner()
@@ -84,7 +86,7 @@ int main(int argc, char **argv)
 	FILE *output = NULL;
 	char *g_blankpass_placeholder = "$BLANKPASS";
 	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
-	struct timespec start, finish;
+	struct timespec start, end;
 	double elapsed;
 	struct rlimit limit;
 	int tempint;
@@ -238,9 +240,9 @@ int main(int argc, char **argv)
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		detection_start(&context, &target_list, &target_list,
 				context.max_threads);
-		clock_gettime(CLOCK_MONOTONIC, &finish);
-		elapsed = (finish.tv_sec - start.tv_sec);
-		elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		elapsed = (double)(end.tv_sec - start.tv_sec);
+		elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
 		log_info("Detection process took %f seconds.", elapsed);
 		log_info("Number of targets after filtering: %zu.",
 			 target_list.length);
@@ -310,9 +312,9 @@ int main(int argc, char **argv)
 		--p;
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &finish);
-	elapsed = (finish.tv_sec - start.tv_sec);
-	elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	elapsed = (double)(end.tv_sec - start.tv_sec);
+	elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
 
 	if (context.progress_bar)
 		progressbar_render(count, total, NULL, -1);
