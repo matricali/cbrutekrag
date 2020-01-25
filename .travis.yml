@@ -39,6 +39,9 @@ env:
   - OS=ubuntu DIST=trusty ARCH=i386
   - OS=ubuntu DIST=precise ARCH=i386
 
+git:
+  depth: false
+
 jobs:
   allow_failures:
   - env: OS=debian DIST=jessie ARCH=i386
