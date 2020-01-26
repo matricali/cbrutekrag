@@ -33,8 +33,8 @@ SOFTWARE.
 #endif
 
 typedef struct {
-	char username[LOGIN_NAME_MAX];
-	char password[LOGIN_PASS_MAX];
+	char username[LOGIN_NAME_MAX + 1];
+	char password[LOGIN_PASS_MAX + 1];
 } btkg_credentials_t;
 
 typedef struct {
