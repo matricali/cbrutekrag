@@ -12,15 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Now is possible to specify the port on targets list (ex: 10.10.1.10:2222) (see #5)
 - Shows time elapsed on each phase.
 - Remote command execution (argument: -X <command>).
+- Increase the maximum file descriptor number that can be opened by this process.
+- manpages (`man cbrutekrag`)
+- Debug bracktrace symbols
+- Ignore as default non OpenSSH servers (argument flag -a to accept)
+- Detects and skip NON SSH servers (tcpwrapped).
+- Ignoring servers that don't support password authentication.
 
 ### Changed
 - Separate Cbrutekrag verbosity from SSHLIB verbosity. (arguments: -v and -V respectively).
+- The default maximum number of threads is calculated automatically.
+- Allow servers detected as honeypot (argument flag -A)
+- Improved detection of non-eligible servers.
 
 ### Removed
 - Removed port option (-p <port>) in favor of new targets syntax (191.168.0.0/24:2222)
 
 ### Fixed
 - Wait until all forks finished her work.
+- Ignore SIGPIPE
+- Fixed false positives in servers which login are interactive.
 
 ## [0.4.0] - 2018-09-02
 ### Added

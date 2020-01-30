@@ -15,21 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * File:   iprange.h
- * Author: Jorge Matricali <jorgematricali@gmail.com>
- *
- * Created on 19 de agosto de 2018, 00:57
- */
-
 #ifndef IPRANGE_H
 #define IPRANGE_H
 
 #include <arpa/inet.h> /* in_addr_t */
 
 typedef struct network_addr {
-    in_addr_t addr;
-    int pfx;
+	in_addr_t addr;
+	int pfx;
 } network_addr_t;
 
 /**
@@ -37,7 +30,7 @@ typedef struct network_addr {
  * @param ipstr
  * @return
  */
-in_addr_t a_to_hl(const char* ipstr);
+in_addr_t a_to_hl(const char *ipstr);
 
 /**
  * Compute netmask address given prefix
@@ -68,6 +61,6 @@ in_addr_t broadcast(in_addr_t addr, int prefix);
  * @param ipstr
  * @return
  */
-network_addr_t str_to_netaddr(const char* ipstr);
+network_addr_t str_to_netaddr(const char *ipstr);
 
 #endif /* IPRANGE_H */

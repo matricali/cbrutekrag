@@ -23,27 +23,29 @@ SOFTWARE.
 #ifndef LOGGER_H
 #define LOGGER_H
 
-enum {
-    LOG_TRACE,
-    LOG_DEBUG,
-    LOG_INFO,
-    LOG_WARN,
-    LOG_ERROR,
-    LOG_FATAL,
+enum { LOG_TRACE,
+       LOG_DEBUG,
+       LOG_INFO,
+       LOG_WARN,
+       LOG_ERROR,
+       LOG_FATAL,
 };
 
-#define log_error(...) print_output(LOG_ERROR, __FILE__, __LINE__, \
-    "\033[91m", "\033[0m", stderr, __VA_ARGS__)
-#define log_warn(...) print_output(LOG_WARN, __FILE__, __LINE__, \
-    "", "", stderr, __VA_ARGS__)
-#define log_debug(...) print_output(LOG_DEBUG, __FILE__, __LINE__, \
-    "\033[37m", "\033[0m", stderr, __VA_ARGS__)
-#define log_info(...) print_output(LOG_INFO, __FILE__, __LINE__, \
-    "", "", stdout, __VA_ARGS__)
+#define log_error(...)                                                         \
+	print_output(LOG_ERROR, __FILE__, __LINE__, "\033[91m", "\033[0m",     \
+		     stderr, __VA_ARGS__)
+#define log_warn(...)                                                          \
+	print_output(LOG_WARN, __FILE__, __LINE__, "", "", stderr, __VA_ARGS__)
 
-void print_output(int level, const char* file, int line, const char* head,
-    const char* tail, FILE* stream, const char* format, ...);
+#define log_debug(...)                                                         \
+	print_output(LOG_DEBUG, __FILE__, __LINE__, "\033[37m", "\033[0m",     \
+		     stderr, __VA_ARGS__)
+#define log_info(...)                                                          \
+	print_output(LOG_INFO, __FILE__, __LINE__, "", "", stdout, __VA_ARGS__)
 
-void log_output(FILE* stream, const char* format, ...);
+void print_output(int level, const char *file, int line, const char *head,
+		  const char *tail, FILE *stream, const char *format, ...);
+
+void log_output(FILE *stream, const char *format, ...);
 
 #endif /* LOGGER_H */

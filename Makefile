@@ -1,10 +1,17 @@
 CC	= gcc
 
-CFLAGS	+= -Wall -g -std=gnu99 -O3 -Iinclude
-LDFLAGS	+= -lpthread -lssh
+CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=gnu99 -O3 -Iinclude -g
+LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
 
 NAME	= cbrutekrag
-SRCS	:= cbrutekrag.c log.c str.c wordlist.c iprange.c progressbar.c bruteforce_ssh.c detection.c target.c
+SRCS	:= cbrutekrag.c \
+	log.c \
+	str.c \
+	iprange.c \
+	progressbar.c \
+	bruteforce_ssh.c \
+	detection.c target.c \
+	credentials.c
 OBJS	:= $(SRCS:%.c=obj/%.o)
 
 all: dirs $(NAME)

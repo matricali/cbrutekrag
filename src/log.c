@@ -29,41 +29,46 @@ SOFTWARE.
 
 int g_verbose;
 
-void print_output(int level, const char* file, int line, const char* head,
-    const char* tail, FILE* stream, const char* format, ...)
+void print_output(int level, const char *file, int line, const char *head,
+		  const char *tail, FILE *stream, const char *format, ...)
 {
-    if (level == LOG_DEBUG && !(g_verbose & CBRUTEKRAG_VERBOSE_MODE)) {
-        return;
-    }
-    time_t t = time(NULL);
-    struct tm* tm = localtime(&t);
+	if (level == LOG_DEBUG && !(g_verbose & CBRUTEKRAG_VERBOSE_MODE)) {
+		return;
+	}
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
 
-    va_list arg;
-    char s[20];
+	va_list arg;
+	char s[20];
 
-    s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
-    fprintf(stream, "\033[2K\r%s[%s] ", head, s);
+	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+	fprintf(stream, "\033[2K\r%s[%s] ", head, s);
 
-    va_start(arg, format);
-    vfprintf(stream, format, arg);
-    va_end(arg);
-    fprintf(stream, "%s\n", tail);
-    fflush(stream);
+#ifndef DEBUG
+	if (level == LOG_DEBUG)
+#endif
+		fprintf(stream, "%s:%d ", file, line);
+
+	va_start(arg, format);
+	vfprintf(stream, format, arg);
+	va_end(arg);
+	fprintf(stream, "%s\n", tail);
+	fflush(stream);
 }
 
-void log_output(FILE* stream, const char* format, ...)
+void log_output(FILE *stream, const char *format, ...)
 {
-    time_t t = time(NULL);
-    struct tm* tm = localtime(&t);
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
 
-    va_list arg;
-    char s[20];
+	va_list arg;
+	char s[20];
 
-    s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
-    fprintf(stream, "%s ", s);
+	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+	fprintf(stream, "%s ", s);
 
-    va_start(arg, format);
-    vfprintf(stream, format, arg);
-    va_end(arg);
-    fflush(stream);
+	va_start(arg, format);
+	vfprintf(stream, format, arg);
+	va_end(arg);
+	fflush(stream);
 }

@@ -34,47 +34,48 @@ SOFTWARE.
  * @param  suffix  String suffix
  * @param  bar_len Bar length
  */
-void progressbar_render(int count, int total, char* suffix, int bar_len)
+void progressbar_render(size_t count, size_t total, char *suffix,
+			size_t bar_len)
 {
-    struct winsize w;
-    ioctl(0, TIOCGWINSZ, &w);
+	struct winsize w;
+	ioctl(0, TIOCGWINSZ, &w);
 
-    int max_cols = w.ws_col;
+	size_t max_cols = w.ws_col;
 
-    if (bar_len < 0)
-        bar_len = max_cols - 80;
-    if (suffix == NULL)
-        suffix = "";
+	if (bar_len == 0)
+		bar_len = max_cols - 80;
+	if (suffix == NULL)
+		suffix = "";
 
-    int filled_len = bar_len * count / total;
-    int empty_len = bar_len - filled_len;
-    float percents = 100.0f * count / total;
-    int fill = max_cols - bar_len - strlen(suffix) - 16;
+	size_t filled_len = bar_len * count / total;
+	size_t empty_len = bar_len - filled_len;
+	float percents = 100.0f * (float)(count / total);
+	size_t fill = max_cols - bar_len - strlen(suffix) - 16;
 
-    printf("\b%c[2K\r", 27);
-    if (bar_len > 0) {
-        printf("\033[37m|");
-        if (filled_len > 0) {
-            printf("\033[32m");
-            for (int i = 0; i < filled_len; ++i) {
-                printf("\u2588");
-            }
-        }
-        if (empty_len > 0) {
-            printf("\033[37m");
-            for (int i = 0; i < empty_len; ++i) {
-                printf("\u2591");
-            }
-        }
-        printf("\033[37m|\033[0m");
-    }
-    if (max_cols > 60)
-        printf("  %.2f%%   %s", percents, suffix);
-    if (fill > 0) {
-        for (int i = 0; i < fill; ++i) {
-            printf(" ");
-        }
-    }
-    printf("\r");
-    fflush(stdout);
+	printf("\b%c[2K\r", 27);
+	if (bar_len > 0) {
+		printf("\033[37m|");
+		if (filled_len > 0) {
+			printf("\033[32m");
+			for (size_t i = 0; i < filled_len; ++i) {
+				printf("\u2588");
+			}
+		}
+		if (empty_len > 0) {
+			printf("\033[37m");
+			for (size_t i = 0; i < empty_len; ++i) {
+				printf("\u2591");
+			}
+		}
+		printf("\033[37m|\033[0m");
+	}
+	if (max_cols > 60)
+		printf("  %.2f%%   %s", percents, suffix);
+	if (fill > 0) {
+		for (size_t i = 0; i < fill; ++i) {
+			printf(" ");
+		}
+	}
+	printf("\r");
+	fflush(stdout);
 }
