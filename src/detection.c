@@ -114,7 +114,7 @@ int detection_login_methods(btkg_context_t *context, const char *hostname,
 
 	method = ssh_userauth_list(session, NULL);
 
-	if (method & SSH_AUTH_METHOD_PASSWORD) {
+	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
 		ssh_disconnect(session);
 		ssh_free(session);
 		return 0;

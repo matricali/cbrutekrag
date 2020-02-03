@@ -1,3 +1,4 @@
 cbrutekrag
 *.o
 build/
+external/
