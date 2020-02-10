@@ -342,7 +342,7 @@ void *detection_process(void *ptr)
 			pthread_mutex_unlock(&mutex);
 			break;
 		}
-		btkg_target_t current_target =
+		btkg_target_t *current_target =
 			target_list->targets[scan_counter];
 		scan_counter++;
 
@@ -350,8 +350,8 @@ void *detection_process(void *ptr)
 			char str[40];
 			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
 				 scan_counter, target_list->length,
-				 filtered.length, current_target.host,
-				 current_target.port);
+				 filtered.length, current_target->host,
+				 current_target->port);
 			progressbar_render(scan_counter, target_list->length,
 					   str, 0);
 		}
@@ -359,15 +359,15 @@ void *detection_process(void *ptr)
 
 		if (context->dry_run) {
 			pthread_mutex_lock(&mutex);
-			log_info("Scanning %s:%d", current_target.host,
-				 current_target.port);
+			log_info("Scanning %s:%d", current_target->host,
+				 current_target->port);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);
 			continue;
 		}
 
-		if (detection_detect_ssh(context, current_target.host,
-					 current_target.port, 1) == 0) {
+		if (detection_detect_ssh(context, current_target->host,
+					 current_target->port, 1) == 0) {
 			pthread_mutex_lock(&mutex);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);

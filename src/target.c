@@ -46,11 +46,41 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 }
 
 /**
+ * Allocate btkg_target_t
+ */
+btkg_target_t *btkg_target_create(void)
+{
+	btkg_target_t *target = malloc(sizeof(btkg_target_t));
+	if (target == NULL) {
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+	target->host = NULL;
+	target->port = 22;
+
+	return target;
+}
+
+/**
+ * Destroy btkg_target_t
+ */
+void btkg_target_destroy(btkg_target_t *target)
+{
+	if (target == NULL)
+		return;
+	if (target->host != NULL)
+		free(target->host);
+
+	free(target);
+	target = NULL;
+}
+
+/**
  * Split target into btkg_target_t structure
  */
-btkg_target_t target_parse(char *line)
+btkg_target_t *target_parse(char *line)
 {
-	btkg_target_t ret = { .host = NULL, .port = 22 };
+	btkg_target_t *ret = btkg_target_create();
 	char *ptr = strtok(line, ":");
 
 	char *host = NULL;
@@ -67,9 +97,9 @@ btkg_target_t target_parse(char *line)
 				log_error("WARNING: Invalid port (%s)", ptr);
 				return ret;
 			}
-			ret.port = (uint16_t)port;
+			ret->port = (uint16_t)port;
 		}
-		ret.host = host;
+		ret->host = host;
 	}
 
 	return ret;
@@ -79,9 +109,9 @@ btkg_target_t target_parse(char *line)
  * Append btkg_target_t into given btkg_target_list_t
  */
 void btkg_target_list_append(btkg_target_list_t *target_list,
-			     btkg_target_t target)
+			     btkg_target_t *target)
 {
-	btkg_target_t *targets = target_list->targets;
+	btkg_target_t **targets = target_list->targets;
 
 	if (targets == NULL) {
 		targets = malloc(sizeof(target));
@@ -106,8 +136,11 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 	netmask_s = strchr(range, '/');
 
 	if (netmask_s == NULL) {
-		btkg_target_t target = { .host = strdup(range), .port = port };
+		btkg_target_t *target = btkg_target_create();
+		target->host = strdup(range);
+		target->port = port;
 		btkg_target_list_append(target_list, target);
+
 		return;
 	}
 
@@ -120,10 +153,10 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 	hi = broadcast(netaddr.addr, netaddr.pfx);
 
 	for (in_addr_t x = lo; x < hi; x++) {
-		btkg_target_t new_target;
+		btkg_target_t *new_target = btkg_target_create();
 		in.s_addr = htonl(x);
-		new_target.host = strdup(inet_ntoa(in));
-		new_target.port = port;
+		new_target->host = strdup(inet_ntoa(in));
+		new_target->port = port;
 		btkg_target_list_append(target_list, new_target);
 	}
 }
@@ -147,16 +180,19 @@ void btkg_target_list_load(btkg_target_list_t *target_list, char *filename)
 	int lines = 0;
 	for (lines = 0; (read = getline(&temp, &len, fp)) != -1; lines++) {
 		strtok(temp, "\n");
-		btkg_target_t ret = target_parse(temp);
+		btkg_target_t *target = target_parse(temp);
 
-		if (ret.host == NULL) {
+		if (target->host == NULL) {
 			log_error(
 				"WARNING: An error ocurred parsing '%s' on line #%d",
 				filename, lines);
 			continue;
 		}
 
-		btkg_target_list_append_range(target_list, ret.host, ret.port);
+		btkg_target_list_append_range(target_list, target->host,
+					      target->port);
+
+		btkg_target_destroy(target);
 	}
 
 	free(temp);
