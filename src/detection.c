@@ -38,6 +38,7 @@ SOFTWARE.
 #include "log.h"
 #include "progressbar.h"
 #include "target.h"
+#include "macrowrapper.h"
 
 #define BUF_SIZE 1024
 #define BANNER_LEN 256
@@ -152,7 +153,7 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 	ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
 
 	FD_ZERO(&fdset);
-	FD_SET(sockfd, &fdset);
+	FdSet(sockfd, &fdset);
 
 	/* Connection timeout */
 	struct timeval tv;
