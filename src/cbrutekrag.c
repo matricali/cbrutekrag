@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 	char *credentials_filename = NULL;
 	char *output_filename = NULL;
 	FILE *output = NULL;
-	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
+	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0, NULL };
 	struct timespec start, end;
 	double elapsed;
 	struct rlimit limit;
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 	context.max_threads =
 		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
-	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPh")) != -1) {
+	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsS:vVPh")) != -1) {
 		switch (opt) {
 			case 'a':
 				context.non_openssh = 1;
@@ -141,6 +141,9 @@ int main(int argc, char **argv)
 			case 's':
 				context.perform_scan = 1;
 				break;
+			case 'S':
+				context.scan_output = strdup(optarg);
+				break;
 			case 'D':
 				context.dry_run = 1;
 				break;
@@ -154,6 +157,7 @@ int main(int argc, char **argv)
 				       "  -v                Verbose mode\n"
 				       "  -V                Verbose mode (sshlib)\n"
 				       "  -s                Scan mode\n"
+				       "  -S                Scan output results\n"
 				       "  -D                Dry run\n"
 				       "  -P                Progress bar\n"
 				       "  -T <targets>      Targets file\n"

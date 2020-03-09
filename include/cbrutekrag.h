@@ -35,6 +35,7 @@ typedef struct {
 	int perform_scan;
 	int non_openssh;
 	int allow_honeypots;
+	char *scan_output;
 } btkg_context_t;
 
 void print_banner(void);
