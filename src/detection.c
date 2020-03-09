@@ -334,6 +334,7 @@ void *detection_process(void *ptr)
 	btkg_detection_args_t *args = (btkg_detection_args_t *)ptr;
 	btkg_target_list_t *target_list = args->target_list;
 	btkg_context_t *context = args->context;
+	FILE *output = args->output;
 
 	for (;;) {
 		pthread_mutex_lock(&mutex);
@@ -369,6 +370,10 @@ void *detection_process(void *ptr)
 					 current_target->port, 1) == 0) {
 			pthread_mutex_lock(&mutex);
 			btkg_target_list_append(&filtered, current_target);
+			if (output != NULL)
+				fprintf(output, "%s:%d %s\n",
+					current_target->host,
+					current_target->port, "BANNER");
 			pthread_mutex_unlock(&mutex);
 		}
 	}
@@ -389,6 +394,20 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 	pthread_t scan_threads[max_threads];
 	int ret;
 
+	FILE *output = NULL;
+
+	/* Output file */
+	if (context->scan_output != NULL) {
+		output = fopen(context->scan_output, "a");
+		if (output == NULL) {
+			log_error("Error opening output file. (%s)",
+				  context->scan_output);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	args.output = output;
+
 	for (size_t i = 0; i < max_threads; i++) {
 		if ((ret = pthread_create(&scan_threads[i], NULL,
 					  &detection_process, (void *)&args))) {
@@ -402,6 +421,9 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 			log_error("Cannot join thread no: %d\n", ret);
 		}
 	}
+
+	if (args.output != NULL)
+		fclose(output);
 
 	if (context->progress_bar)
 		progressbar_render(1, 1, NULL, 0);

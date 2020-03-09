@@ -30,6 +30,7 @@ SOFTWARE.
 typedef struct {
 	btkg_context_t *context;
 	btkg_target_list_t *target_list;
+	FILE *output;
 } btkg_detection_args_t;
 
 int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
