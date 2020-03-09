@@ -175,17 +175,19 @@ int main(int argc, char **argv)
 	btkg_target_list_init(&target_list);
 
 	while (optind < argc) {
-		btkg_target_t ret = target_parse(argv[optind]);
+		btkg_target_t *target = target_parse(argv[optind]);
 
-		if (ret.host == NULL) {
+		if (target->host == NULL) {
 			log_error(
 				"WARNING: An error ocurred parsing target '%s' on argument #%d",
 				argv[optind], optind);
 			continue;
 		}
 
-		btkg_target_list_append_range(&target_list, ret.host, ret.port);
-		free(ret.host);
+		btkg_target_list_append_range(&target_list, target->host,
+					      target->port);
+		btkg_target_destroy(target);
+
 		optind++;
 	}
 
@@ -277,7 +279,7 @@ int main(int argc, char **argv)
 				p--;
 			}
 
-			btkg_target_t current_target = target_list.targets[y];
+			btkg_target_t *current_target = target_list.targets[y];
 
 			pid = fork();
 
@@ -286,8 +288,8 @@ int main(int argc, char **argv)
 			} else if (pid == 0) {
 				if (!context.dry_run) {
 					bruteforce_ssh_try_login(
-						&context, current_target.host,
-						current_target.port,
+						&context, current_target->host,
+						current_target->port,
 						credentials.username,
 						credentials.password, count,
 						total, output);
@@ -318,7 +320,16 @@ int main(int argc, char **argv)
 
 	pid = 0;
 
+	for (size_t y = 0; y < target_list.length; y++) {
+		btkg_target_destroy(target_list.targets[y]);
+	}
+
 	btkg_credentials_list_destroy(&credentials_list);
+
+	if (output_filename != NULL) {
+		free(output_filename);
+		output_filename = NULL;
+	}
 
 	if (output != NULL)
 		fclose(output);
