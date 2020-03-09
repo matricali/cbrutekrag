@@ -1,7 +1,15 @@
 CC	= gcc
 
-CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=gnu99 -O3 -Iinclude -g
-LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
+CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=gnu99 \
+	-Iinclude -I./external/libssh-0.9.3/include -g -D_GNU_SOURCE -DLIBSSH_STATIC
+LDFLAGS	+= -L./external/libssh-0.9.3/build/src \
+-lssh \
+-lpthread \
+-lssh \
+-rdynamic \
+-lrt \
+-lcrypto \
+-lz
 
 NAME	= cbrutekrag
 SRCS	:= cbrutekrag.c \
@@ -11,8 +19,7 @@ SRCS	:= cbrutekrag.c \
 	progressbar.c \
 	bruteforce_ssh.c \
 	detection.c target.c \
-	credentials.c \
-	macrowrapper.c
+	credentials.c
 OBJS	:= $(SRCS:%.c=obj/%.o)
 
 all: dirs $(NAME)

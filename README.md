@@ -11,17 +11,42 @@ Penetration tests on SSH servers using dictionary attacks. Written in _C_.
 >Users have to act as permitted by local law rules.
 
 ## Requirements
-* `gcc` compiler
-* `libssh`
+**cbrutekrag** uses **libssh** - The SSH Library (http://www.libssh.org/)
 
 ## Build
+
+Requirements:
+
+* `make`
+* `gcc` compiler
+* `libssh-dev`
+
 ```bash
 git clone --depth=1 https://github.com/matricali/cbrutekrag.git
 cd cbrutekrag
 make
 make install
 ```
-Then you can do
+
+## Static build
+
+Requirements:
+
+* `cmake`
+* `gcc` compiler
+* `make`
+* `libssl-dev`
+* `libz-dev`
+
+```bash
+git clone --depth=1 https://github.com/matricali/cbrutekrag.git
+cd cbrutekrag
+bash static-build.sh
+make install
+```
+
+## Run
+
 ```bash
 $ cbrutekrag -h
        _                _       _

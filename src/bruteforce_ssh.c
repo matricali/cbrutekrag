@@ -143,7 +143,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 
 	method = ssh_userauth_list(my_ssh_session, NULL);
 
-	if (method & SSH_AUTH_METHOD_PASSWORD) {
+	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
 		r = ssh_userauth_password(my_ssh_session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
 			if (context->command != NULL) {
