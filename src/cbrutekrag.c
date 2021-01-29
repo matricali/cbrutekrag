@@ -60,7 +60,7 @@ void print_banner()
 void usage(const char *p)
 {
 	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]\n"
-	       "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n",
+	       "\t\t[-t THREADS] [-o OUTPUT.txt] [-X COMMAND] [TARGETS...]\n\n",
 	       p);
 }
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 	char *credentials_filename = NULL;
 	char *output_filename = NULL;
 	FILE *output = NULL;
-	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
+	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0, NULL };
 	struct timespec start, end;
 	double elapsed;
 	struct rlimit limit;
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 	context.max_threads =
 		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
-	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPh")) != -1) {
+	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPhX:")) != -1) {
 		switch (opt) {
 			case 'a':
 				context.non_openssh = 1;
@@ -147,6 +147,9 @@ int main(int argc, char **argv)
 			case 'P':
 				context.progress_bar = 1;
 				break;
+			case 'X':
+				context.command = strdup(optarg);
+				break;
 			case 'h':
 				print_banner();
 				usage(argv[0]);
@@ -161,7 +164,8 @@ int main(int argc, char **argv)
 				       "  -t <threads>      Max threads\n"
 				       "  -o <output>       Output log file\n"
 				       "  -a                Accepts non OpenSSH servers\n"
-				       "  -A                Allow servers detected as honeypots.\n");
+				       "  -A                Allow servers detected as honeypots.\n"
+				       "  -X <command>      Remote command execution.\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);

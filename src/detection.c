@@ -153,7 +153,7 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 	ret = connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
 
 	FD_ZERO(&fdset);
-	FdSet(sockfd, &fdset);
+	FD_SET(sockfd, &fdset);
 
 	/* Connection timeout */
 	struct timeval tv;
