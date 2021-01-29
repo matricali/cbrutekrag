@@ -27,7 +27,7 @@ SOFTWARE.
 #include "cbrutekrag.h" /* CBRUTEKRAG_VERBOSE_MODE */
 #include "log.h"
 
-int g_verbose;
+extern int g_verbose;
 
 void print_output(int level, const char *file, int line, const char *head,
 		  const char *tail, FILE *stream, const char *format, ...)
