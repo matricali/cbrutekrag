@@ -4,12 +4,12 @@ CFLAGS	+= -pedantic -Wconversion -Wall -Werror -Wextra -Wstrict-prototypes -std=
 	-Iinclude -I./external/libssh-0.9.3/include -g -D_GNU_SOURCE -DLIBSSH_STATIC
 LDFLAGS	+= -L./external/libssh-0.9.3/build/src \
 -lssh \
--lpthread \
--lssh \
--rdynamic \
 -lrt \
 -lcrypto \
--lz
+-lz \
+-lpthread \
+-ldl \
+-static
 
 NAME	= cbrutekrag
 SRCS	:= cbrutekrag.c \
