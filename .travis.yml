@@ -11,10 +11,13 @@ language: C
 
 env:
   matrix:
+  - OS=debian DIST=bullseye
   - OS=debian DIST=buster
   - OS=debian DIST=stretch
   - OS=debian DIST=jessie
   - OS=debian DIST=wheezy
+  - OS=ubuntu DIST=jammy
+  - OS=ubuntu DIST=focal
   - OS=ubuntu DIST=bionic
   - OS=ubuntu DIST=xenial
   - OS=ubuntu DIST=trusty
@@ -22,6 +25,8 @@ env:
   - OS=el DIST=8
   - OS=el DIST=7
   - OS=el DIST=6
+  - OS=fedora DIST=33
+  - OS=fedora DIST=32
   - OS=fedora DIST=31
   - OS=fedora DIST=30
   - OS=fedora DIST=29
@@ -30,10 +35,13 @@ env:
   - OS=fedora DIST=26
   - OS=fedora DIST=25
   - OS=fedora DIST=24
+  - OS=debian DIST=bullseye ARCH=i386
   - OS=debian DIST=buster ARCH=i386
   - OS=debian DIST=stretch ARCH=i386
   - OS=debian DIST=jessie ARCH=i386
   - OS=debian DIST=wheezy ARCH=i386
+  - OS=ubuntu DIST=jammy ARCH=i386
+  - OS=ubuntu DIST=focal ARCH=i386
   - OS=ubuntu DIST=bionic ARCH=i386
   - OS=ubuntu DIST=xenial ARCH=i386
   - OS=ubuntu DIST=trusty ARCH=i386
