@@ -228,7 +228,7 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 		if (banner_len > BANNER_LEN)
 			banner_len = BANNER_LEN;
 		strncpy(banner, buffer, banner_len);
-		banner[banner_len] = 0;
+		banner[banner_len - 1] = 0;
 	}
 
 	if (strstr(banner, "SSH-") != banner) {
