@@ -67,8 +67,8 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	if (r != SSH_OK) {
 		ssh_free(my_ssh_session);
 		if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
-			log_error("[!1] Error connecting to %s:%d (%d) %s.", hostname,
-				  port, ssh_get_error_code(my_ssh_session), ssh_get_error(my_ssh_session));
+			log_error("[!] Error connecting to %s:%d %s.", hostname,
+				  port, ssh_get_error(my_ssh_session));
 		}
 		return -1;
 	}
@@ -122,8 +122,9 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			ret = ssh_channel_request_exec(channel,
 						       "cat > /dev/null");
 			if (ret < 0) {
-				log_debug("[!] %s:%d - Possible interactive login (ie SonicWall).",
-					  hostname, port);
+				log_debug(
+					"[!] %s:%d - Possible interactive login (ie SonicWall).",
+					hostname, port);
 				ssh_channel_close(channel);
 				ssh_disconnect(my_ssh_session);
 				ssh_free(my_ssh_session);

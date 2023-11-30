@@ -70,7 +70,7 @@ int detection_login_methods(btkg_context_t *context, const char *hostname,
 	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
 	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
 	ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-#if LIBSSH_VERSION_MAYOR > 0 ||                                                \
+#if LIBSSH_VERSION_MAYOR > 0 || \
 	(LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
 	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
 	ssh_options_set(session, SSH_OPTIONS_HOSTKEYS, "none");
@@ -224,9 +224,11 @@ int detection_detect_ssh(btkg_context_t *ctx, const char *hostname,
 	}
 
 	banner_len = strcspn(buffer, "\r\n");
+
+	if (banner_len > BANNER_LEN)
+		banner_len = BANNER_LEN;
+
 	if (banner_len > 0) {
-		if (banner_len > BANNER_LEN)
-			banner_len = BANNER_LEN;
 		strncpy(banner, buffer, banner_len);
 		banner[banner_len - 1] = 0;
 	}
