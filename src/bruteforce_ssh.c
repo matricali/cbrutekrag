@@ -54,7 +54,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &port);
-#if LIBSSH_VERSION_MAYOR > 0 ||                                                \
+#if LIBSSH_VERSION_MAYOR > 0 || \
 	(LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
@@ -101,6 +101,36 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
 		r = ssh_userauth_password(my_ssh_session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
+			ssh_channel channel = ssh_channel_new(my_ssh_session);
+
+			if (channel == NULL) {
+				log_debug("[!] %s:%d - Cannot create channel.",
+					  hostname, port);
+				ssh_disconnect(my_ssh_session);
+				ssh_free(my_ssh_session);
+				return -1;
+			}
+
+			int ret = ssh_channel_open_session(channel);
+			if (ret < 0) {
+				ssh_channel_close(channel);
+				ssh_disconnect(my_ssh_session);
+				ssh_free(my_ssh_session);
+				return -1;
+			}
+
+			ret = ssh_channel_request_exec(channel,
+						       "cat > /dev/null");
+			if (ret < 0) {
+				log_debug(
+					"[!] %s:%d - Possible interactive login (ie SonicWall).",
+					hostname, port);
+				ssh_channel_close(channel);
+				ssh_disconnect(my_ssh_session);
+				ssh_free(my_ssh_session);
+				return -1;
+			}
+
 			ssh_disconnect(my_ssh_session);
 			ssh_free(my_ssh_session);
 
