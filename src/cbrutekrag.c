@@ -54,7 +54,7 @@ void print_banner()
 	       "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
 	       "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
 	       "              \033[0m\033[1mOpenSSH Brute force tool 0.5.0\033[0m\033[92m        __/ |\n"
-	       "          \033[0m(c) Copyright 2014-2023 Jorge Matricali\033[92m  |___/\033[0m\n\n");
+	       "          \033[0m(c) Copyright 2014-2022 Jorge Matricali\033[92m  |___/\033[0m\n\n");
 }
 
 void usage(const char *p)
@@ -102,70 +102,70 @@ int main(int argc, char **argv)
 	setrlimit(RLIMIT_NOFILE, &limit);
 
 	/* Calculate maximun number of threads. */
-	context.max_threads = (limit.rlim_cur > 1024) ? 1024 :
-							limit.rlim_cur - 8;
+	context.max_threads =
+		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
 	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPh")) != -1) {
 		switch (opt) {
-		case 'a':
-			context.non_openssh = 1;
-			break;
-		case 'A':
-			context.allow_honeypots = 1;
-			break;
-		case 'v':
-			context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
-			g_verbose = context.verbose;
-			break;
-		case 'V':
-			context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
-			break;
-		case 'T':
-			hostnames_filename = strdup(optarg);
-			break;
-		case 'C':
-			credentials_filename = strdup(optarg);
-			break;
-		case 't':
-			tempint = atoi(optarg);
-			if (tempint < 1) {
-				log_error("Invalid threads size. (%d)",
-					  tempint);
+			case 'a':
+				context.non_openssh = 1;
+				break;
+			case 'A':
+				context.allow_honeypots = 1;
+				break;
+			case 'v':
+				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
+				g_verbose = context.verbose;
+				break;
+			case 'V':
+				context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
+				break;
+			case 'T':
+				hostnames_filename = strdup(optarg);
+				break;
+			case 'C':
+				credentials_filename = strdup(optarg);
+				break;
+			case 't':
+				tempint = atoi(optarg);
+				if (tempint < 1) {
+					log_error("Invalid threads size. (%d)",
+						  tempint);
+					exit(EXIT_FAILURE);
+				}
+				context.max_threads = (size_t)tempint;
+				break;
+			case 'o':
+				output_filename = strdup(optarg);
+				break;
+			case 's':
+				context.perform_scan = 1;
+				break;
+			case 'D':
+				context.dry_run = 1;
+				break;
+			case 'P':
+				context.progress_bar = 1;
+				break;
+			case 'h':
+				print_banner();
+				usage(argv[0]);
+				printf("  -h                This help\n"
+				       "  -v                Verbose mode\n"
+				       "  -V                Verbose mode (sshlib)\n"
+				       "  -s                Scan mode\n"
+				       "  -D                Dry run\n"
+				       "  -P                Progress bar\n"
+				       "  -T <targets>      Targets file\n"
+				       "  -C <credentials>  Username and password file\n"
+				       "  -t <threads>      Max threads\n"
+				       "  -o <output>       Output log file\n"
+				       "  -a                Accepts non OpenSSH servers\n"
+				       "  -A                Allow servers detected as honeypots.\n");
+				exit(EXIT_SUCCESS);
+			default:
+				usage(argv[0]);
 				exit(EXIT_FAILURE);
-			}
-			context.max_threads = (size_t)tempint;
-			break;
-		case 'o':
-			output_filename = strdup(optarg);
-			break;
-		case 's':
-			context.perform_scan = 1;
-			break;
-		case 'D':
-			context.dry_run = 1;
-			break;
-		case 'P':
-			context.progress_bar = 1;
-			break;
-		case 'h':
-			print_banner();
-			usage(argv[0]);
-			printf("  -h                This help\n"
-			       "  -v                Verbose mode\n"
-			       "  -V                Verbose mode (sshlib)\n"
-			       "  -s                Scan mode\n"
-			       "  -D                Dry run\n"
-			       "  -P                Progress bar\n"
-			       "  -T <targets>      Targets file\n"
-			       "  -C <credentials>  Username and password file\n"
-			       "  -t <threads>      Max threads\n"
-			       "  -o <output>       Output log file\n"
-			       "  -a                Accepts non OpenSSH servers\n"
-			       "  -A                Allow servers detected as honeypots.\n");
-			exit(EXIT_SUCCESS);
-		default:
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
 		}
 	}
 	print_banner();
