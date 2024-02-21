@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-
-- Fixed static build
+- Added missing wrapper for FD_SET in static build
+- ssh_get_error shouldnt be used after ssh_free
 - Fixed Array index out of bounds in detection.c
+- Fixed static build
 
 ### Added
 
