@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Added missing wrapper for FD_SET in static build
+- ssh_get_error shouldnt be used after ssh_free
+- Buffer overflow in banner grabber
+
 ## [0.5.0] - 2020-03-07
 ### Added
 - Support for custom port (argument: -p <PORT>) both on scan and bruteforce phases.
