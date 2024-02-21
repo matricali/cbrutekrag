@@ -147,8 +147,15 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 		r = ssh_userauth_password(my_ssh_session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
 			if (context->command != NULL) {
-				bruteforce_ssh_execute_command(
+				int cx = bruteforce_ssh_execute_command(
 					my_ssh_session, context->command);
+				if (cx != SSH_OK) {
+					log_error(
+						"[!] %s:%d - Cannot execute command.",
+						hostname, port);
+				} else {
+					log_info("\033[32m[+]\033[0m %s:%d - Command executed successfully.", hostname, port);
+				}
 			}
 			ssh_disconnect(my_ssh_session);
 			ssh_free(my_ssh_session);
@@ -218,7 +225,6 @@ int bruteforce_ssh_execute_command(ssh_session session, const char *command)
 
 	ret = ssh_channel_request_exec(channel, command);
 	if (ret != SSH_OK) {
-		log_error("Cannot execute command.");
 		ssh_channel_close(channel);
 		ssh_channel_free(channel);
 		return ret;
