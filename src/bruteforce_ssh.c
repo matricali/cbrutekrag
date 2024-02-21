@@ -245,11 +245,14 @@ int bruteforce_ssh_execute_command(ssh_session session, const char *command)
 		goto exit_with_errors;
 	}
 
-	fclose(output);
+	if (output != NULL) {
+		fclose(output);
+	}
+	ssh_channel_send_eof(channel);
 	ssh_channel_close(channel);
 	ssh_channel_free(channel);
 
-	return ret;
+	return SSH_OK;
 
 exit_with_errors:
 	if (output != NULL) {
