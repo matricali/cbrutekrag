@@ -25,6 +25,7 @@ SOFTWARE.
 
 #include <stdint.h>
 
+#include "cbrutekrag.h"
 #include "target.h"
 
 typedef struct {

