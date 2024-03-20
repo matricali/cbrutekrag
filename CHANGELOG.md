@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Hostname can be used as a username or password dynamically ($TARGET)
+
 ### Fixed
 - Added missing wrapper for FD_SET in static build
 - ssh_get_error shouldnt be used after ssh_free
