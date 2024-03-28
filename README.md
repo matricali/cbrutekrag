@@ -93,5 +93,14 @@ cbrutekrag -s -t 8 -C combinations.txt -o result.log 192.168.1.0/24
 ```
 root root
 root password
-root $BLANKPASS$
+root $BLANKPASS
+$TARGET root
+root $TARGET
 ```
+
+#### Combinations file placeholders
+
+|Placeholder|Purpose|As password| As username|
+|------------|------|-----------|------------|
+|$BLANKPASS|Blank password|✔️|-|
+|$TARGET|Use hostname or IP as a password|✔️|✔️|

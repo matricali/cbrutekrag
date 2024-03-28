@@ -22,6 +22,7 @@ SOFTWARE.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <libssh/libssh.h>
 
@@ -118,25 +119,30 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 			     const char *password, size_t count, size_t total,
 			     FILE *output)
 {
+	const char *_password =
+		strcmp(password, "$TARGET") == 0 ? hostname : password;
+	const char *_username =
+		strcmp(username, "$TARGET") == 0 ? hostname : username;
+
 	int ret = bruteforce_ssh_login(context, hostname, port, username,
 				       password);
 
 	if (ret == 0) {
 		log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port,
-			 username, password);
+			 _username, _password);
 		if (output != NULL) {
 			log_output(output, "\t%s:%d\t%s\t%s\n", hostname, port,
-				   username, password);
+				   _username, _password);
 		}
 	} else {
 		log_debug("\033[38m[-]\033[0m %s:%d %s %s", hostname, port,
-			  username, password);
+			  _username, _password);
 	}
 
 	if (context->progress_bar) {
 		char bar_suffix[50];
 		sprintf(bar_suffix, "[%zu] %s:%d %s %s", count, hostname, port,
-			username, password);
+			_username, _password);
 		progressbar_render(count, total, bar_suffix, 0);
 	}
 
