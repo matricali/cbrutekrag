@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Hostname can be used as a username or password dynamically ($TARGET)
+- Hostname can be used as a username or password dynamically ($TARGET) (#28)
 
 ### Fixed
 - Added missing wrapper for FD_SET in static build

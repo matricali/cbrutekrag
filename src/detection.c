@@ -36,9 +36,9 @@ SOFTWARE.
 #include "cbrutekrag.h"
 #include "detection.h"
 #include "log.h"
+#include "macrowrapper.h"
 #include "progressbar.h"
 #include "target.h"
-#include "macrowrapper.h"
 
 #define BUF_SIZE 1024
 #define BANNER_LEN 256
