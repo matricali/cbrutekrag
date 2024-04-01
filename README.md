@@ -6,8 +6,8 @@ Penetration tests on SSH servers using dictionary attacks. Written in _C_.
 > _brute krag_ means "brute force" in afrikáans
 
 ## Disclaimer
->This tool is for ethical testing purpose only.   
->cbrutekrag and its owners can't be held responsible for misuse by users.   
+>This tool is for ethical testing purpose only.
+>cbrutekrag and its owners can't be held responsible for misuse by users.
 >Users have to act as permitted by local law rules.
 
 ## Requirements
@@ -59,8 +59,8 @@ $ cbrutekrag -h
       (c) Copyright 2014-2022 Jorge Matricali  |___/
 
 
-usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C combinations.lst]
-		[-t THREADS] [-o OUTPUT.txt] [TARGETS...]
+usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]
+                [-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]
 
   -h                This help
   -v                Verbose mode
@@ -72,6 +72,10 @@ usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C combinations.
   -C <combinations> Username and password file
   -t <threads>      Max threads
   -o <output>       Output log file
+  -F <format>       Output log format
+                    Available placeholders:
+                    %DATETIME%, %HOSTNAME%
+                    %PORT%, %USERNAME%, %PASSWORD%
   -a                Accepts non OpenSSH servers
   -A                Allow servers detected as honeypots.
 ```
@@ -104,3 +108,35 @@ root $TARGET
 |------------|------|-----------|------------|
 |$BLANKPASS|Blank password|✔️|-|
 |$TARGET|Use hostname or IP as a password|✔️|✔️|
+
+### Customizable output format
+
+Output format can be easily customizable using the command line option `-F`
+
+Example: `./cbrutekrag -F "%HOSTNAME%:%PORT%|%USERNAME%|%PASSWORD%\n"`, which
+produces an output like:
+
+```
+192.168.0.100:22|root|toor
+192.168.0.105:22|ubnt|ubnt
+```
+
+#### Default value
+
+`%DATETIME%\t%HOSTNAME%:%PORT%\t%USERNAME%\t%PASSWORD%\n`
+
+```
+2024/04/01 13:05:13     192.168.0.100:22     root    admin
+```
+
+#### Placeholders
+
+|Placeholder|Description                       |Example            |
+|-----------|----------------------------------|-------------------|
+|%DATETIME% |Replaced by `Y/m/d HH:ii:ss` date |2024/04/01 12:46:27|
+|%HOSTNAME% |Replaced by hostname or IPv4      |192.168.0.100      |
+|%PORT%     |Replaced by connection port       |22                 |
+|%USERNAME% |Replaced by username used         |root               |
+|%PASSWORD% |Replaced by password used         |admin              |
+|\n         |Replaced by LF                    |                   |
+|\t         |Replaced by TAB                   |                   |

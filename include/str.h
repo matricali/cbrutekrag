@@ -27,5 +27,9 @@ SOFTWARE.
 
 char **str_split(char *a_str, const char a_delim);
 const char *str_repeat(char *str, size_t times);
+char *str_replace(char *orig, char *rep, char *with);
+char *btkg_str_replace_placeholder(char *input, const char *search,
+				   const char *replace);
+void btkg_str_replace_escape_sequences(char *str);
 
 #endif /* STR_H */

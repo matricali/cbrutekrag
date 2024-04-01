@@ -44,6 +44,7 @@ SOFTWARE.
 #define NANO_PER_SEC 1000000000.0
 
 int g_verbose = 0;
+char *g_output_format = NULL;
 
 void print_banner()
 {
@@ -60,7 +61,7 @@ void print_banner()
 void usage(const char *p)
 {
 	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]\n"
-	       "\t\t[-t THREADS] [-o OUTPUT.txt] [TARGETS...]\n\n",
+	       "\t\t[-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]\n\n",
 	       p);
 }
 
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
 	context.max_threads =
 		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
 
-	while ((opt = getopt(argc, argv, "aAT:C:t:o:DsvVPh")) != -1) {
+	while ((opt = getopt(argc, argv, "aAT:C:t:o:F:DsvVPh")) != -1) {
 		switch (opt) {
 			case 'a':
 				context.non_openssh = 1;
@@ -135,6 +136,11 @@ int main(int argc, char **argv)
 				}
 				context.max_threads = (size_t)tempint;
 				break;
+			case 'F':
+				g_output_format = strdup(optarg);
+				btkg_str_replace_escape_sequences(
+					g_output_format);
+				break;
 			case 'o':
 				output_filename = strdup(optarg);
 				break;
@@ -160,6 +166,10 @@ int main(int argc, char **argv)
 				       "  -C <credentials>  Username and password file\n"
 				       "  -t <threads>      Max threads\n"
 				       "  -o <output>       Output log file\n"
+				       "  -F <format>       Output log format\n"
+				       "                    Available placeholders:\n"
+				       "                    %%DATETIME%%, %%HOSTNAME%%\n"
+				       "                    %%PORT%%, %%USERNAME%%, %%PASSWORD%%\n"
 				       "  -a                Accepts non OpenSSH servers\n"
 				       "  -A                Allow servers detected as honeypots.\n");
 				exit(EXIT_SUCCESS);
@@ -223,6 +233,12 @@ int main(int argc, char **argv)
 	if (context.max_threads > target_list.length) {
 		log_info("Decreasing max threads to %zu.", target_list.length);
 		context.max_threads = target_list.length;
+	}
+
+	/* Output Format */
+	if (g_output_format == NULL) {
+		g_output_format = strdup(
+			"%DATETIME%\t%HOSTNAME%:%PORT%\t%USERNAME%\t%PASSWORD%\n");
 	}
 
 	/* Output file */

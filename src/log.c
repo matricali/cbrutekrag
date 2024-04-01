@@ -22,12 +22,15 @@ SOFTWARE.
 
 #include <stdarg.h> /* va_list, va_start, va_end */
 #include <stdio.h> /* fprintf, vfprintf, stderr */
+#include <string.h> /* strlen, malloc, strncpy */
 #include <time.h> /* time_t, time, tm, localtime, strftime */
 
 #include "cbrutekrag.h" /* CBRUTEKRAG_VERBOSE_MODE */
 #include "log.h"
+#include "str.h" /* replace_placeholder */
 
 extern int g_verbose;
+extern char *g_output_format;
 
 void print_output(int level, const char *file, int line, const char *head,
 		  const char *tail, FILE *stream, const char *format, ...)
@@ -71,4 +74,36 @@ void log_output(FILE *stream, const char *format, ...)
 	vfprintf(stream, format, arg);
 	va_end(arg);
 	fflush(stream);
+}
+
+void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
+				const char *username, const char *password)
+{
+	int port_len = snprintf(NULL, 0, "%d", port);
+	char strport[port_len];
+
+	sprintf(strport, "%d", port);
+
+	// Allocation
+	size_t output_len = sizeof(char) * (strlen(g_output_format) + 1);
+	char *output = malloc(output_len);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+	strncpy(output, g_output_format, output_len);
+#pragma GCC diagnostic pop
+	// Timestamp
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
+	char s[20];
+
+	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+
+	output = btkg_str_replace_placeholder(output, "%DATETIME%", s);
+	output = btkg_str_replace_placeholder(output, "%HOSTNAME%", hostname);
+	output = btkg_str_replace_placeholder(output, "%USERNAME%", username);
+	output = btkg_str_replace_placeholder(output, "%PASSWORD%", password);
+	output = btkg_str_replace_placeholder(output, "%PORT%", strport);
+
+	fprintf(stream, "%s", output);
+	free(output);
 }

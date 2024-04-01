@@ -48,4 +48,7 @@ void print_output(int level, const char *file, int line, const char *head,
 
 void log_output(FILE *stream, const char *format, ...);
 
+void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
+				const char *username, const char *password);
+
 #endif /* LOGGER_H */
