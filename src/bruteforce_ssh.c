@@ -124,8 +124,8 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 	const char *_username =
 		strcmp(username, "$TARGET") == 0 ? hostname : username;
 
-	int ret = bruteforce_ssh_login(context, hostname, port, username,
-				       password);
+	int ret = bruteforce_ssh_login(context, hostname, port, _username,
+				       _password);
 
 	if (ret == 0) {
 		log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port,
