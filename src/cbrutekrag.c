@@ -20,17 +20,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <execinfo.h> /* backtrace, backtrace_symbols_fd */
 #include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h> /* clock */
-#include <unistd.h> /* fork */
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+// #include <process.h>
+#else
+#include <execinfo.h> /* backtrace, backtrace_symbols_fd */
+#include <signal.h>
 #include <sys/resource.h> /* rlimit */
 #include <sys/wait.h> /* waitpid */
+#include <unistd.h> /* for usleep() */
+#endif
+
+#include <pthread.h>
 
 #include "bruteforce_ssh.h"
 #include "cbrutekrag.h"
@@ -67,14 +76,63 @@ void usage(const char *p)
 
 void err_handler(int sig)
 {
+	log_error("Error: signal %d:\n", sig);
+
+#ifndef _WIN32
 	void *array[10];
 	int size;
 
 	size = backtrace(array, 10);
 
-	log_error("Error: signal %d:\n", sig);
 	backtrace_symbols_fd(array, size, STDERR_FILENO);
+#endif
 	exit(EXIT_FAILURE);
+}
+
+static size_t btkg_get_max_threads(void)
+{
+#ifndef _WIN32
+	struct rlimit limit;
+
+	/* Increase the maximum file descriptor number that can be opened by this process. */
+	getrlimit(RLIMIT_NOFILE, &limit);
+	limit.rlim_cur = limit.rlim_max;
+	setrlimit(RLIMIT_NOFILE, &limit);
+
+	return (limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
+#else
+	// TODO: Get real max threads available under Windows
+	return 1024;
+#endif
+}
+
+typedef struct {
+	btkg_context_t *context;
+	btkg_target_t *target;
+	btkg_credentials_t credentials;
+	size_t index;
+	size_t total;
+	FILE *output;
+} thread_data_t;
+
+void *thread_function(void *data)
+{
+	thread_data_t *thread_data = (thread_data_t *)data;
+	btkg_context_t *context = thread_data->context;
+	btkg_target_t *target = thread_data->target;
+	btkg_credentials_t credentials = thread_data->credentials;
+	size_t index = thread_data->index;
+	size_t total = thread_data->total;
+	FILE *output = thread_data->output;
+	int ret = EXIT_SUCCESS;
+
+	if (!context->dry_run) {
+		ret = bruteforce_ssh_try_login(
+			context, target->host, target->port, credentials.username,
+			credentials.password, index, total, output);
+	}
+
+	pthread_exit((void *)(intptr_t)ret);
 }
 
 int main(int argc, char **argv)
@@ -88,23 +146,20 @@ int main(int argc, char **argv)
 	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
 	struct timespec start, end;
 	double elapsed;
-	struct rlimit limit;
 	int tempint;
 
 	/* Error handler */
 	signal(SIGSEGV, err_handler);
 
+#ifndef _WIN32
 	/* Ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
-
-	/* Increase the maximum file descriptor number that can be opened by this process. */
-	getrlimit(RLIMIT_NOFILE, &limit);
-	limit.rlim_cur = limit.rlim_max;
-	setrlimit(RLIMIT_NOFILE, &limit);
+#endif
 
 	/* Calculate maximun number of threads. */
-	context.max_threads =
-		(limit.rlim_cur > 1024) ? 1024 : limit.rlim_cur - 8;
+	context.max_threads = btkg_get_max_threads();
+
+	context.timeout = 1;
 
 	while ((opt = getopt(argc, argv, "aAT:C:t:o:F:DsvVPh")) != -1) {
 		switch (opt) {
@@ -250,6 +305,14 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 	}
+#ifdef _WIN32
+	/* Initialize WinSock */
+	WSADATA wsa_data;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
+		fprintf(stderr, "WSAStartup failed.\n");
+		exit(1);
+	}
+#endif
 
 	/* Port scan and honeypot detection */
 	if (context.perform_scan) {
@@ -276,8 +339,10 @@ int main(int argc, char **argv)
 	}
 
 	/* Bruteforce */
-	pid_t pid = 0;
-	size_t p = 0;
+	pthread_t *threads =
+		(pthread_t *)malloc(context.max_threads * sizeof(pthread_t));
+	thread_data_t *thread_data = (thread_data_t *)malloc(
+		context.max_threads * sizeof(thread_data_t));
 	size_t count = 0;
 
 	log_info("Starting brute-force process...");
@@ -287,41 +352,36 @@ int main(int argc, char **argv)
 		btkg_credentials_t credentials =
 			credentials_list.credentials[x];
 
-		for (size_t y = 0; y < target_list.length; y++) {
-			if (p >= context.max_threads) {
-				waitpid(-1, NULL, 0);
-				p--;
-			}
+		for (size_t y = 0; y < targets->length; y++) {
+			btkg_target_t *current_target = &targets->targets[y];
 
-			btkg_target_t current_target = target_list.targets[y];
+			thread_data[count].context = &context;
+			thread_data[count].target = current_target;
+			thread_data[count].credentials = credentials;
+			thread_data[count].index = count;
+			thread_data[count].total = total;
+			thread_data[count].output = output;
 
-			pid = fork();
-
-			if (pid) {
-				p++;
-			} else if (pid == 0) {
-				if (!context.dry_run) {
-					bruteforce_ssh_try_login(
-						&context, current_target.host,
-						current_target.port,
-						credentials.username,
-						credentials.password, count,
-						total, output);
-				}
-				exit(EXIT_SUCCESS);
-			} else {
-				log_error("Fork failed!");
+			if (pthread_create(&threads[count], NULL,
+					   thread_function,
+					   &thread_data[count]) != 0) {
+				log_error("Failed to create thread!");
+				exit(EXIT_FAILURE);
 			}
 
 			count++;
 		}
 	}
 
-	/* Wait until all forks finished her work*/
-	while (p > 0) {
-		waitpid(-1, NULL, 0);
-		--p;
+	/* Wait until all threads finish their work */
+	for (size_t i = 0; i < count; i++) {
+		void *ret;
+		printf("Joining thread: %ld\n", count);
+		pthread_join(threads[i], &ret);
 	}
+
+	free(threads);
+	free(thread_data);
 
 	clock_gettime(CLOCK_MONOTONIC, &end);
 	elapsed = (double)(end.tv_sec - start.tv_sec);
@@ -331,8 +391,6 @@ int main(int argc, char **argv)
 		progressbar_render(count, total, NULL, 0);
 
 	log_info("Brute-force process took %f seconds.", elapsed);
-
-	pid = 0;
 
 	btkg_credentials_list_destroy(&credentials_list);
 	btkg_target_list_destroy(targets);
