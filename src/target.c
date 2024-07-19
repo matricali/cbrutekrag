@@ -72,7 +72,7 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
  */
 btkg_target_list_t *btkg_target_list_create(void)
 {
-	btkg_target_list_t *targets = malloc(sizeof(btkg_target_list_t *));
+	btkg_target_list_t *targets = malloc(sizeof(btkg_target_list_t));
 
 	if (targets != NULL)
 		btkg_target_list_init(targets);
