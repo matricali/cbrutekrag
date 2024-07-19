@@ -31,20 +31,20 @@ char *g_blankpass_placeholder = "$BLANKPASS";
 
 int btkg_credentials_parse(char *line, btkg_credentials_t *dst)
 {
-	dst->username[0] = 0;
-	dst->password[0] = 0;
+	dst->username[0] = '\0';
+	dst->password[0] = '\0';
 
 	char *username = strtok(line, " ");
 	if (username == NULL)
 		return -1;
-	strncpy(dst->username, username, LOGIN_NAME_MAX);
+	snprintf(dst->username, LOGIN_NAME_MAX, "%s", username);
 
 	char *password = strtok(NULL, "\n");
 	if (password == NULL)
 		return 0;
 
 	if (strcmp(password, g_blankpass_placeholder) != 0)
-		strncpy(dst->password, password, LOGIN_PASS_MAX);
+		snprintf(dst->password, LOGIN_PASS_MAX, "%s", password);
 
 	return 0;
 }
@@ -67,24 +67,23 @@ void btkg_credentials_list_load(btkg_credentials_list_t *credentials_list,
 {
 	FILE *fp;
 	ssize_t read;
-	char *temp = 0;
-	size_t len;
+	char *temp = NULL;
+	size_t len = 0;
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
 		log_error("Error opening file. (%s)", filename);
-		exit(EXIT_FAILURE);
+		return;
 	}
 
-	int lines = 0;
-	for (lines = 1; (read = getline(&temp, &len, fp)) != -1; lines++) {
-		strtok(temp, "\n");
+	for (int lines = 1; (read = getline(&temp, &len, fp)) != -1; lines++) {
+		temp[strcspn(temp, "\n")] = '\0';
+
 		btkg_credentials_t credentials;
 
 		if (btkg_credentials_parse(temp, &credentials) != 0) {
-			log_error(
-				"WARNING: An error ocurred parsing '%s' on line #%d",
-				filename, lines);
+			log_error("WARNING: Error parsing '%s' on line #%d",
+				  filename, lines);
 			continue;
 		}
 
@@ -92,8 +91,6 @@ void btkg_credentials_list_load(btkg_credentials_list_t *credentials_list,
 	}
 
 	free(temp);
-	temp = NULL;
-
 	fclose(fp);
 }
 
@@ -122,5 +119,7 @@ void btkg_credentials_list_append(btkg_credentials_list_t *credentials_list,
 void btkg_credentials_list_destroy(btkg_credentials_list_t *credentials_list)
 {
 	free(credentials_list->credentials);
+	credentials_list->credentials = NULL;
+	credentials_list->length = 0;
 	credentials_list = NULL;
 }
