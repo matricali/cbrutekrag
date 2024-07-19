@@ -33,8 +33,7 @@ char *g_output_format = NULL;
 
 typedef struct {
 	const char *input;
-	const char *hostname;
-	uint16_t port;
+	btkg_target_t *expected;
 } test_input_t;
 
 enum {
@@ -44,44 +43,63 @@ enum {
 	TEST_FAIL_PORT = 3
 };
 
-static int test_btkg_target_parse(const char *input, const char *hostname,
-				  uint16_t port)
+static int test_btkg_target_parse(const char *input, btkg_target_t *expected)
 {
 	char *line = strdup(input);
 
-	printf("Test btkg_credentials_parse('%s') => { '%s', %d }: ", input,
-	       hostname, port);
-
-	btkg_target_t target = btkg_target_parse(line);
-	free(line);
-
-	if (hostname == NULL && target.host != NULL) {
-		printf("FAIL\n-- Expected parsed hostname = NULL, got '%s'\n",
-		       target.host);
-		return TEST_FAIL_PARSE;
-	} else if (hostname != NULL && strcmp(target.host, hostname) != 0) {
-		printf("FAIL\n-- Expected parsed hostname = '%s', got '%s'\n",
-		       hostname, target.host);
-		return TEST_FAIL_HOSTNAME;
+	if (expected == NULL) {
+		printf("Test btkg_credentials_parse('%s') => NULL: ", input);
+	} else {
+		printf("Test btkg_credentials_parse('%s') => { '%s', %d }: ",
+		       input, expected->host, expected->port);
 	}
 
-	if (target.port != port) {
-		printf("FAIL\n-- Expected parsed port = '%d', got '%d'\n", port,
-		       target.port);
-		return TEST_FAIL_PORT;
+	btkg_target_t *target = btkg_target_parse(line);
+	free(line);
+
+	if (expected == NULL) {
+		if (target != NULL) {
+			printf("FAIL\n-- Expected parsed target = NULL, got '{ %s, %d }'\n",
+			       target->host, target->port);
+			free(target->host);
+			free(target);
+			return TEST_FAIL_PARSE;
+		}
+	} else {
+		if (target == NULL) {
+			printf("FAIL\n-- Expected parsed target = { '%s', %d }, got NULL\n",
+			       expected->host, expected->port);
+			return TEST_FAIL_PARSE;
+		}
+
+		if (strcmp(target->host, expected->host) != 0) {
+			printf("FAIL\n-- Expected parsed hostname = '%s', got '%s'\n",
+			       expected->host, target->host);
+			free(target->host);
+			free(target);
+			return TEST_FAIL_HOSTNAME;
+		}
+
+		if (target->port != expected->port) {
+			printf("FAIL\n-- Expected parsed port = '%d', got '%d'\n",
+			       expected->port, target->port);
+			free(target->host);
+			free(target);
+			return TEST_FAIL_PORT;
+		}
 	}
 
 	printf("PASSED\n");
 	return TEST_PASSED;
 }
 
-void run_tests(const test_input_t *tests)
+void run_tests(test_input_t *tests)
 {
 	int i = 0;
 
 	while (tests[i].input != NULL) {
-		int result = test_btkg_target_parse(
-			tests[i].input, tests[i].hostname, tests[i].port);
+		int result = test_btkg_target_parse(tests[i].input,
+						    tests[i].expected);
 		if (result != TEST_PASSED) {
 			printf("Test %d failed with error code %d\n", i + 1,
 			       result);
@@ -98,16 +116,19 @@ int main()
 	printf("Running target.c Test\n");
 
 	test_input_t matrix[] = {
-		{ "127.0.0.1", "127.0.0.1",
-		  22 }, // Default value por port should be 22
-		{ "192.168.0.1", "192.168.0.1", 22 },
-		{ "192.168.100.1:2222", "192.168.100.1", 2222 },
-		{ "192.168.100.1:22", "192.168.100.1", 22 },
-		{ "localhost:22", "localhost", 22 },
-		{ "localhost:0", NULL, 22 },
-		{ "10.10.10.10:test", NULL, 22 },
-		{ "10.10.10.10  :22", NULL, 22 },
-		{ NULL, NULL, 0 },
+		// Default value por port should be 22
+		{ "127.0.0.1", &(btkg_target_t){ "127.0.0.1", 22 } },
+		{ "192.168.0.1", &(btkg_target_t){ "192.168.0.1", 22 } },
+		// Custom ports
+		{ "192.168.100.1:2222",
+		  &(btkg_target_t){ "192.168.100.1", 2222 } },
+		{ "192.168.100.1:22", &(btkg_target_t){ "192.168.100.1", 22 } },
+		{ "localhost:22", &(btkg_target_t){ "localhost", 22 } },
+		// Invalid
+		{ "localhost:0", NULL },
+		{ "10.10.10.10:test", NULL },
+		{ "10.10.10.10  :22", NULL },
+		{ NULL, NULL },
 	};
 
 	run_tests(matrix);
