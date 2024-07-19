@@ -14,27 +14,51 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - uses: lukka/get-cmake@v3.27
 
       - name: Set up vcpkg
-        uses: lukka/get-vcpkg@v10
+        uses: lukka/run-vcpkg@v11
         with:
           vcpkgCommitId: 'latest'
           runVcpkgInstall: true
 
-      - name: Set up CMake
-        uses: actions/setup-cmake@v2
+      - name: Run CMake consuming CMakePreset.json and run vcpkg to build packages
+        uses: lukka/run-cmake@v10
         with:
-          cmake-version: '3.20.1'
+          # This is the default path to the CMakeLists.txt along side the
+          # CMakePresets.json. Change if you need have CMakeLists.txt and CMakePresets.json
+          # located elsewhere.
+          # cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
 
-      - name: Configure CMake
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          # You could use CMake workflow presets defined in the CMakePresets.json
+          # with just this line below. Note this one cannot be used with any other
+          # preset input, it is mutually exclusive.
+          # workflowPreset: 'workflow-name'
 
-      - name: Build
-        run: cmake --build build --config Release
+          # This is the name of the CMakePresets.json's configuration to use to generate
+          # the project files. This configuration leverages the vcpkg.cmake toolchain file to
+          # run vcpkg and install all dependencies specified in vcpkg.json.
+          configurePreset: 'default'
+          # Additional arguments can be appended to the cmake command.
+          # This is useful to reduce the number of CMake's Presets since you can reuse
+          # an existing preset with different variables.
+          # configurePresetAdditionalArgs: "['-DENABLE_YOUR_FEATURE=1']"
 
-      - name: Run Tests
-        run: ctest --output-on-failure -C Release --test-dir build
+          # This is the name of the CMakePresets.json's configuration to build the project.
+          buildPreset: 'default'
+          # Additional arguments can be appended when building, for example to specify the
+          # configuration to build.
+          # This is useful to reduce the number of CMake's Presets you need in CMakePresets.json.
+          buildPresetAdditionalArgs: "['--config Release']"
+
+          # This is the name of the CMakePresets.json's configuration to test the project with.
+          testPreset: 'default'
+          # Additional arguments can be appended when testing, for example to specify the config
+          # to test.
+          # This is useful to reduce the number of CMake's Presets you need in CMakePresets.json.
+          testPresetAdditionalArgs: "['--config Release']"
 
       - name: Archive Build Artifacts
         uses: actions/upload-artifact@v2
