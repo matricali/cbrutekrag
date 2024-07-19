@@ -22,15 +22,29 @@ SOFTWARE.
 
 #include <stdarg.h> /* va_list, va_start, va_end */
 #include <stdio.h> /* fprintf, vfprintf, stderr */
-#include <string.h> /* strlen, malloc, strncpy */
+#include <string.h> /* strlen, malloc */
 #include <time.h> /* time_t, time, tm, localtime, strftime */
 
 #include "cbrutekrag.h" /* CBRUTEKRAG_VERBOSE_MODE */
 #include "log.h"
-#include "str.h" /* replace_placeholder */
+#include "str.h" /* btkg_str_replace_placeholder */
 
 extern int g_verbose;
 extern char *g_output_format;
+
+#define TIMESTAMP_BUFFER_SIZE 20
+
+static inline const char *get_current_timestamp(void)
+{
+	time_t t = time(NULL);
+	struct tm *tm = localtime(&t);
+	static char buffer[TIMESTAMP_BUFFER_SIZE];
+
+	buffer[strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S", tm)] =
+		'\0';
+
+	return buffer;
+}
 
 void print_output(int level, const char *file, int line, const char *head,
 		  const char *tail, FILE *stream, const char *format, ...)
@@ -38,14 +52,10 @@ void print_output(int level, const char *file, int line, const char *head,
 	if (level == LOG_DEBUG && !(g_verbose & CBRUTEKRAG_VERBOSE_MODE)) {
 		return;
 	}
-	time_t t = time(NULL);
-	struct tm *tm = localtime(&t);
 
 	va_list arg;
-	char s[20];
 
-	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
-	fprintf(stream, "\033[2K\r%s[%s] ", head, s);
+	fprintf(stream, "\033[2K\r%s[%s] ", head, get_current_timestamp());
 
 #ifndef DEBUG
 	if (level == LOG_DEBUG)
@@ -61,14 +71,9 @@ void print_output(int level, const char *file, int line, const char *head,
 
 void log_output(FILE *stream, const char *format, ...)
 {
-	time_t t = time(NULL);
-	struct tm *tm = localtime(&t);
-
 	va_list arg;
-	char s[20];
 
-	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
-	fprintf(stream, "%s ", s);
+	fprintf(stream, "%s ", get_current_timestamp());
 
 	va_start(arg, format);
 	vfprintf(stream, format, arg);
@@ -79,31 +84,55 @@ void log_output(FILE *stream, const char *format, ...)
 void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 				const char *username, const char *password)
 {
-	int port_len = snprintf(NULL, 0, "%d", port);
-	char strport[port_len];
+	if (g_output_format == NULL) {
+		log_error("g_output_format is NULL");
+		return;
+	}
 
-	sprintf(strport, "%d", port);
+	int port_len = snprintf(NULL, 0, "%d", port);
+	char strport[port_len + 1]; // +1 for the null terminator
+
+	snprintf(strport, sizeof(strport), "%d", port);
 
 	// Allocation
-	size_t output_len = sizeof(char) * (strlen(g_output_format) + 1);
+	size_t output_len = strlen(g_output_format) + 1;
 	char *output = malloc(output_len);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-overflow"
-	strncpy(output, g_output_format, output_len);
-#pragma GCC diagnostic pop
-	// Timestamp
-	time_t t = time(NULL);
-	struct tm *tm = localtime(&t);
-	char s[20];
 
-	s[strftime(s, sizeof(s), "%Y/%m/%d %H:%M:%S", tm)] = '\0';
+	if (output == NULL) {
+		log_error("Error allocating memory");
+		return;
+	}
 
-	output = btkg_str_replace_placeholder(output, "%DATETIME%", s);
+	snprintf(output, output_len, "%s", g_output_format);
+
+	output = btkg_str_replace_placeholder(output, "%DATETIME%",
+					      get_current_timestamp());
+	if (output == NULL)
+		goto error;
+
 	output = btkg_str_replace_placeholder(output, "%HOSTNAME%", hostname);
-	output = btkg_str_replace_placeholder(output, "%USERNAME%", username);
-	output = btkg_str_replace_placeholder(output, "%PASSWORD%", password);
-	output = btkg_str_replace_placeholder(output, "%PORT%", strport);
+	if (output == NULL)
+		goto error;
 
+	output = btkg_str_replace_placeholder(output, "%USERNAME%", username);
+	if (output == NULL)
+		goto error;
+
+	output = btkg_str_replace_placeholder(output, "%PASSWORD%", password);
+	if (output == NULL)
+		goto error;
+
+	output = btkg_str_replace_placeholder(output, "%PORT%", strport);
+	if (output == NULL)
+		goto error;
+
+	// Print buffer
 	fprintf(stream, "%s", output);
+	free(output);
+
+	return;
+
+error:
+	log_error("Error replacing placeholders");
 	free(output);
 }

@@ -23,12 +23,13 @@ SOFTWARE.
 #ifndef LOGGER_H
 #define LOGGER_H
 
-enum { LOG_TRACE,
-       LOG_DEBUG,
-       LOG_INFO,
-       LOG_WARN,
-       LOG_ERROR,
-       LOG_FATAL,
+enum {
+	LOG_TRACE,
+	LOG_DEBUG,
+	LOG_INFO,
+	LOG_WARN,
+	LOG_ERROR,
+	LOG_FATAL,
 };
 
 #define log_error(...)                                                         \
