@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: lukka/get-cmake@v3.27
+      - uses: lukka/get-cmake@v3.29.0
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
