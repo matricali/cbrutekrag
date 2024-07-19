@@ -1,0 +1,43 @@
+name: Windows CMake Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up vcpkg
+        uses: lukka/get-vcpkg@v10
+        with:
+          vcpkgCommitId: 'latest'
+          runVcpkgInstall: true
+
+      - name: Set up CMake
+        uses: actions/setup-cmake@v2
+        with:
+          cmake-version: '3.20.1'
+
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=${{ runner.temp }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run Tests
+        run: ctest --output-on-failure -C Release --test-dir build
+
+      - name: Archive Build Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: cbrutekrag
+          path: build/src/cbrutekrag.exe
