@@ -20,11 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <sys/select.h>
+#endif
 
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 
 void FdSet(int fd, fd_set *set)
 {
+#ifdef _WIN32
+	FD_SET((SOCKET)fd, set);
+#else
 	FD_SET(fd, set);
+#endif
 }

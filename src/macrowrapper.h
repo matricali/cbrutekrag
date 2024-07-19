@@ -23,6 +23,14 @@ SOFTWARE.
 #ifndef __BTKG_MACROWRAPPER_H
 #define __BTKG_MACROWRAPPER_H
 
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <sys/select.h>
+#endif
+
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 void FdSet(int fd, fd_set *set);
 
 #endif /* __BTKG_MACROWRAPPER_H */
