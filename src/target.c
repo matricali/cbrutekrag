@@ -20,13 +20,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#else
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "compat.h"
 #include "iprange.h"
 #include "log.h"
 #include "target.h"
+
+#ifdef _WIN32
+#define close closesocket
+#define ssize_t SSIZE_T
+#endif
 
 /**
  * Check if given port is valid
@@ -151,7 +170,7 @@ void btkg_target_list_load(btkg_target_list_t *target_list, char *filename)
 
 		if (ret.host == NULL) {
 			log_error(
-				"WARNING: An error ocurred parsing '%s' on line #%d",
+				"WARNING: An error occurred parsing '%s' on line #%d",
 				filename, lines);
 			continue;
 		}
