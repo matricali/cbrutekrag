@@ -41,7 +41,7 @@ int btkg_credentials_parse(char *line, btkg_credentials_t *dst)
 
 	char *password = strtok(NULL, "\n");
 	if (password == NULL)
-		return -2;
+		return 0;
 
 	if (strcmp(password, g_blankpass_placeholder) != 0)
 		strncpy(dst->password, password, LOGIN_PASS_MAX);
