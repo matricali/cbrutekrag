@@ -18,7 +18,7 @@ OBJS	:= $(SRCS:%.c=obj/%.o)
 all: dirs $(NAME)
 
 dirs:
-	mkdir -p obj
+	-mkdir obj
 
 $(NAME): $(OBJS)
 	@$(CC) $(OBJS) $(LDFLAGS) -o $@
