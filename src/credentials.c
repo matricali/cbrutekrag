@@ -39,7 +39,7 @@ int btkg_credentials_parse(char *line, btkg_credentials_t *dst)
 		return -1;
 	strncpy(dst->username, username, LOGIN_NAME_MAX);
 
-	char *password = strtok(NULL, " ");
+	char *password = strtok(NULL, "\n");
 	if (password == NULL)
 		return -2;
 
