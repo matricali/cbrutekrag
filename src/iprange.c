@@ -15,12 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+#else
+#include <arpa/inet.h> /* ntohl */
+#endif
+
 #include <errno.h> /* errno */
 #include <stdio.h>
 #include <stdlib.h> /* exit */
 #include <string.h> /* strchr */
-
-#include <arpa/inet.h> /* ntohl */
 
 #include "iprange.h"
 
@@ -33,7 +39,11 @@ in_addr_t a_to_hl(const char *ipstr)
 {
 	struct in_addr in;
 
+#ifdef _WIN32
+	if (inet_pton(AF_INET, ipstr, &in) != 1) {
+#else
 	if (!inet_aton(ipstr, &in)) {
+#endif
 		fprintf(stderr, "Invalid address %s!\n", ipstr);
 		exit(1);
 	}
@@ -88,8 +98,9 @@ network_addr_t str_to_netaddr(const char *ipstr)
 	long prefix = 32;
 	char *prefixstr;
 	network_addr_t netaddr;
+	char *ipstr_copy = strdup(ipstr); // Make a copy of ipstr to modify
 
-	if ((prefixstr = strchr(ipstr, '/'))) {
+	if ((prefixstr = strchr(ipstr_copy, '/'))) {
 		*prefixstr = '\0';
 		prefixstr++;
 		errno = 0;
@@ -97,12 +108,14 @@ network_addr_t str_to_netaddr(const char *ipstr)
 		if (errno || (*prefixstr == '\0') || (prefix < 0) ||
 		    (prefix > 32)) {
 			fprintf(stderr, "Invalid prefix /%s...!\n", prefixstr);
+			free(ipstr_copy);
 			exit(1);
 		}
 	}
 
 	netaddr.pfx = (int)prefix;
-	netaddr.addr = network(a_to_hl(ipstr), (int)prefix);
+	netaddr.addr = network(a_to_hl(ipstr_copy), (int)prefix);
 
+	free(ipstr_copy);
 	return (netaddr);
 }

@@ -18,7 +18,14 @@
 #ifndef IPRANGE_H
 #define IPRANGE_H
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+typedef int in_addr_t;
+#pragma comment(lib, "ws2_32.lib")
+#else
 #include <arpa/inet.h> /* in_addr_t */
+#endif
 
 typedef struct network_addr {
 	in_addr_t addr;
