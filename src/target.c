@@ -47,12 +47,15 @@ SOFTWARE.
 #define ssize_t SSIZE_T
 #endif
 
+#define MAX_PORT 65535
+#define DEFAULT_PORT 22
+
 /**
  * Check if given port is valid
  */
 int btkg_target_port_is_valid(const long port)
 {
-	return port >= 1 && port <= 65535;
+	return port >= 1 && port <= MAX_PORT;
 }
 
 /**
@@ -65,30 +68,33 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 }
 
 /**
- * Split target into btkg_target_t structure
+ * Parse target string into btkg_target_t structure
  */
-btkg_target_t target_parse(char *line)
+btkg_target_t btkg_target_parse(char *line)
 {
-	btkg_target_t ret = { .host = NULL, .port = 22 };
+	btkg_target_t ret = { .host = NULL, .port = DEFAULT_PORT };
 	char *ptr = strtok(line, ":");
 
-	char *host = NULL;
-	long port = 0;
-
 	if (ptr != NULL) {
-		host = strdup(ptr);
-		ptr = strtok(NULL, "´");
+		ret.host = strdup(ptr);
+		if (ret.host == NULL) {
+			perror("strdup");
+			exit(EXIT_FAILURE);
+		}
 
+		ptr = strtok(NULL, ":");
 		if (ptr != NULL) {
 			char *endptr;
-			port = strtol(ptr, &endptr, 10);
-			if (!btkg_target_port_is_valid(port)) {
+			long port = strtol(ptr, &endptr, 10);
+			if (*endptr != '\0' ||
+			    !btkg_target_port_is_valid(port)) {
 				log_error("WARNING: Invalid port (%s)", ptr);
+				free(ret.host);
+				ret.host = NULL;
 				return ret;
 			}
 			ret.port = (uint16_t)port;
 		}
-		ret.host = host;
 	}
 
 	return ret;
@@ -100,86 +106,89 @@ btkg_target_t target_parse(char *line)
 void btkg_target_list_append(btkg_target_list_t *target_list,
 			     btkg_target_t target)
 {
-	btkg_target_t *targets = target_list->targets;
-
-	if (targets == NULL) {
-		targets = malloc(sizeof(target));
-		*targets = target;
-	} else {
-		targets = realloc(targets,
-				  sizeof(target) * (target_list->length + 1));
-		*(targets + target_list->length) = target;
+	btkg_target_t *new_targets =
+		realloc(target_list->targets,
+			sizeof(target) * (target_list->length + 1));
+	if (new_targets == NULL) {
+		perror("realloc");
+		exit(EXIT_FAILURE);
 	}
 
-	target_list->length = target_list->length + 1;
-	target_list->targets = targets;
+	target_list->targets = new_targets;
+	target_list->targets[target_list->length] = target;
+	target_list->length++;
 }
 
 /**
- * Parse CIDR block and appends as many btkg_target_t as needed into the given btkg_target_list_t
+ * Parse CIDR block and append as many btkg_target_t as needed into the given btkg_target_list_t
  */
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
 				   const char *range, uint16_t port)
 {
-	char *netmask_s;
-	netmask_s = strchr(range, '/');
+	char *netmask_s = strchr(range, '/');
 
 	if (netmask_s == NULL) {
 		btkg_target_t target = { .host = strdup(range), .port = port };
+		if (target.host == NULL) {
+			perror("strdup");
+			exit(EXIT_FAILURE);
+		}
 		btkg_target_list_append(target_list, target);
 		return;
 	}
 
 	struct in_addr in;
 	in_addr_t lo, hi;
-	network_addr_t netaddr;
-
-	netaddr = str_to_netaddr(range);
+	network_addr_t netaddr = str_to_netaddr(range);
 	lo = netaddr.addr;
 	hi = broadcast(netaddr.addr, netaddr.pfx);
 
 	for (in_addr_t x = lo; x < hi; x++) {
-		btkg_target_t new_target;
 		in.s_addr = htonl(x);
-		new_target.host = strdup(inet_ntoa(in));
-		new_target.port = port;
+		btkg_target_t new_target = { .host = strdup(inet_ntoa(in)),
+					     .port = port };
+		if (new_target.host == NULL) {
+			perror("strdup");
+			exit(EXIT_FAILURE);
+		}
 		btkg_target_list_append(target_list, new_target);
 	}
 }
 
 /**
- * Loads targets from a given file and append them into the given btkg_target_list_t
+ * Load targets from a given file and append them into the given btkg_target_list_t
  */
-void btkg_target_list_load(btkg_target_list_t *target_list, char *filename)
+void btkg_target_list_load(btkg_target_list_t *target_list,
+			   const char *filename)
 {
-	FILE *fp;
-	ssize_t read;
-	char *temp = 0;
-	size_t len;
-
-	fp = fopen(filename, "r");
+	FILE *fp = fopen(filename, "r");
 	if (fp == NULL) {
+		perror("fopen");
 		log_error("Error opening file. (%s)", filename);
 		exit(EXIT_FAILURE);
 	}
 
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
 	int lines = 0;
-	for (lines = 0; (read = getline(&temp, &len, fp)) != -1; lines++) {
-		strtok(temp, "\n");
-		btkg_target_t ret = target_parse(temp);
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+		strtok(line, "\n");
+		btkg_target_t ret = btkg_target_parse(line);
 
 		if (ret.host == NULL) {
 			log_error(
 				"WARNING: An error occurred parsing '%s' on line #%d",
 				filename, lines);
-			continue;
+		} else {
+			btkg_target_list_append_range(target_list, ret.host,
+						      ret.port);
 		}
 
-		btkg_target_list_append_range(target_list, ret.host, ret.port);
+		lines++;
 	}
 
-	free(temp);
-	temp = NULL;
-
+	free(line);
 	fclose(fp);
 }

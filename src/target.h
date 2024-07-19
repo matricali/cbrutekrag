@@ -43,8 +43,9 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
 				   const char *range, uint16_t port);
 
-void btkg_target_list_load(btkg_target_list_t *target_list, char *filename);
+void btkg_target_list_load(btkg_target_list_t *target_list,
+			   const char *filename);
 
-btkg_target_t target_parse(char *line);
+btkg_target_t btkg_target_parse(char *line);
 
 #endif /* TARGET_H */
