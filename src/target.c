@@ -68,17 +68,56 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 }
 
 /**
+ * Allocate new btkg_target_list_t
+ */
+btkg_target_list_t *btkg_target_list_create(void)
+{
+	btkg_target_list_t *targets = malloc(sizeof(btkg_target_list_t *));
+
+	if (targets != NULL)
+		btkg_target_list_init(targets);
+
+	return targets;
+}
+
+/**
+ * Destroy and free btkg_target_list_t
+ */
+void btkg_target_list_destroy(btkg_target_list_t *target_list)
+{
+	if (target_list == NULL) {
+		return;
+	}
+
+	for (size_t i = 0; i < target_list->length; i++) {
+		free(target_list->targets[i].host);
+	}
+
+	free(target_list->targets);
+	free(target_list);
+}
+
+/**
  * Parse target string into btkg_target_t structure
  */
-btkg_target_t btkg_target_parse(char *line)
+btkg_target_t *btkg_target_parse(char *line)
 {
-	btkg_target_t ret = { .host = NULL, .port = DEFAULT_PORT };
+	btkg_target_t *ret = malloc(sizeof(btkg_target_t));
+	if (ret == NULL) {
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+
+	ret->host = NULL;
+	ret->port = DEFAULT_PORT;
+
 	char *ptr = strtok(line, ":");
 
 	if (ptr != NULL) {
-		ret.host = strdup(ptr);
-		if (ret.host == NULL) {
+		ret->host = strdup(ptr);
+		if (ret->host == NULL) {
 			perror("strdup");
+			free(ret);
 			exit(EXIT_FAILURE);
 		}
 
@@ -89,11 +128,11 @@ btkg_target_t btkg_target_parse(char *line)
 			if (*endptr != '\0' ||
 			    !btkg_target_port_is_valid(port)) {
 				log_error("WARNING: Invalid port (%s)", ptr);
-				free(ret.host);
-				ret.host = NULL;
-				return ret;
+				free(ret->host);
+				free(ret);
+				return NULL;
 			}
-			ret.port = (uint16_t)port;
+			ret->port = (uint16_t)port;
 		}
 	}
 
@@ -104,19 +143,20 @@ btkg_target_t btkg_target_parse(char *line)
  * Append btkg_target_t into given btkg_target_list_t
  */
 void btkg_target_list_append(btkg_target_list_t *target_list,
-			     btkg_target_t target)
+			     btkg_target_t *target)
 {
 	btkg_target_t *new_targets =
 		realloc(target_list->targets,
-			sizeof(target) * (target_list->length + 1));
+			sizeof(btkg_target_t) * (target_list->length + 1));
 	if (new_targets == NULL) {
 		perror("realloc");
 		exit(EXIT_FAILURE);
 	}
 
 	target_list->targets = new_targets;
-	target_list->targets[target_list->length] = target;
+	target_list->targets[target_list->length] = *target;
 	target_list->length++;
+	free(target);
 }
 
 /**
@@ -128,11 +168,18 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 	char *netmask_s = strchr(range, '/');
 
 	if (netmask_s == NULL) {
-		btkg_target_t target = { .host = strdup(range), .port = port };
-		if (target.host == NULL) {
-			perror("strdup");
+		btkg_target_t *target = malloc(sizeof(btkg_target_t));
+		if (target == NULL) {
+			perror("malloc");
 			exit(EXIT_FAILURE);
 		}
+		target->host = strdup(range);
+		if (target->host == NULL) {
+			perror("strdup");
+			free(target);
+			exit(EXIT_FAILURE);
+		}
+		target->port = port;
 		btkg_target_list_append(target_list, target);
 		return;
 	}
@@ -145,12 +192,18 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 
 	for (in_addr_t x = lo; x < hi; x++) {
 		in.s_addr = htonl(x);
-		btkg_target_t new_target = { .host = strdup(inet_ntoa(in)),
-					     .port = port };
-		if (new_target.host == NULL) {
-			perror("strdup");
+		btkg_target_t *new_target = malloc(sizeof(btkg_target_t));
+		if (new_target == NULL) {
+			perror("malloc");
 			exit(EXIT_FAILURE);
 		}
+		new_target->host = strdup(inet_ntoa(in));
+		if (new_target->host == NULL) {
+			perror("strdup");
+			free(new_target);
+			exit(EXIT_FAILURE);
+		}
+		new_target->port = port;
 		btkg_target_list_append(target_list, new_target);
 	}
 }
@@ -175,15 +228,15 @@ void btkg_target_list_load(btkg_target_list_t *target_list,
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		strtok(line, "\n");
-		btkg_target_t ret = btkg_target_parse(line);
+		btkg_target_t *ret = btkg_target_parse(line);
 
-		if (ret.host == NULL) {
+		if (ret == NULL) {
 			log_error(
 				"WARNING: An error occurred parsing '%s' on line #%d",
 				filename, lines);
 		} else {
-			btkg_target_list_append_range(target_list, ret.host,
-						      ret.port);
+			btkg_target_list_append_range(target_list, ret->host,
+						      ret->port);
 		}
 
 		lines++;

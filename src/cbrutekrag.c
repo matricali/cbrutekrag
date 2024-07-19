@@ -181,29 +181,29 @@ int main(int argc, char **argv)
 	print_banner();
 
 	/* Targets */
-	btkg_target_list_t target_list;
-	btkg_target_list_init(&target_list);
+	btkg_target_list_t *targets = btkg_target_list_create();
 
 	while (optind < argc) {
-		btkg_target_t ret = target_parse(argv[optind]);
+		btkg_target_t *ret = btkg_target_parse(argv[optind]);
 
-		if (ret.host == NULL) {
+		if (ret == NULL) {
 			log_error(
 				"WARNING: An error ocurred parsing target '%s' on argument #%d",
 				argv[optind], optind);
 			continue;
 		}
 
-		btkg_target_list_append_range(&target_list, ret.host, ret.port);
-		free(ret.host);
+		btkg_target_list_append_range(targets, ret->host, ret->port);
+		free(ret->host);
+		free(ret);
 		optind++;
 	}
 
-	if (target_list.targets == NULL && hostnames_filename == NULL)
+	if (targets->targets == NULL && hostnames_filename == NULL)
 		hostnames_filename = strdup("hostnames.txt");
 
 	if (hostnames_filename != NULL) {
-		btkg_target_list_load(&target_list, hostnames_filename);
+		btkg_target_list_load(targets, hostnames_filename);
 		free(hostnames_filename);
 	}
 
@@ -216,13 +216,13 @@ int main(int argc, char **argv)
 	btkg_credentials_list_load(&credentials_list, credentials_filename);
 	free(credentials_filename);
 
-	/* Calculate total attemps */
-	total = target_list.length * credentials_list.length;
+	/* Calculate total attempts */
+	total = targets->length * credentials_list.length;
 
 	printf("\nAmount of username/password combinations: %zu\n",
 	       credentials_list.length);
-	printf("Number of targets: %zu\n", target_list.length);
-	printf("Total attemps: %zu\n", total);
+	printf("Number of targets: %zu\n", targets->length);
+	printf("Total attempts: %zu\n", total);
 	printf("Max threads: %zu\n\n", context.max_threads);
 
 	if (total == 0) {
@@ -230,9 +230,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (context.max_threads > target_list.length) {
-		log_info("Decreasing max threads to %zu.", target_list.length);
-		context.max_threads = target_list.length;
+	if (context.max_threads > targets->length) {
+		log_info("Decreasing max threads to %zu.", targets->length);
+		context.max_threads = targets->length;
 	}
 
 	/* Output Format */
@@ -255,24 +255,24 @@ int main(int argc, char **argv)
 	if (context.perform_scan) {
 		log_info("Starting servers discoverage process...");
 		clock_gettime(CLOCK_MONOTONIC, &start);
-		detection_start(&context, &target_list, &target_list,
+		detection_start(&context, targets, targets,
 				context.max_threads);
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		elapsed = (double)(end.tv_sec - start.tv_sec);
 		elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
 		log_info("Detection process took %f seconds.", elapsed);
 		log_info("Number of targets after filtering: %zu.",
-			 target_list.length);
+			 targets->length);
 	}
 
-	if (target_list.length == 0) {
+	if (targets->length == 0) {
 		log_info("No work to do.");
 		exit(EXIT_SUCCESS);
 	}
 
-	if (context.max_threads > target_list.length) {
-		log_info("Decreasing max threads to %zu.", target_list.length);
-		context.max_threads = target_list.length;
+	if (context.max_threads > targets->length) {
+		log_info("Decreasing max threads to %zu.", targets->length);
+		context.max_threads = targets->length;
 	}
 
 	/* Bruteforce */
@@ -335,6 +335,7 @@ int main(int argc, char **argv)
 	pid = 0;
 
 	btkg_credentials_list_destroy(&credentials_list);
+	btkg_target_list_destroy(targets);
 
 	if (output != NULL)
 		fclose(output);

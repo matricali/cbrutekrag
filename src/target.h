@@ -35,10 +35,14 @@ typedef struct {
 
 int btkg_target_port_is_valid(const long port);
 
+btkg_target_list_t *btkg_target_list_create(void);
+
+void btkg_target_list_destroy(btkg_target_list_t *target_list);
+
 void btkg_target_list_init(btkg_target_list_t *target_list);
 
 void btkg_target_list_append(btkg_target_list_t *target_list,
-			     btkg_target_t target);
+			     btkg_target_t *target);
 
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
 				   const char *range, uint16_t port);
@@ -46,6 +50,6 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 void btkg_target_list_load(btkg_target_list_t *target_list,
 			   const char *filename);
 
-btkg_target_t btkg_target_parse(char *line);
+btkg_target_t *btkg_target_parse(char *line);
 
 #endif /* TARGET_H */
