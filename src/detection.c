@@ -54,7 +54,7 @@ typedef int socklen_t;
 
 size_t scan_counter = 0;
 btkg_target_list_t filtered;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int detection_login_methods(ssh_session session, const char *hostname, int port)
 {
@@ -100,7 +100,9 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 {
 	int verbosity = 0;
 
-	if (context->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
+	btkg_options_t *options = &context->options;
+
+	if (options->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
 		verbosity = SSH_LOG_PROTOCOL;
 	} else {
 		verbosity = SSH_LOG_NOLOG;
@@ -127,7 +129,7 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 	int rc = ssh_connect(session);
 
 	if (rc != SSH_OK) {
-		if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
+		if (options->verbose & CBRUTEKRAG_VERBOSE_MODE) {
 			log_error("[!] Error connecting to %s:%d %s.", hostname,
 				  port, ssh_get_error(session));
 		}
@@ -162,7 +164,7 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 		log_warn("[!] %s:%d - %s It's not a OpenSSH server", hostname,
 			 port, banner);
 
-		if (context->non_openssh != 1) {
+		if (options->non_openssh != 1) {
 			ssh_disconnect(session);
 			ssh_free(session);
 
@@ -213,6 +215,7 @@ void *detection_process(void *ptr)
 	btkg_detection_args_t *args = (btkg_detection_args_t *)ptr;
 	btkg_target_list_t *target_list = args->target_list;
 	btkg_context_t *context = args->context;
+	btkg_options_t *options = &context->options;
 
 	for (;;) {
 		pthread_mutex_lock(&mutex);
@@ -224,7 +227,7 @@ void *detection_process(void *ptr)
 			&target_list->targets[scan_counter];
 		scan_counter++;
 
-		if (context->progress_bar) {
+		if (options->progress_bar) {
 			char str[40];
 			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
 				 scan_counter, target_list->length,
@@ -235,7 +238,7 @@ void *detection_process(void *ptr)
 		}
 		pthread_mutex_unlock(&mutex);
 
-		if (context->dry_run) {
+		if (options->dry_run) {
 			pthread_mutex_lock(&mutex);
 			log_info("Scanning %s:%d", current_target->host,
 				 current_target->port);
@@ -246,7 +249,7 @@ void *detection_process(void *ptr)
 
 		if (detection_detect_ssh(context, current_target->host,
 					 current_target->port,
-					 context->timeout) == 0) {
+					 options->timeout) == 0) {
 			pthread_mutex_lock(&mutex);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);
@@ -260,6 +263,7 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 		     btkg_target_list_t *targets, size_t max_threads)
 {
 	btkg_target_list_init(&filtered);
+	btkg_options_t *options = &context->options;
 	btkg_detection_args_t args;
 
 	memset(&args, 0, sizeof(btkg_detection_args_t));
@@ -284,7 +288,7 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 		}
 	}
 
-	if (context->progress_bar)
+	if (options->progress_bar)
 		progressbar_render(1, 1, NULL, 0);
 
 	*targets = filtered;
