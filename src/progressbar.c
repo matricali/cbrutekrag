@@ -76,9 +76,15 @@ void progressbar_render(size_t count, size_t total, const char *suffix,
 	if (suffix == NULL)
 		suffix = "";
 
-	size_t filled_len = bar_len * count / total;
+	size_t filled_len = 0;
+	double percentage = 0;
+
+	if (total > 0) {
+		filled_len = bar_len * count / total;
+		percentage = ((double)count / (double)total) * 100.0;
+	}
+
 	size_t empty_len = bar_len - filled_len;
-	double percentage = ((double)count / (double)total) * 100.0;
 	size_t fill = max_cols - bar_len - strlen(suffix) - 16;
 
 	printf("\b%c[2K\r", 27);

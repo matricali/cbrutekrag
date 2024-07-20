@@ -22,6 +22,10 @@ if(MINGW)
   target_link_libraries(test2 PRIVATE ws2_32)
 endif()
 
-# Añade un test
+# Test progressbar
+add_executable(test3 test-progressbar.c ../src/progressbar.c)
+
+# Testcases
 add_test(NAME Credentials COMMAND test1)
 add_test(NAME TargetParse COMMAND test2)
+add_test(NAME TargetProgressBar COMMAND test3)
