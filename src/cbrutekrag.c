@@ -46,7 +46,6 @@ SOFTWARE.
 #include "credentials.h"
 #include "detection.h"
 #include "log.h"
-#include "progressbar.h"
 #include "str.h"
 #include "target.h"
 
@@ -64,7 +63,7 @@ void print_banner()
 	       "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
 	       "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
 	       "              \033[0m\033[1mOpenSSH Brute force tool 0.6.0\033[0m\033[92m        __/ |\n"
-	       "          \033[0m(c) Copyright 2014-2022 Jorge Matricali\033[92m  |___/\033[0m\n\n");
+	       "          \033[0m(c) Copyright 2014-2024 Jorge Matricali\033[92m  |___/\033[0m\n\n");
 }
 
 void usage(const char *p)
@@ -106,46 +105,46 @@ static size_t btkg_get_max_threads(void)
 #endif
 }
 
-typedef struct {
-	btkg_context_t *context;
-	btkg_target_t *target;
-	btkg_credentials_t credentials;
-	size_t index;
-	size_t total;
-	FILE *output;
-} thread_data_t;
-
-void *thread_function(void *data)
+void btkg_options_init(btkg_options_t *options)
 {
-	thread_data_t *thread_data = (thread_data_t *)data;
-	btkg_context_t *context = thread_data->context;
-	btkg_target_t *target = thread_data->target;
-	btkg_credentials_t credentials = thread_data->credentials;
-	size_t index = thread_data->index;
-	size_t total = thread_data->total;
-	FILE *output = thread_data->output;
-	int ret = EXIT_SUCCESS;
+	if (options == NULL)
+		return;
 
-	if (!context->dry_run) {
-		ret = bruteforce_ssh_try_login(
-			context, target->host, target->port, credentials.username,
-			credentials.password, index, total, output);
+	options->timeout = 3;
+	options->max_threads = 1;
+	options->progress_bar = 0;
+	options->verbose = 0;
+	options->dry_run = 0;
+	options->perform_scan = 0;
+	options->non_openssh = 0;
+	options->allow_honeypots = 0;
+}
+
+void btkg_context_init(btkg_context_t *context)
+{
+	if (context == NULL) {
+		return;
 	}
 
-	pthread_exit((void *)(intptr_t)ret);
+	btkg_options_init(&context->options);
+
+	context->output = NULL;
+	context->count = 0;
+	context->successful = 0;
+	context->total = 0;
+	context->credentials_idx = 0;
+	context->targets_idx = 0;
+
+	btkg_credentials_list_init(&context->credentials);
+	btkg_target_list_init(&context->targets);
 }
 
 int main(int argc, char **argv)
 {
 	int opt;
-	size_t total = 0;
 	char *hostnames_filename = NULL;
 	char *credentials_filename = NULL;
 	char *output_filename = NULL;
-	FILE *output = NULL;
-	btkg_context_t context = { 3, 1, 0, 0, 0, 0, 0, 0 };
-	struct timespec start, end;
-	double elapsed;
 	int tempint;
 
 	/* Error handler */
@@ -156,25 +155,30 @@ int main(int argc, char **argv)
 	signal(SIGPIPE, SIG_IGN);
 #endif
 
-	/* Calculate maximun number of threads. */
-	context.max_threads = btkg_get_max_threads();
+	/* Initialize context */
+	btkg_context_t context;
+	btkg_context_init(&context);
 
-	context.timeout = 1;
+	/* Calculate maximun number of threads. */
+	btkg_options_t *options = &context.options;
+	options->max_threads = btkg_get_max_threads();
+
+	options->timeout = 1;
 
 	while ((opt = getopt(argc, argv, "aAT:C:t:o:F:DsvVPh")) != -1) {
 		switch (opt) {
 			case 'a':
-				context.non_openssh = 1;
+				options->non_openssh = 1;
 				break;
 			case 'A':
-				context.allow_honeypots = 1;
+				options->allow_honeypots = 1;
 				break;
 			case 'v':
-				context.verbose |= CBRUTEKRAG_VERBOSE_MODE;
-				g_verbose = context.verbose;
+				options->verbose |= CBRUTEKRAG_VERBOSE_MODE;
+				g_verbose = options->verbose;
 				break;
 			case 'V':
-				context.verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
+				options->verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
 				break;
 			case 'T':
 				hostnames_filename = strdup(optarg);
@@ -189,7 +193,7 @@ int main(int argc, char **argv)
 						  tempint);
 					exit(EXIT_FAILURE);
 				}
-				context.max_threads = (size_t)tempint;
+				options->max_threads = (size_t)tempint;
 				break;
 			case 'F':
 				g_output_format = strdup(optarg);
@@ -200,13 +204,13 @@ int main(int argc, char **argv)
 				output_filename = strdup(optarg);
 				break;
 			case 's':
-				context.perform_scan = 1;
+				options->perform_scan = 1;
 				break;
 			case 'D':
-				context.dry_run = 1;
+				options->dry_run = 1;
 				break;
 			case 'P':
-				context.progress_bar = 1;
+				options->progress_bar = 1;
 				break;
 			case 'h':
 				print_banner();
@@ -235,9 +239,9 @@ int main(int argc, char **argv)
 	}
 	print_banner();
 
-	/* Targets */
-	btkg_target_list_t *targets = btkg_target_list_create();
+	btkg_target_list_t *targets = &context.targets;
 
+	/* Targets */
 	while (optind < argc) {
 		btkg_target_t *ret = btkg_target_parse(argv[optind]);
 
@@ -266,28 +270,28 @@ int main(int argc, char **argv)
 		credentials_filename = strdup("combos.txt");
 
 	/* Load username/password combinations */
-	btkg_credentials_list_t credentials_list;
-	btkg_credentials_list_init(&credentials_list);
-	btkg_credentials_list_load(&credentials_list, credentials_filename);
+	btkg_credentials_list_load(&context.credentials, credentials_filename);
 	free(credentials_filename);
 
 	/* Calculate total attempts */
-	total = targets->length * credentials_list.length;
+	btkg_credentials_list_t *credentials = &context.credentials;
+
+	context.total = targets->length * credentials->length;
 
 	printf("\nAmount of username/password combinations: %zu\n",
-	       credentials_list.length);
+	       credentials->length);
 	printf("Number of targets: %zu\n", targets->length);
-	printf("Total attempts: %zu\n", total);
-	printf("Max threads: %zu\n\n", context.max_threads);
+	printf("Total attempts: %zu\n", context.total);
+	printf("Max threads: %zu\n\n", options->max_threads);
 
-	if (total == 0) {
+	if (context.total == 0) {
 		log_error("No work to do.");
 		exit(EXIT_FAILURE);
 	}
 
-	if (context.max_threads > targets->length) {
+	if (options->max_threads > targets->length) {
 		log_info("Decreasing max threads to %zu.", targets->length);
-		context.max_threads = targets->length;
+		options->max_threads = targets->length;
 	}
 
 	/* Output Format */
@@ -298,8 +302,8 @@ int main(int argc, char **argv)
 
 	/* Output file */
 	if (output_filename != NULL) {
-		output = fopen(output_filename, "a");
-		if (output == NULL) {
+		context.output = fopen(output_filename, "a");
+		if (context.output == NULL) {
 			log_error("Error opening output file. (%s)",
 				  output_filename);
 			exit(EXIT_FAILURE);
@@ -314,12 +318,15 @@ int main(int argc, char **argv)
 	}
 #endif
 
+	struct timespec start, end;
+	double elapsed;
+
 	/* Port scan and honeypot detection */
-	if (context.perform_scan) {
+	if (options->perform_scan) {
 		log_info("Starting servers discoverage process...");
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		detection_start(&context, targets, targets,
-				context.max_threads);
+				options->max_threads);
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		elapsed = (double)(end.tv_sec - start.tv_sec);
 		elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
@@ -333,70 +340,28 @@ int main(int argc, char **argv)
 		exit(EXIT_SUCCESS);
 	}
 
-	if (context.max_threads > targets->length) {
+	if (options->max_threads > targets->length) {
 		log_info("Decreasing max threads to %zu.", targets->length);
-		context.max_threads = targets->length;
+		options->max_threads = targets->length;
 	}
 
 	/* Bruteforce */
-	pthread_t *threads =
-		(pthread_t *)malloc(context.max_threads * sizeof(pthread_t));
-	thread_data_t *thread_data = (thread_data_t *)malloc(
-		context.max_threads * sizeof(thread_data_t));
-	size_t count = 0;
-
 	log_info("Starting brute-force process...");
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
-	for (size_t x = 0; x < credentials_list.length; x++) {
-		btkg_credentials_t credentials =
-			credentials_list.credentials[x];
-
-		for (size_t y = 0; y < targets->length; y++) {
-			btkg_target_t *current_target = &targets->targets[y];
-
-			thread_data[count].context = &context;
-			thread_data[count].target = current_target;
-			thread_data[count].credentials = credentials;
-			thread_data[count].index = count;
-			thread_data[count].total = total;
-			thread_data[count].output = output;
-
-			if (pthread_create(&threads[count], NULL,
-					   thread_function,
-					   &thread_data[count]) != 0) {
-				log_error("Failed to create thread!");
-				exit(EXIT_FAILURE);
-			}
-
-			count++;
-		}
-	}
-
-	/* Wait until all threads finish their work */
-	for (size_t i = 0; i < count; i++) {
-		void *ret;
-		printf("Joining thread: %ld\n", count);
-		pthread_join(threads[i], &ret);
-	}
-
-	free(threads);
-	free(thread_data);
+	btkg_bruteforce_start(&context);
 
 	clock_gettime(CLOCK_MONOTONIC, &end);
 	elapsed = (double)(end.tv_sec - start.tv_sec);
 	elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
 
-	if (context.progress_bar)
-		progressbar_render(count, total, NULL, 0);
-
 	log_info("Brute-force process took %f seconds.", elapsed);
 
-	btkg_credentials_list_destroy(&credentials_list);
+	btkg_credentials_list_destroy(credentials);
 	btkg_target_list_destroy(targets);
 
-	if (output != NULL)
-		fclose(output);
+	if (context.output != NULL)
+		fclose(context.output);
 
 	exit(EXIT_SUCCESS);
 }

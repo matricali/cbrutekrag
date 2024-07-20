@@ -23,6 +23,11 @@ SOFTWARE.
 #ifndef CBRUTEKRAG_H
 #define CBRUTEKRAG_H
 
+#include <stdint.h>
+
+#include "target.h"
+#include "credentials.h"
+
 #define CBRUTEKRAG_VERBOSE_MODE 0x1
 #define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
 
@@ -35,6 +40,18 @@ typedef struct {
 	int perform_scan;
 	int non_openssh;
 	int allow_honeypots;
+} btkg_options_t;
+
+typedef struct {
+	btkg_options_t options;
+	btkg_credentials_list_t credentials;
+	btkg_target_list_t targets;
+	size_t count;
+	size_t successful;
+	size_t total;
+	size_t credentials_idx;
+	size_t targets_idx;
+	FILE *output;
 } btkg_context_t;
 
 void print_banner(void);

@@ -90,11 +90,14 @@ void btkg_target_list_destroy(btkg_target_list_t *target_list)
 	}
 
 	for (size_t i = 0; i < target_list->length; i++) {
-		free(target_list->targets[i].host);
+		if (target_list->targets[i].host != NULL) {
+			free(target_list->targets[i].host);
+		}
 	}
 
 	free(target_list->targets);
-	free(target_list);
+	target_list->length = 0;
+	target_list->targets = NULL;
 }
 
 /**
@@ -148,6 +151,7 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
 	btkg_target_t *new_targets =
 		realloc(target_list->targets,
 			sizeof(btkg_target_t) * (target_list->length + 1));
+
 	if (new_targets == NULL) {
 		perror("realloc");
 		exit(EXIT_FAILURE);

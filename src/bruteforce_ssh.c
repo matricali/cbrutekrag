@@ -25,12 +25,13 @@ SOFTWARE.
 #include <string.h>
 
 #include <libssh/libssh.h>
+#include <pthread.h>
 
 #include "cbrutekrag.h"
 #include "log.h"
 #include "progressbar.h"
 
-int g_timeout;
+static pthread_mutex_t bflock = PTHREAD_MUTEX_INITIALIZER;
 
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			 uint16_t port, const char *username,
@@ -39,7 +40,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	ssh_session my_ssh_session;
 	int verbosity = 0;
 
-	if (context->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
+	if (context->options.verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
 		verbosity = SSH_LOG_PROTOCOL;
 	} else {
 		verbosity = SSH_LOG_NOLOG;
@@ -60,13 +61,14 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
 #endif
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT, &g_timeout);
+	ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT,
+			&context->options.timeout);
 	ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
 
 	int r;
 	r = ssh_connect(my_ssh_session);
 	if (r != SSH_OK) {
-		if (context->verbose & CBRUTEKRAG_VERBOSE_MODE) {
+		if (context->options.verbose & CBRUTEKRAG_VERBOSE_MODE) {
 			log_error("[!] Error connecting to %s:%d %s.", hostname,
 				  port, ssh_get_error(my_ssh_session));
 		}
@@ -116,8 +118,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 			     const uint16_t port, const char *username,
-			     const char *password, size_t count, size_t total,
-			     FILE *output)
+			     const char *password)
 {
 	const char *_password =
 		strcmp(password, "$TARGET") == 0 ? hostname : password;
@@ -130,21 +131,96 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 	if (ret == 0) {
 		log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port,
 			 _username, _password);
-		if (output != NULL) {
-			btkg_log_successfull_login(output, hostname, port,
-						   _username, _password);
+		if (context->output != NULL) {
+			btkg_log_successfull_login(context->output, hostname,
+						   port, _username, _password);
 		}
 	} else {
 		log_debug("\033[38m[-]\033[0m %s:%d %s %s", hostname, port,
 			  _username, _password);
 	}
 
-	if (context->progress_bar) {
-		char bar_suffix[50];
-		sprintf(bar_suffix, "[%zu] %s:%d %s %s", count, hostname, port,
-			_username, _password);
-		progressbar_render(count, total, bar_suffix, 0);
+	return ret;
+}
+
+static void *btkg_bruteforce_worker(void *ptr)
+{
+	btkg_context_t *context = (btkg_context_t *)ptr;
+	btkg_target_list_t *targets = &context->targets;
+	btkg_credentials_list_t *credentials = &context->credentials;
+	btkg_options_t *options = &context->options;
+
+	for (;;) {
+		pthread_mutex_lock(&bflock);
+		if (context->targets_idx >= targets->length) {
+			context->targets_idx = 0;
+			context->credentials_idx++;
+		}
+		if (context->credentials_idx >= credentials->length) {
+			// Llegamos al final
+			log_debug("No work to do. Stopping thread...");
+			pthread_mutex_unlock(&bflock);
+			break;
+		}
+
+		btkg_target_t *target =
+			&targets->targets[context->targets_idx++];
+		btkg_credentials_t *combo =
+			&credentials->credentials[context->credentials_idx];
+		context->count++;
+
+		if (options->progress_bar) {
+			char str[40];
+			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
+				 context->count, context->total, context->count,
+				 target->host, target->port);
+			progressbar_render(context->count, context->total, str,
+					   0);
+		}
+		pthread_mutex_unlock(&bflock);
+
+		if (!options->dry_run) {
+			int ret = bruteforce_ssh_try_login(
+				context, target->host, target->port,
+				combo->username, combo->password);
+			if (ret == 0) {
+				pthread_mutex_lock(&bflock);
+				context->successful++;
+				pthread_mutex_unlock(&bflock);
+			}
+		} else {
+			log_debug("\033[38m[-]\033[0m %s:%d %s %s",
+				  target->host, target->port, combo->username,
+				  combo->password);
+		}
+	}
+	pthread_exit(NULL);
+	return NULL;
+}
+
+void btkg_bruteforce_start(btkg_context_t *context)
+{
+	btkg_options_t *options = &context->options;
+
+	pthread_t scan_threads[options->max_threads];
+	int ret;
+
+	for (size_t i = 0; i < options->max_threads; i++) {
+		log_debug("Creating thread: %ld", i);
+		if ((ret = pthread_create(&scan_threads[i], NULL,
+					  *btkg_bruteforce_worker,
+					  (void *)context))) {
+			log_error("Thread creation failed: %d\n", ret);
+		}
 	}
 
-	return ret;
+	for (size_t i = 0; i < options->max_threads; i++) {
+		ret = pthread_join(scan_threads[i], NULL);
+		if (ret != 0) {
+			log_error("Cannot join thread no: %d\n", ret);
+		}
+	}
+
+	if (options->progress_bar)
+		progressbar_render(context->count, context->total, NULL, 0);
 }
