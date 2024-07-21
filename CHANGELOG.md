@@ -6,20 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Removed
-
-- Honeypot detection
-
 ### Added
 
 - Hostname can be used as a username or password dynamically ($TARGET) (#28)
 - Output log format are now customizable (#30)
+- Windows support
+
+### Changed
+
+- Bruteforce process now uses pthread instead of fork
 
 ### Fixed
 
 - Added missing wrapper for FD_SET in static build
-- ssh_get_error shouldnt be used after ssh_free
+- ssh_get_error shouldn't be used after ssh_free
 - Buffer overflow in banner grabber
+- Division by zero when progress bar has no elements
+
+### Removed
+
+- Honeypot detection
 
 ## [0.5.0] - 2020-03-07
 ### Added

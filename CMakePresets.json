@@ -1,13 +1,11 @@
 {
-  "version": 2,
+  "version": 8,
   "configurePresets": [
     {
       "name": "default",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      }
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
     }
   ]
 }
