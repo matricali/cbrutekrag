@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ssh_get_error shouldn't be used after ssh_free
 - Buffer overflow in banner grabber
 - Division by zero when progress bar has no elements
+- Update total work to do after targets filtering
+- ssh_free releases the memory allocated for banner
 
 ### Removed
 

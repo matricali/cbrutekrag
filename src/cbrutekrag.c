@@ -325,11 +325,16 @@ int main(int argc, char **argv)
 	if (options->perform_scan) {
 		log_info("Starting servers discoverage process...");
 		clock_gettime(CLOCK_MONOTONIC, &start);
+
 		detection_start(&context, targets, targets,
 				options->max_threads);
+
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		elapsed = (double)(end.tv_sec - start.tv_sec);
 		elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
+
+		context.total = targets->length * credentials->length;
+
 		log_info("Detection process took %f seconds.", elapsed);
 		log_info("Number of targets after filtering: %zu.",
 			 targets->length);
