@@ -222,6 +222,9 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 		log_warn(
 			"[!] %s:%d - %s The server doesn't accept password authentication method",
 			hostname, port, banner);
+		ssh_disconnect(session);
+		ssh_free(session);
+
 		return -1;
 	}
 
