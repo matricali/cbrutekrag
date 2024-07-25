@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,21 @@ SOFTWARE.
 #include <string.h>
 
 #include "str.h"
+
+/**
+ * @brief Safely copies a string to a destination buffer ensuring null termination.
+ *
+ * @param dst Destination buffer.
+ * @param src Source string.
+ * @param dst_size Size of the destination buffer.
+ */
+void btkg_str_copy(char *dst, const char *src, size_t dst_size)
+{
+	if (dst_size > 0) {
+		strncpy(dst, src, dst_size - 1);
+		dst[dst_size - 1] = '\0'; // Ensure null-termination
+	}
+}
 
 char **str_split(char *a_str, const char a_delim)
 {

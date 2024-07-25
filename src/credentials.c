@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ SOFTWARE.
 #include "compat.h"
 #include "credentials.h"
 #include "log.h"
+#include "str.h"
 
 char *g_blankpass_placeholder = "$BLANKPASS";
 
@@ -37,14 +38,14 @@ int btkg_credentials_parse(char *line, btkg_credentials_t *dst)
 	char *username = strtok(line, " ");
 	if (username == NULL)
 		return -1;
-	snprintf(dst->username, LOGIN_NAME_MAX, "%s", username);
+	btkg_str_copy(dst->username, username, LOGIN_NAME_MAX);
 
 	char *password = strtok(NULL, "\n");
 	if (password == NULL)
 		return 0;
 
 	if (strcmp(password, g_blankpass_placeholder) != 0)
-		snprintf(dst->password, LOGIN_PASS_MAX, "%s", password);
+		btkg_str_copy(dst->password, password, LOGIN_PASS_MAX);
 
 	return 0;
 }
