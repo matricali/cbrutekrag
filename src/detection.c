@@ -24,7 +24,9 @@ SOFTWARE.
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
+#endif // _MSC_VER
 typedef int socklen_t;
 #else
 #include <arpa/inet.h>

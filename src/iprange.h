@@ -22,7 +22,9 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef int in_addr_t;
+#ifdef _MSC_VER
 #pragma comment(lib, "ws2_32.lib")
+#endif // _MSC_VER
 #else
 #include <arpa/inet.h> /* in_addr_t */
 #endif
