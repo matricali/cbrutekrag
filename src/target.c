@@ -160,7 +160,6 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
 	target_list->targets = new_targets;
 	target_list->targets[target_list->length] = *target;
 	target_list->length++;
-	free(target);
 }
 
 /**
