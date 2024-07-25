@@ -194,10 +194,10 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 		return -1;
 	}
 
+	log_info("[!] %s:%d - %s", hostname, port, banner);
+
 	ssh_disconnect(session);
 	ssh_free(session);
-
-	log_info("[!] %s:%d - %s", hostname, port, banner);
 
 	return 0;
 }
