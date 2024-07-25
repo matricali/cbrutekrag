@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,21 @@ SOFTWARE.
 
 static pthread_mutex_t bflock = PTHREAD_MUTEX_INITIALIZER;
 
+/**
+ * Attempt to brute-force SSH login using the provided credentials.
+ *
+ * This function tries to log in to the SSH server using the specified hostname,
+ * port, username, and password. It performs the brute-force attempt and handles
+ * any related errors.
+ *
+ * @param context   The context containing options and configurations for brute-force.
+ * @param hostname  The hostname of the SSH server.
+ * @param port      The port of the SSH server.
+ * @param username  The username to use for the login attempt.
+ * @param password  The password to use for the login attempt.
+ *
+ * @return 0 on success, non-zero on failure.
+ */
 int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			 uint16_t port, const char *username,
 			 const char *password)
@@ -116,6 +131,20 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	return -1;
 }
 
+/**
+ * Try to log in to an SSH server with the specified credentials.
+ *
+ * This function tries a single login attempt using the provided credentials and
+ * returns the result of the attempt.
+ *
+ * @param context   The context containing options and configurations for brute-force.
+ * @param hostname  The hostname of the SSH server.
+ * @param port      The port of the SSH server.
+ * @param username  The username to use for the login attempt.
+ * @param password  The password to use for the login attempt.
+ *
+ * @return 0 on success, non-zero on failure.
+ */
 int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 			     const uint16_t port, const char *username,
 			     const char *password)
@@ -143,6 +172,16 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 	return ret;
 }
 
+/**
+ * Worker function for brute-force SSH login attempts.
+ *
+ * This function is executed by each worker thread to perform brute-force SSH login attempts
+ * on the specified targets using the provided credentials.
+ *
+ * @param ptr  Pointer to the context containing targets, credentials, and options.
+ *
+ * @return NULL when the worker completes its task.
+ */
 static void *btkg_bruteforce_worker(void *ptr)
 {
 	btkg_context_t *context = (btkg_context_t *)ptr;
@@ -198,6 +237,14 @@ static void *btkg_bruteforce_worker(void *ptr)
 	return NULL;
 }
 
+/**
+ * Start the brute-force SSH login process.
+ *
+ * This function initializes and starts the brute-force process, including setting
+ * up necessary threads and handling the brute-force attack.
+ *
+ * @param context   The context containing options and configurations for brute-force.
+ */
 void btkg_bruteforce_start(btkg_context_t *context)
 {
 	btkg_options_t *options = &context->options;

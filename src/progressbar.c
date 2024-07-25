@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,12 @@ SOFTWARE.
 #include <string.h>
 
 /**
- * Get the terminal width
- * @return The width of the terminal
+ * Get the terminal width.
+ *
+ * This function retrieves the width of the terminal in columns. If the
+ * width cannot be determined, a default value of 80 columns is used.
+ *
+ * @return The width of the terminal in columns.
  */
 static size_t get_terminal_width(void)
 {
@@ -44,7 +48,8 @@ static size_t get_terminal_width(void)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE),
 				       &csbi)) {
-		max_cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		max_cols =
+			(size_t)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
 	}
 #else
 	struct winsize w;
@@ -57,14 +62,18 @@ static size_t get_terminal_width(void)
 }
 
 /**
- * Render progress bar like this:
+ * Render a progress bar to the terminal.
+ *
+ * This function displays a progress bar with a filled and empty section
+ * to represent progress, as well as a percentage and optional suffix.
+ * The bar is rendered to fit within the width of the terminal.
+ *
  * |███░░░░░░░░░░░░░░░░░░░░░|  14.51%   [37] 192.168.100.37 root root
  *
- * @author Jorge Matricali <jorgematricali@gmail.com>
- * @param count   Current iteration
- * @param total   Total iterations
- * @param suffix  String suffix
- * @param bar_len Bar length
+ * @param count   The current iteration count.
+ * @param total   The total number of iterations.
+ * @param suffix  A string suffix to append after the progress bar.
+ * @param bar_len The length of the progress bar in characters.
  */
 void progressbar_render(size_t count, size_t total, const char *suffix,
 			size_t bar_len)

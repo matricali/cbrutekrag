@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,21 @@ SOFTWARE.
 #ifndef PROGRESSBAR_H
 #define PROGRESSBAR_H
 
+/**
+ * Render a progress bar to the terminal.
+ *
+ * This function displays a progress bar with a filled and empty section
+ * to represent progress, as well as a percentage and optional suffix.
+ * The bar is rendered to fit within the width of the terminal.
+ *
+ * |███░░░░░░░░░░░░░░░░░░░░░|  14.51%   [37] 192.168.100.37 root root
+ *
+ * @param count   The current iteration count.
+ * @param total   The total number of iterations.
+ * @param suffix  A string suffix to append after the progress bar.
+ * @param bar_len The length of the progress bar in characters.
+ */
 void progressbar_render(size_t count, size_t total, char *suffix,
 			size_t bar_len);
 
-#endif /* PROGRESSBAR_H */
+#endif // PROGRESSBAR_H

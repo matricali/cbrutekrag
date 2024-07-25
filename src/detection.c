@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -56,6 +56,18 @@ size_t scan_counter = 0;
 btkg_target_list_t filtered;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/**
+ * Detect login methods supported by the SSH server.
+ *
+ * This function tries to detect supported authentication methods on the SSH
+ * server by checking if it allows user authentication with no credentials.
+ *
+ * @param session  The SSH session to check.
+ * @param hostname The hostname of the SSH server.
+ * @param port     The port of the SSH server.
+ *
+ * @return 0 if password authentication is supported, -1 otherwise.
+ */
 int detection_login_methods(ssh_session session, const char *hostname, int port)
 {
 	int rc = 0;
@@ -87,6 +99,23 @@ int detection_login_methods(ssh_session session, const char *hostname, int port)
 	return -1;
 }
 
+/**
+ * Detect if the SSH service is running and if it supports
+ * password authentication.
+ *
+ * This function connects to an SSH server and checks its banner and
+ * authentication methods to determine if it's a valid SSH service and if
+ * it supports password authentication.
+ *
+ * @param ctx       The context containing options for detection.
+ * @param hostname  The hostname of the SSH server.
+ * @param port      The port of the SSH server.
+ * @param tm        The timeout for the SSH connection.
+ *
+ * @return 0 if the server is a valid SSH server with password authentication,
+ * 				 1 if there is a connection error, -1 if the server does not meet
+ *			   the criteria.
+ */
 int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 			 uint16_t port, long tm)
 {
@@ -202,6 +231,17 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 	return 0;
 }
 
+/**
+ * Thread function to process detection for each target.
+ *
+ * This function processes targets from the target list, detects SSH services
+ * and their authentication methods, and updates the filtered target list.
+ *
+ * @param ptr A pointer to a btkg_detection_args_t structure containing the
+ *            context and target list.
+ *
+ * @return NULL
+ */
 void *detection_process(void *ptr)
 {
 	btkg_detection_args_t *args = (btkg_detection_args_t *)ptr;
@@ -251,6 +291,18 @@ void *detection_process(void *ptr)
 	return NULL;
 }
 
+/**
+ * Start the detection process with multiple threads.
+ *
+ * This function initializes and starts multiple threads to process the target
+ * list and detect SSH services. It waits for all threads to complete before
+ * updating the target list with the results.
+ *
+ * @param context  The context containing options for the detection.
+ * @param source   The source target list to process.
+ * @param targets  The target list to store the results.
+ * @param max_threads The maximum number of threads to use.
+ */
 void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 		     btkg_target_list_t *targets, size_t max_threads)
 {

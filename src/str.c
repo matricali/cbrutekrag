@@ -42,67 +42,16 @@ void btkg_str_copy(char *dst, const char *src, size_t dst_size)
 	}
 }
 
-char **str_split(char *a_str, const char a_delim)
-{
-	char **result = 0;
-	size_t count = 0;
-	char *tmp = a_str;
-	char *last_comma = 0;
-	char delim[2];
-	delim[0] = a_delim;
-	delim[1] = 0;
-
-	/* Count how many elements will be extracted. */
-	while (*tmp) {
-		if (a_delim == *tmp) {
-			count++;
-			last_comma = tmp;
-		}
-		tmp++;
-	}
-
-	/* Add space for trailing token. */
-	count += last_comma < (a_str + strlen(a_str) - 1);
-
-	/* Add space for terminating null string so caller
-       knows where the list of returned strings ends. */
-	count++;
-
-	result = malloc(sizeof(char *) * count);
-
-	if (result) {
-		size_t idx = 0;
-		char *token = strtok(a_str, delim);
-
-		while (token) {
-			assert(idx < count);
-			*(result + idx++) = strdup(token);
-			token = strtok(0, delim);
-		}
-		assert(idx == count - 1);
-		*(result + idx) = 0;
-	}
-
-	return result;
-}
-
-// You must free the result if result is non-NULL.
-const char *str_repeat(char *str, size_t times)
-{
-	if (times < 1)
-		return NULL;
-	char *ret = malloc(sizeof(str) * times + 1);
-	if (ret == NULL)
-		return NULL;
-	strcpy(ret, str);
-	while (--times > 0) {
-		strcat(ret, str);
-	}
-	return ret;
-}
-
-// You must free the result if result is non-NULL.
-char *str_replace(char *orig, char *rep, char *with)
+/**
+ * @brief Replaces all occurrences of a substring within a string with another substring.
+ *
+ * @param orig The original string.
+ * @param rep The substring to replace.
+ * @param with The replacement substring.
+ *
+ * @return A new string with the replacements. Should be freed by the caller.
+ */
+char *btkg_str_replace(const char *orig, const char *rep, const char *with)
 {
 	char *result;
 	char *ins;
@@ -123,15 +72,16 @@ char *str_replace(char *orig, char *rep, char *with)
 	len_with = strlen(with);
 
 	// count the number of replacements needed
-	ins = orig;
+	ins = (char *)orig;
 	for (count = 0; (tmp = strstr(ins, rep)); ++count) {
 		ins = tmp + len_rep;
 	}
 
 	tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
-
-	if (!result)
+	if (!result) {
+		perror("malloc");
 		return NULL;
+	}
 
 	// first time through the loop, all the variable are set correctly
 	// from here on,
@@ -149,11 +99,19 @@ char *str_replace(char *orig, char *rep, char *with)
 	return result;
 }
 
+/**
+ * @brief Replaces placeholders in a string with specified values.
+ *
+ * @param input The input string containing placeholders.
+ * @param search The placeholder to search for.
+ * @param replace The string to replace the placeholder with.
+ *
+ * @return A new string with placeholders replaced. Should be freed by the caller.
+ */
 char *btkg_str_replace_placeholder(char *input, const char *search,
 				   const char *replace)
 {
-	char *tmp = NULL;
-	tmp = str_replace(input, (char *)search, (char *)replace);
+	char *tmp = btkg_str_replace(input, search, replace);
 	if (tmp) {
 		if (input)
 			free(input);
@@ -162,6 +120,11 @@ char *btkg_str_replace_placeholder(char *input, const char *search,
 	return input;
 }
 
+/**
+ * @brief Replaces escape sequences in a string with their corresponding characters.
+ *
+ * @param str The input string containing escape sequences.
+ */
 void btkg_str_replace_escape_sequences(char *str)
 {
 	char *read = str;

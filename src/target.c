@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +51,11 @@ SOFTWARE.
 #define DEFAULT_PORT 22
 
 /**
- * Check if given port is valid
+ * @brief Check if a given port number is valid.
+ *
+ * @param port The port number to check.
+ *
+ * @return 1 if the port is valid (between 1 and 65535), otherwise 0.
  */
 int btkg_target_port_is_valid(const long port)
 {
@@ -59,7 +63,9 @@ int btkg_target_port_is_valid(const long port)
 }
 
 /**
- * Initialize btkg_target_list_t
+ * @brief Initialize a btkg_target_list_t structure.
+ *
+ * @param target_list Pointer to the target list to initialize.
  */
 void btkg_target_list_init(btkg_target_list_t *target_list)
 {
@@ -68,7 +74,10 @@ void btkg_target_list_init(btkg_target_list_t *target_list)
 }
 
 /**
- * Allocate new btkg_target_list_t
+ * @brief Allocate and initialize a new btkg_target_list_t structure.
+ *
+ * @return Pointer to the newly allocated btkg_target_list_t structure,
+ *         or NULL if the allocation fails.
  */
 btkg_target_list_t *btkg_target_list_create(void)
 {
@@ -81,7 +90,9 @@ btkg_target_list_t *btkg_target_list_create(void)
 }
 
 /**
- * Destroy and free btkg_target_list_t
+ * @brief Destroy and free a btkg_target_list_t structure.
+ *
+ * @param target_list Pointer to the target list to destroy.
  */
 void btkg_target_list_destroy(btkg_target_list_t *target_list)
 {
@@ -101,7 +112,14 @@ void btkg_target_list_destroy(btkg_target_list_t *target_list)
 }
 
 /**
- * Parse target string into btkg_target_t structure
+ * @brief Parse a target string and create a btkg_target_t structure.
+ *
+ * @param line The target string (e.g., "192.168.1.1:8080").
+ *
+ * @return Pointer to the newly created btkg_target_t structure,
+ *         or NULL if the string is invalid.
+ *
+ * @note Exits the program with an error message if memory allocation fails.
  */
 btkg_target_t *btkg_target_parse(char *line)
 {
@@ -143,7 +161,10 @@ btkg_target_t *btkg_target_parse(char *line)
 }
 
 /**
- * Append btkg_target_t into given btkg_target_list_t
+ * @brief Append a btkg_target_t structure to a btkg_target_list_t.
+ *
+ * @param target_list Pointer to the target list.
+ * @param target Pointer to the target to append.
  */
 void btkg_target_list_append(btkg_target_list_t *target_list,
 			     btkg_target_t *target)
@@ -163,7 +184,12 @@ void btkg_target_list_append(btkg_target_list_t *target_list,
 }
 
 /**
- * Parse CIDR block and append as many btkg_target_t as needed into the given btkg_target_list_t
+ * @brief Parse a CIDR block and append all addresses in the range as
+ *        btkg_target_t structures to the given btkg_target_list_t.
+ *
+ * @param target_list Pointer to the target list.
+ * @param range The CIDR block string (e.g., "192.168.1.0/24").
+ * @param port The port number to use for all targets.
  */
 void btkg_target_list_append_range(btkg_target_list_t *target_list,
 				   const char *range, uint16_t port)
@@ -212,7 +238,11 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 }
 
 /**
- * Load targets from a given file and append them into the given btkg_target_list_t
+ * @brief Load targets from a given file and append them into the
+ *        given btkg_target_list_t.
+ *
+ * @param target_list Pointer to the target list.
+ * @param filename The path to the file containing target definitions.
  */
 void btkg_target_list_load(btkg_target_list_t *target_list,
 			   const char *filename)

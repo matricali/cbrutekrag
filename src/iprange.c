@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Jorge Matricali <jorgematricali@gmail.com>
+ * Copyright (C) 2018-2024 Jorge Matricali <jorgematricali@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,13 @@
 #include "iprange.h"
 
 /**
- * Convert an A.B.C.D address into a 32-bit host-order value
- * @param ipstr
- * @return
+ * @brief Convert an IPv4 address in string format to a 32-bit host-order value.
+ *
+ * @param ipstr The IPv4 address in string format (e.g., "192.168.1.1").
+ *
+ * @return The 32-bit host-order value of the IPv4 address.
+ *
+ * @note Exits the program with an error message if the address is invalid.
  */
 in_addr_t a_to_hl(const char *ipstr)
 {
@@ -48,13 +52,15 @@ in_addr_t a_to_hl(const char *ipstr)
 		exit(1);
 	}
 
-	return (ntohl(in.s_addr));
+	return (in_addr_t)ntohl(in.s_addr);
 }
 
 /**
- * Compute netmask address given prefix
- * @param prefix
- * @return
+ * @brief Compute the netmask address given a prefix length.
+ *
+ * @param prefix The prefix length (0 to 32).
+ *
+ * @return The netmask address as a 32-bit integer.
  */
 in_addr_t netmask(int prefix)
 {
@@ -66,10 +72,12 @@ in_addr_t netmask(int prefix)
 }
 
 /**
- * Compute network address given address and prefix
- * @param addr
- * @param prefix
- * @return
+ * @brief Compute the network address given an IP address and a prefix length.
+ *
+ * @param addr The IP address as a 32-bit integer.
+ * @param prefix The prefix length (0 to 32).
+ *
+ * @return The network address as a 32-bit integer.
  */
 in_addr_t network(in_addr_t addr, int prefix)
 {
@@ -77,10 +85,12 @@ in_addr_t network(in_addr_t addr, int prefix)
 }
 
 /**
- * Compute broadcast address given address and prefix
- * @param addr
- * @param prefix
- * @return
+ * @brief Compute the broadcast address given an IP address and a prefix length.
+ *
+ * @param addr The IP address as a 32-bit integer.
+ * @param prefix The prefix length (0 to 32).
+ *
+ * @return The broadcast address as a 32-bit integer.
  */
 in_addr_t broadcast(in_addr_t addr, int prefix)
 {
@@ -88,10 +98,14 @@ in_addr_t broadcast(in_addr_t addr, int prefix)
 }
 
 /**
- * Convert a network address char string into a host-order network
- * address and an integer prefix value
- * @param ipstr
- * @return
+ * @brief Convert a network address in string format into a host-order network address
+ *        and an integer prefix value.
+ *
+ * @param ipstr The network address in string format (e.g., "192.168.1.0/24").
+ *
+ * @return A network_addr_t structure containing the network address and prefix.
+ *
+ * @note Exits the program with an error message if the address or prefix is invalid.
  */
 network_addr_t str_to_netaddr(const char *ipstr)
 {

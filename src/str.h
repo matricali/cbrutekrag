@@ -34,11 +34,34 @@ SOFTWARE.
  */
 void btkg_str_copy(char *dst, const char *src, size_t dst_size);
 
-char **str_split(char *a_str, const char a_delim);
-const char *str_repeat(char *str, size_t times);
-char *str_replace(char *orig, char *rep, char *with);
+/**
+ * @brief Replaces all occurrences of a substring within a string with another substring.
+ *
+ * @param orig The original string.
+ * @param rep The substring to replace.
+ * @param with The replacement substring.
+ *
+ * @return A new string with the replacements. Should be freed by the caller.
+ */
+char *btkg_str_replace(const char *orig, const char *rep, const char *with);
+
+/**
+ * @brief Replaces placeholders in a string with specified values.
+ *
+ * @param input The input string containing placeholders.
+ * @param search The placeholder to search for.
+ * @param replace The string to replace the placeholder with.
+ *
+ * @return A new string with placeholders replaced. Should be freed by the caller.
+ */
 char *btkg_str_replace_placeholder(char *input, const char *search,
 				   const char *replace);
+
+/**
+ * @brief Replaces escape sequences in a string with their corresponding characters.
+ *
+ * @param str The input string containing escape sequences.
+ */
 void btkg_str_replace_escape_sequences(char *str);
 
 #endif /* STR_H */

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,11 +29,19 @@ SOFTWARE.
 #include "log.h"
 #include "str.h" /* btkg_str_replace_placeholder */
 
+/** Global verbosity level. */
 extern int g_verbose;
+
+/** Global output format string. */
 extern char *g_output_format;
 
 #define TIMESTAMP_BUFFER_SIZE 20
 
+/**
+ * @brief Get the current timestamp in the format YYYY/MM/DD HH:MM:SS.
+ *
+ * @return A pointer to a static buffer containing the timestamp.
+ */
 static inline const char *get_current_timestamp(void)
 {
 	time_t t = time(NULL);
@@ -46,6 +54,19 @@ static inline const char *get_current_timestamp(void)
 	return buffer;
 }
 
+/**
+ * @brief Print formatted output to a specified stream with optional logging
+ *        information such as file and line number.
+ *
+ * @param level The logging level of the message (e.g., LOG_DEBUG).
+ * @param file The source file from which the log is coming.
+ * @param line The line number in the source file.
+ * @param head A prefix string to be printed before the log message.
+ * @param tail A suffix string to be printed after the log message.
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param format The format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
 void print_output(int level, const char *file, int line, const char *head,
 		  const char *tail, FILE *stream, const char *format, ...)
 {
@@ -69,6 +90,13 @@ void print_output(int level, const char *file, int line, const char *head,
 	fflush(stream);
 }
 
+/**
+ * @brief Print formatted output to a specified stream with the current timestamp.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param format The format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
 void log_output(FILE *stream, const char *format, ...)
 {
 	va_list arg;
@@ -81,6 +109,17 @@ void log_output(FILE *stream, const char *format, ...)
 	fflush(stream);
 }
 
+/**
+ * @brief Log a successful login attempt with detailed information such as
+ *        hostname, port, username, and password, formatted according to
+ *        a global output format string.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param hostname The hostname or IP address where the login was successful.
+ * @param port The port number used in the login attempt.
+ * @param username The username used in the login attempt.
+ * @param password The password used in the login attempt.
+ */
 void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 				const char *username, const char *password)
 {

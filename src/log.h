@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,33 +23,102 @@ SOFTWARE.
 #ifndef LOGGER_H
 #define LOGGER_H
 
+/**
+ * @brief Logging levels.
+ */
 enum {
-	LOG_TRACE,
-	LOG_DEBUG,
-	LOG_INFO,
-	LOG_WARN,
-	LOG_ERROR,
-	LOG_FATAL,
+	LOG_TRACE, /**< Trace level for detailed debugging. */
+	LOG_DEBUG, /**< Debug level for general debugging information. */
+	LOG_INFO, /**< Info level for informational messages. */
+	LOG_WARN, /**< Warn level for warnings and potential issues. */
+	LOG_ERROR, /**< Error level for error messages. */
+	LOG_FATAL /**< Fatal level for critical errors that may cause termination. */
 };
 
+/**
+ * @brief Log an error message with red color and file/line information.
+ *
+ * This macro calls `print_output` with the LOG_ERROR level, red color for
+ * the message, and includes file and line information.
+ *
+ * @param ... Format string and arguments for the error message.
+ */
 #define log_error(...)                                                         \
 	print_output(LOG_ERROR, __FILE__, __LINE__, "\033[91m", "\033[0m",     \
 		     stderr, __VA_ARGS__)
+
+/**
+ * @brief Log a warning message without color and with file/line information.
+ *
+ * This macro calls `print_output` with the LOG_WARN level and includes file
+ * and line information.
+ *
+ * @param ... Format string and arguments for the warning message.
+ */
 #define log_warn(...)                                                          \
 	print_output(LOG_WARN, __FILE__, __LINE__, "", "", stderr, __VA_ARGS__)
 
+/**
+ * @brief Log a debug message with gray color and file/line information.
+ *
+ * This macro calls `print_output` with the LOG_DEBUG level, gray color for
+ * the message, and includes file and line information.
+ *
+ * @param ... Format string and arguments for the debug message.
+ */
 #define log_debug(...)                                                         \
 	print_output(LOG_DEBUG, __FILE__, __LINE__, "\033[37m", "\033[0m",     \
 		     stderr, __VA_ARGS__)
+
+/**
+ * @brief Log an informational message without color and with no file/line
+ *        information.
+ *
+ * This macro calls `print_output` with the LOG_INFO level and writes to
+ * stdout.
+ *
+ * @param ... Format string and arguments for the informational message.
+ */
 #define log_info(...)                                                          \
 	print_output(LOG_INFO, __FILE__, __LINE__, "", "", stdout, __VA_ARGS__)
 
+/**
+ * @brief Print a formatted output message to a specified stream with optional
+ *        logging information such as file and line number.
+ *
+ * @param level The logging level of the message (e.g., LOG_DEBUG).
+ * @param file The source file from which the log is coming.
+ * @param line The line number in the source file.
+ * @param head A prefix string to be printed before the log message.
+ * @param tail A suffix string to be printed after the log message.
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param format The format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
 void print_output(int level, const char *file, int line, const char *head,
 		  const char *tail, FILE *stream, const char *format, ...);
 
+/**
+ * @brief Print a formatted output message with the current timestamp to a
+ *        specified stream.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param format The format string for the log message.
+ * @param ... Additional arguments for the format string.
+ */
 void log_output(FILE *stream, const char *format, ...);
 
+/**
+ * @brief Log a successful login attempt with details formatted according to
+ *        a global output format string.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param hostname The hostname or IP address where the login was successful.
+ * @param port The port number used in the login attempt.
+ * @param username The username used in the login attempt.
+ * @param password The password used in the login attempt.
+ */
 void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 				const char *username, const char *password);
 
-#endif /* LOGGER_H */
+#endif // LOGGER_H
