@@ -66,8 +66,6 @@ int detection_login_methods(ssh_session session, const char *hostname, int port)
 		log_debug(
 			"[!] %s:%d - Server without authentication. (not eligible)",
 			hostname, port);
-		ssh_disconnect(session);
-		ssh_free(session);
 
 		return -1;
 	}
@@ -76,8 +74,6 @@ int detection_login_methods(ssh_session session, const char *hostname, int port)
 		log_debug(
 			"[!] %s:%d - ssh_userauth_none(): A serious error happened. (not eligible)",
 			hostname, port);
-		ssh_disconnect(session);
-		ssh_free(session);
 
 		return -1;
 	}
@@ -85,13 +81,9 @@ int detection_login_methods(ssh_session session, const char *hostname, int port)
 	int method = ssh_userauth_list(session, NULL);
 
 	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
-		ssh_disconnect(session);
-		ssh_free(session);
 		return 0;
 	}
 
-	ssh_disconnect(session);
-	ssh_free(session);
 	return -1;
 }
 
