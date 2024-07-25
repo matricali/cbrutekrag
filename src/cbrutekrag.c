@@ -363,5 +363,10 @@ int main(int argc, char **argv)
 	if (context.output != NULL)
 		fclose(context.output);
 
+	if (g_output_format != NULL) {
+		free(g_output_format);
+		g_output_format = NULL;
+	}
+
 	exit(EXIT_SUCCESS);
 }
