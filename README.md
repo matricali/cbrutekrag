@@ -27,6 +27,8 @@ $ cbrutekrag -h
           OpenSSH Brute force tool 0.6.0        __/ |
       (c) Copyright 2014-2024 Jorge Matricali  |___/
 
+      https://github.com/matricali/cbrutekrag
+
 
 usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]
                 [-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]
@@ -42,9 +44,9 @@ usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.l
 -t, --threads <threads>   Max threads
 -o, --output <file>       Output log file
 -F, --format <pattern>    Output log format
-                 Available placeholders:
-                 %DATETIME%, %HOSTNAME%
-                 %PORT%, %USERNAME%, %PASSWORD%
+                          Available placeholders:
+                          %DATETIME%, %HOSTNAME%
+                          %PORT%, %USERNAME%, %PASSWORD%
 -a, --allow-non-openssh   Accepts non OpenSSH servers
 -A, --allow-honeypots     Allow servers detected as honeypots
 ```

@@ -80,7 +80,9 @@ void print_banner()
 	       "\033[37m    | (__ \033[92m| |_) | |  | |_| | ||  __/   <| | | (_| | (_| |\n"
 	       "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
 	       "              \033[0m\033[1mOpenSSH Brute force tool 0.6.0\033[0m\033[92m        __/ |\n"
-	       "          \033[0m(c) Copyright 2014-2024 Jorge Matricali\033[92m  |___/\033[0m\n\n");
+	       "          \033[0m(c) Copyright 2014-2024 Jorge Matricali\033[92m  |___/\033[0m\n\n"
+			   "          \033[36mhttps://github.com/matricali/cbrutekrag\n"
+				 "\033[0m\n");
 }
 
 void usage(const char *p)
