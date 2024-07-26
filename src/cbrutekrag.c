@@ -30,13 +30,12 @@ SOFTWARE.
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
-// #include <process.h>
 #else
 #include <execinfo.h> /* backtrace, backtrace_symbols_fd */
 #include <signal.h>
 #include <sys/resource.h> /* rlimit */
 #include <sys/wait.h> /* waitpid */
-#include <unistd.h> /* for usleep() */
+#include <unistd.h> /* STDERR_FILENO */
 #endif
 
 #include <pthread.h>
@@ -53,6 +52,24 @@ SOFTWARE.
 
 int g_verbose = 0;
 char *g_output_format = NULL;
+
+/* Long options for getopt_long */
+static struct option long_options[] = {
+	{ "help", no_argument, NULL, 'h' },
+	{ "verbose", no_argument, NULL, 'v' },
+	{ "verbose-sshlib", no_argument, NULL, 'V' },
+	{ "scan", no_argument, NULL, 's' },
+	{ "dry-run", no_argument, NULL, 'D' },
+	{ "progress", no_argument, NULL, 'P' },
+	{ "targets", required_argument, NULL, 'T' },
+	{ "credentials", required_argument, NULL, 'C' },
+	{ "threads", required_argument, NULL, 't' },
+	{ "output", required_argument, NULL, 'o' },
+	{ "format", required_argument, NULL, 'F' },
+	{ "allow-non-openssh", no_argument, NULL, 'a' },
+	{ "allow-honeypots", no_argument, NULL, 'A' },
+	{ NULL, 0, NULL, 0 }
+};
 
 void print_banner()
 {
@@ -142,6 +159,7 @@ void btkg_context_init(btkg_context_t *context)
 int main(int argc, char **argv)
 {
 	int opt;
+	int option_index = 0;
 	char *hostnames_filename = NULL;
 	char *credentials_filename = NULL;
 	char *output_filename = NULL;
@@ -159,13 +177,14 @@ int main(int argc, char **argv)
 	btkg_context_t context;
 	btkg_context_init(&context);
 
-	/* Calculate maximun number of threads. */
+	/* Calculate maximum number of threads. */
 	btkg_options_t *options = &context.options;
 	options->max_threads = btkg_get_max_threads();
 
 	options->timeout = 1;
 
-	while ((opt = getopt(argc, argv, "aAT:C:t:o:F:DsvVPh")) != -1) {
+	while ((opt = getopt_long(argc, argv, "aAT:C:t:o:F:DsvVPh",
+				  long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'a':
 				options->non_openssh = 1;
@@ -215,22 +234,22 @@ int main(int argc, char **argv)
 			case 'h':
 				print_banner();
 				usage(argv[0]);
-				printf("  -h                This help\n"
-				       "  -v                Verbose mode\n"
-				       "  -V                Verbose mode (sshlib)\n"
-				       "  -s                Scan mode\n"
-				       "  -D                Dry run\n"
-				       "  -P                Progress bar\n"
-				       "  -T <targets>      Targets file\n"
-				       "  -C <credentials>  Username and password file\n"
-				       "  -t <threads>      Max threads\n"
-				       "  -o <output>       Output log file\n"
-				       "  -F <format>       Output log format\n"
-				       "                    Available placeholders:\n"
-				       "                    %%DATETIME%%, %%HOSTNAME%%\n"
-				       "                    %%PORT%%, %%USERNAME%%, %%PASSWORD%%\n"
-				       "  -a                Accepts non OpenSSH servers\n"
-				       "  -A                Allow servers detected as honeypots.\n");
+				printf("  -h, --help                This help\n"
+				       "  -v, --verbose             Verbose mode\n"
+				       "  -V, --verbose-sshlib      Verbose mode (sshlib)\n"
+				       "  -s, --scan                Scan mode\n"
+				       "  -D, --dry-run             Dry run\n"
+				       "  -P, --progress            Progress bar\n"
+				       "  -T, --targets <file>      Targets file\n"
+				       "  -C, --credentials <file>  Username and password file\n"
+				       "  -t, --threads <threads>   Max threads\n"
+				       "  -o, --output <file>       Output log file\n"
+				       "  -F, --format <pattern>    Output log format\n"
+				       "                            Available placeholders:\n"
+				       "                            %%DATETIME%%, %%HOSTNAME%%\n"
+				       "                            %%PORT%%, %%USERNAME%%, %%PASSWORD%%\n"
+				       "  -a, --allow-non-openssh   Accepts non OpenSSH servers\n"
+				       "  -A, --allow-honeypots     Allow servers detected as honeypots\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);
@@ -247,7 +266,7 @@ int main(int argc, char **argv)
 
 		if (ret == NULL) {
 			log_error(
-				"WARNING: An error ocurred parsing target '%s' on argument #%d",
+				"WARNING: An error occurred parsing target '%s' on argument #%d",
 				argv[optind], optind);
 			continue;
 		}

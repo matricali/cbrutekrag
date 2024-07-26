@@ -31,22 +31,22 @@ $ cbrutekrag -h
 usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]
                 [-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]
 
-  -h                This help
-  -v                Verbose mode
-  -V                Verbose mode (sshlib)
-  -s                Scan mode
-  -D                Dry run
-  -P                Progress bar
-  -T <targets>      Targets file
-  -C <combinations> Username and password file
-  -t <threads>      Max threads
-  -o <output>       Output log file
-  -F <format>       Output log format
-                    Available placeholders:
-                    %DATETIME%, %HOSTNAME%
-                    %PORT%, %USERNAME%, %PASSWORD%
-  -a                Accepts non OpenSSH servers
-  -A                Allow servers detected as honeypots.
+-h, --help                This help
+-v, --verbose             Verbose mode
+-V, --verbose-sshlib      Verbose mode (sshlib)
+-s, --scan                Scan mode
+-D, --dry-run             Dry run
+-P, --progress            Progress bar
+-T, --targets <file>      Targets file
+-C, --credentials <file>  Username and password file
+-t, --threads <threads>   Max threads
+-o, --output <file>       Output log file
+-F, --format <pattern>    Output log format
+                 Available placeholders:
+                 %DATETIME%, %HOSTNAME%
+                 %PORT%, %USERNAME%, %PASSWORD%
+-a, --allow-non-openssh   Accepts non OpenSSH servers
+-A, --allow-honeypots     Allow servers detected as honeypots
 ```
 
 ## Example usages
