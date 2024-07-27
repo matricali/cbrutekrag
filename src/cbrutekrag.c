@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2014-2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -124,6 +124,37 @@ static size_t btkg_get_max_threads(void)
 #endif
 }
 
+#ifdef _WIN32
+/**
+ * @brief Sets up the console to support ANSI escape sequences on Windows.
+ *
+ * This function enables the ENABLE_VIRTUAL_TERMINAL_PROCESSING mode in the
+ * Windows console, allowing it to process ANSI escape sequences for colored
+ * output. If the console handle is invalid or if there is an error while
+ * getting or setting the console mode, an error message is printed to stderr.
+ */
+static void btkg_console_setup()
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hConsole != INVALID_HANDLE_VALUE) {
+		DWORD dwMode = 0;
+
+		if (!GetConsoleMode(hConsole, &dwMode)) {
+			fprintf(stderr, "Error getting console mode: %lu\n",
+				GetLastError());
+			return;
+		}
+
+		dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+		if (!SetConsoleMode(hConsole, dwMode)) {
+			fprintf(stderr, "Error setting console mode: %lu\n",
+				GetLastError());
+		}
+	}
+}
+#endif
+
 void btkg_options_init(btkg_options_t *options)
 {
 	if (options == NULL)
@@ -173,6 +204,11 @@ int main(int argc, char **argv)
 #ifndef _WIN32
 	/* Ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+#endif
+
+#ifdef _WIN32
+	/* Setup console */
+	btkg_console_setup();
 #endif
 
 	/* Initialize context */
