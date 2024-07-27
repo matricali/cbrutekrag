@@ -68,6 +68,7 @@ static struct option long_options[] = {
 	{ "format", required_argument, NULL, 'F' },
 	{ "allow-non-openssh", no_argument, NULL, 'a' },
 	{ "allow-honeypots", no_argument, NULL, 'A' },
+	{ "timeout", required_argument, NULL, 11 },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -219,8 +220,6 @@ int main(int argc, char **argv)
 	btkg_options_t *options = &context.options;
 	options->max_threads = btkg_get_max_threads();
 
-	options->timeout = 1;
-
 	while ((opt = getopt_long(argc, argv, "aAT:C:t:o:F:DsvVPh",
 				  long_options, &option_index)) != -1) {
 		switch (opt) {
@@ -269,6 +268,15 @@ int main(int argc, char **argv)
 			case 'P':
 				options->progress_bar = 1;
 				break;
+			case 11: // --timeout
+				tempint = atoi(optarg);
+				if (tempint < 1) {
+					log_error("Invalid timeout value. (%d)",
+						  tempint);
+					exit(EXIT_FAILURE);
+				}
+				options->timeout = tempint;
+				break;
 			case 'h':
 				print_banner();
 				usage(argv[0]);
@@ -287,7 +295,8 @@ int main(int argc, char **argv)
 				       "                            %%DATETIME%%, %%HOSTNAME%%\n"
 				       "                            %%PORT%%, %%USERNAME%%, %%PASSWORD%%\n"
 				       "  -a, --allow-non-openssh   Accepts non OpenSSH servers\n"
-				       "  -A, --allow-honeypots     Allow servers detected as honeypots\n");
+				       "  -A, --allow-honeypots     Allow servers detected as honeypots\n"
+				       "      --timeout <seconds>   Sets connection timeout (Default: 3)\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);

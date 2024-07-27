@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hostname can be used as a username or password dynamically ($TARGET) (#28)
 - Output log format are now customizable (#30)
 - Windows support
+- Timeout can be specified using --timeout <seconds> argument. Default: 3
 
 ### Changed
 
