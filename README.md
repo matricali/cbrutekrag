@@ -1,6 +1,6 @@
 [![license](https://img.shields.io/github/license/matricali/cbrutekrag.svg)](https://matricali.mit-license.org/2014)
-[![GitHub contributors](https://img.shields.io/github/contributors/matricali/cbrutekrag.svg)](https://github.com/matricali/cbrutekrag/graphs/contributors) ![Build Status](https://github.com/matricali/cbrutekrag/actions/workflows/build.yml/badge.svg?event=push)
-![Static Build Status](https://github.com/matricali/cbrutekrag/actions/workflows/static-build.yml/badge.svg?event=push)
+[![GitHub contributors](https://img.shields.io/github/contributors/matricali/cbrutekrag.svg)](https://github.com/matricali/cbrutekrag/graphs/contributors) [![Build](https://github.com/matricali/cbrutekrag/actions/workflows/build.yml/badge.svg)](https://github.com/matricali/cbrutekrag/actions/workflows/build.yml)
+[![Static Build](https://github.com/matricali/cbrutekrag/actions/workflows/static-build.yml/badge.svg)](https://github.com/matricali/cbrutekrag/actions/workflows/static-build.yml)
 [![Windows Build](https://github.com/matricali/cbrutekrag/actions/workflows/windows-build.yml/badge.svg?branch=master)](https://github.com/matricali/cbrutekrag/actions/workflows/windows-build.yml)
 [![Latest stable release](https://img.shields.io/badge/dynamic/json.svg?label=stable&url=https%3A%2F%2Fapi.github.com%2Frepos%2Fmatricali%2Fcbrutekrag%2Freleases%2Flatest&query=%24.name&colorB=blue)](https://github.com/matricali/cbrutekrag/releases/latest)
 
