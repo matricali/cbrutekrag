@@ -140,7 +140,7 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 
 	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
 	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-	ssh_options_set(session, SSH_OPTIONS_PORT, &port);
+	ssh_options_set(session, SSH_OPTIONS_PORT, &(int){port});
 #if LIBSSH_VERSION_MAJOR > 0 ||                                                \
 	(LIBSSH_VERSION_MAJOR == 0 && LIBSSH_VERSION_MINOR >= 6)
 	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
