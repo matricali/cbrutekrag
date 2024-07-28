@@ -30,6 +30,7 @@ SOFTWARE.
 
 int g_verbose = 0;
 char *g_output_format = NULL;
+char *g_scan_output_format = NULL;
 
 typedef struct {
 	const char *input;
