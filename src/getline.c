@@ -34,6 +34,8 @@
 
 #if !HAVE_GETLINE
 
+#include "compat.h"
+
 ssize_t
 getline(char **buf, size_t *bufsiz, FILE *fp)
 {

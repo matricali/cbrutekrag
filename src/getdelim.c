@@ -59,7 +59,7 @@ getdelim(char **buf, size_t *bufsiz, int delimiter, FILE *fp)
 			}
 			return -1;
 		}
-		*ptr++ = c;
+		*ptr++ = (char)c;
 		if (c == delimiter) {
 			*ptr = '\0';
 			return ptr - *buf;
