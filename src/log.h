@@ -121,4 +121,17 @@ void log_output(FILE *stream, const char *format, ...);
 void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 				const char *username, const char *password);
 
+/**
+ * @brief Log elegible target found with detailed information formatted
+ *        according to a global output format string.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param hostname The hostname or IP address where the login was successful.
+ * @param port The port number used in the login attempt.
+ * @param banner The server banner.
+ * @param password The password used in the login attempt.
+ */
+void btkg_log_target_found(FILE *stream, const char *hostname, int port,
+			   const char *banner);
+
 #endif // LOGGER_H

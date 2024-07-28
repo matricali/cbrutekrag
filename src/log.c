@@ -35,6 +35,9 @@ extern int g_verbose;
 /** Global output format string. */
 extern char *g_output_format;
 
+/** Global scanner output format string. */
+extern char *g_scan_output_format;
+
 #define TIMESTAMP_BUFFER_SIZE 20
 
 /**
@@ -162,6 +165,68 @@ void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 		goto error;
 
 	output = btkg_str_replace_placeholder(output, "%PORT%", strport);
+	if (output == NULL)
+		goto error;
+
+	// Print buffer
+	fprintf(stream, "%s", output);
+	free(output);
+
+	return;
+
+error:
+	log_error("Error replacing placeholders");
+	free(output);
+}
+
+/**
+ * @brief Log elegible target found with detailed information formatted
+ *        according to a global output format string.
+ *
+ * @param stream The output stream (e.g., stdout or stderr).
+ * @param hostname The hostname or IP address where the login was successful.
+ * @param port The port number used in the login attempt.
+ * @param banner The server banner.
+ * @param password The password used in the login attempt.
+ */
+void btkg_log_target_found(FILE *stream, const char *hostname, int port,
+			   const char *banner)
+{
+	if (g_scan_output_format == NULL) {
+		log_error("g_scan_output_format is NULL");
+		return;
+	}
+
+	int port_len = snprintf(NULL, 0, "%d", port);
+	char strport[port_len + 1]; // +1 for the null terminator
+
+	snprintf(strport, sizeof(strport), "%d", port);
+
+	// Allocation
+	size_t output_len = strlen(g_scan_output_format) + 1;
+	char *output = malloc(output_len);
+
+	if (output == NULL) {
+		log_error("Error allocating memory");
+		return;
+	}
+
+	snprintf(output, output_len, "%s", g_scan_output_format);
+
+	output = btkg_str_replace_placeholder(output, "%DATETIME%",
+					      get_current_timestamp());
+	if (output == NULL)
+		goto error;
+
+	output = btkg_str_replace_placeholder(output, "%HOSTNAME%", hostname);
+	if (output == NULL)
+		goto error;
+
+	output = btkg_str_replace_placeholder(output, "%PORT%", strport);
+	if (output == NULL)
+		goto error;
+
+	output = btkg_str_replace_placeholder(output, "%BANNER%", banner);
 	if (output == NULL)
 		goto error;
 

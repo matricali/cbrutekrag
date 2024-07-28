@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Output log format are now customizable (#30)
 - Windows support
 - Timeout can be specified using --timeout <seconds> argument. Default: 3
+- Separated and customizable scanner output log -F <format> -O <file> (#27)
 
 ### Changed
 
 - Bruteforce process now uses pthread instead of fork
+- Short option for bruteforce output log format changed from -F to -f
 
 ### Fixed
 

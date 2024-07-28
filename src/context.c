@@ -62,6 +62,7 @@ void btkg_context_init(btkg_context_t *context)
 	btkg_options_init(&context->options);
 
 	context->output = NULL;
+	context->scan_output = NULL;
 	context->count = 0;
 	context->successful = 0;
 	context->total = 0;

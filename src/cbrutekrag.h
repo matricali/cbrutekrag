@@ -52,6 +52,7 @@ typedef struct {
 	size_t credentials_idx;
 	size_t targets_idx;
 	FILE *output;
+	FILE *scan_output;
 } btkg_context_t;
 
 /**

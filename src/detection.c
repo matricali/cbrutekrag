@@ -228,7 +228,12 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 		return -1;
 	}
 
-	log_info("[!] %s:%d - %s", hostname, port, banner);
+	log_info("[+] %s:%d - %s", hostname, port, banner);
+
+	if (context->scan_output != NULL) {
+		btkg_log_target_found(context->scan_output, hostname, port,
+				      banner);
+	}
 
 	ssh_disconnect(session);
 	ssh_free(session);
@@ -277,8 +282,6 @@ void *detection_process(void *ptr)
 
 		if (options->dry_run) {
 			pthread_mutex_lock(&mutex);
-			log_info("Scanning %s:%d", current_target->host,
-				 current_target->port);
 			btkg_target_list_append(&filtered, current_target);
 			pthread_mutex_unlock(&mutex);
 			continue;

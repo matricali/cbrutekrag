@@ -52,6 +52,7 @@ SOFTWARE.
 
 int g_verbose = 0;
 char *g_output_format = NULL;
+char *g_scan_output_format = NULL;
 
 /* Long options for getopt_long */
 static struct option long_options[] = {
@@ -65,7 +66,9 @@ static struct option long_options[] = {
 	{ "credentials", required_argument, NULL, 'C' },
 	{ "threads", required_argument, NULL, 't' },
 	{ "output", required_argument, NULL, 'o' },
-	{ "format", required_argument, NULL, 'F' },
+	{ "format", required_argument, NULL, 'f' },
+	{ "scan-output", required_argument, NULL, 'O' },
+	{ "scan-format", required_argument, NULL, 'F' },
 	{ "allow-non-openssh", no_argument, NULL, 'a' },
 	{ "allow-honeypots", no_argument, NULL, 'A' },
 	{ "timeout", required_argument, NULL, 11 },
@@ -89,7 +92,7 @@ static void print_banner(void)
 static void usage(const char *p)
 {
 	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]\n"
-	       "\t\t[-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]\n\n",
+	       "\t\t[-t THREADS] [-f OUTPUT FORMAT] [-o OUTPUT.txt] [-F SCAN OUTPUT FORMAT] [-O SCAN_OUTPUT.txt] [TARGETS...]\n\n",
 	       p);
 }
 
@@ -163,6 +166,7 @@ int main(int argc, char **argv)
 	char *hostnames_filename = NULL;
 	char *credentials_filename = NULL;
 	char *output_filename = NULL;
+	char *scan_output_filename = NULL;
 	int tempint;
 
 	/* Error handler */
@@ -186,7 +190,7 @@ int main(int argc, char **argv)
 	btkg_options_t *options = &context.options;
 	options->max_threads = btkg_get_max_threads();
 
-	while ((opt = getopt_long(argc, argv, "aAT:C:t:o:F:DsvVPh",
+	while ((opt = getopt_long(argc, argv, "aAT:C:t:o:f:O:F:DsvVPh",
 				  long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'a':
@@ -217,7 +221,7 @@ int main(int argc, char **argv)
 				}
 				options->max_threads = (size_t)tempint;
 				break;
-			case 'F':
+			case 'f':
 				g_output_format = strdup(optarg);
 				btkg_str_replace_escape_sequences(
 					g_output_format);
@@ -227,6 +231,14 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				options->perform_scan = 1;
+				break;
+			case 'O':
+				scan_output_filename = strdup(optarg);
+				break;
+			case 'F':
+				g_scan_output_format = strdup(optarg);
+				btkg_str_replace_escape_sequences(
+					g_scan_output_format);
 				break;
 			case 'D':
 				options->dry_run = 1;
@@ -260,6 +272,13 @@ int main(int argc, char **argv)
 				       "                            Available placeholders:\n"
 				       "                            %%DATETIME%%, %%HOSTNAME%%\n"
 				       "                            %%PORT%%, %%USERNAME%%, %%PASSWORD%%\n"
+				       "  -O, --scan-output <file>  Output log file for scanner\n"
+				       "  -F, --scan-format <pattern> Output log format for scanner\n"
+				       "                            Available placeholders:\n"
+				       "                            %%DATETIME%%, %%HOSTNAME%%\n"
+				       "                            %%PORT%%, %%BANNER%%.\n"
+				       "                            Default:\n"
+				       "                            \"%%HOSTNAME%%:%%PORT%%\\t%%BANNER%%\\n\"\n"
 				       "  -a, --allow-non-openssh   Accepts non OpenSSH servers\n"
 				       "  -A, --allow-honeypots     Allow servers detected as honeypots\n"
 				       "      --timeout <seconds>   Sets connection timeout (Default: 3)\n");
@@ -358,8 +377,33 @@ int main(int argc, char **argv)
 		log_info("Starting servers discoverage process...");
 		clock_gettime(CLOCK_MONOTONIC, &start);
 
+		/* Scan output file */
+		if (scan_output_filename != NULL) {
+			context.scan_output = fopen(scan_output_filename, "a");
+			if (context.scan_output == NULL) {
+				log_error(
+					"Error opening scan output file. (%s)",
+					scan_output_filename);
+				exit(EXIT_FAILURE);
+			}
+
+			/* Scanner Output Format */
+			if (g_scan_output_format == NULL) {
+				g_scan_output_format =
+					strdup("%HOSTNAME%:%PORT%\t%BANNER%\n");
+			}
+		}
+
 		detection_start(&context, targets, targets,
 				options->max_threads);
+
+		if (context.scan_output != NULL)
+			fclose(context.scan_output);
+
+		if (g_scan_output_format != NULL) {
+			free(g_scan_output_format);
+			g_scan_output_format = NULL;
+		}
 
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		elapsed = (double)(end.tv_sec - start.tv_sec);

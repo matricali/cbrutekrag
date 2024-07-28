@@ -31,7 +31,7 @@ $ cbrutekrag -h
 
 
 usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]
-                [-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]
+                [-t THREADS] [-f OUTPUT FORMAT] [-o OUTPUT.txt] [-F SCAN OUTPUT FORMAT] [-O SCAN_OUTPUT.txt] [TARGETS...]
 
 -h, --help                This help
 -v, --verbose             Verbose mode
@@ -47,6 +47,13 @@ usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.l
                           Available placeholders:
                           %DATETIME%, %HOSTNAME%
                           %PORT%, %USERNAME%, %PASSWORD%
+-O, --scan-output <file>  Output log file for scanner
+-F, --scan-format <pattern> Output log format for scanner
+                          Available placeholders:
+                          %DATETIME%, %HOSTNAME%
+                          %PORT%, %BANNER%.
+                          Default:
+                          "%HOSTNAME%:%PORT%\t%BANNER%\n"
 -a, --allow-non-openssh   Accepts non OpenSSH servers
 -A, --allow-honeypots     Allow servers detected as honeypots
     --timeout <seconds>   Sets connection timeout (Default: 3)
@@ -83,9 +90,9 @@ root $TARGET
 
 ### Customizable output format
 
-Output format can be easily customizable using the command line option `-F`
+Output format can be easily customizable using the command line option `-f`
 
-Example: `./cbrutekrag -F "%HOSTNAME%:%PORT%|%USERNAME%|%PASSWORD%\n"`, which
+Example: `./cbrutekrag -f "%HOSTNAME%:%PORT%|%USERNAME%|%PASSWORD%\n"`, which
 produces an output like:
 
 ```
@@ -113,6 +120,36 @@ produces an output like:
 |\n         |Replaced by LF                    |                   |
 |\t         |Replaced by TAB                   |                   |
 
+### Customizable output format for scanner
+
+Output format can be easily customizable using the command line option `-F`
+
+Example: `./cbrutekrag -F "%HOSTNAME%\t%PORT%\t%BANNER%\n"`, which
+produces an output like:
+
+```
+192.168.0.100 22  SSH-2.0-OpenSSH_6.0p1 Debian-4+deb7u2
+192.168.0.105 22  SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u2
+```
+
+#### Default value
+
+`%HOSTNAME%:%PORT%\t%BANNER%\n`
+
+```
+192.168.0.100:22  SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u2
+```
+
+#### Placeholders
+
+|Placeholder|Description                       |Example            |
+|-----------|----------------------------------|-------------------|
+|%DATETIME% |Replaced by `Y/m/d HH:ii:ss` date |2024/04/01 12:46:27|
+|%HOSTNAME% |Replaced by hostname or IPv4      |192.168.0.100      |
+|%PORT%     |Replaced by connection port       |22                 |
+|%BANNER%   |Replaced by server banner         |SSH-2.0-OpenSSH_9.2p1 Debian-2+deb12u2|
+|\n         |Replaced by LF                    |                   |
+|\t         |Replaced by TAB                   |                   |
 
 ## Requirements
 **cbrutekrag** uses **libssh** - The SSH Library (http://www.libssh.org/)
