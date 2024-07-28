@@ -72,7 +72,7 @@ static struct option long_options[] = {
 	{ NULL, 0, NULL, 0 }
 };
 
-void print_banner()
+static void print_banner(void)
 {
 	printf("\033[92m           _                _       _\n"
 	       "          | |              | |     | |\n"
@@ -82,11 +82,11 @@ void print_banner()
 	       "\033[37m     \\___|\033[92m|_.__/|_|   \\__,_|\\__\\___|_|\\_\\_|  \\__,_|\\__, |\n"
 	       "              \033[0m\033[1mOpenSSH Brute force tool 0.6.0\033[0m\033[92m        __/ |\n"
 	       "          \033[0m(c) Copyright 2014-2024 Jorge Matricali\033[92m  |___/\033[0m\n\n"
-			   "          \033[36mhttps://github.com/matricali/cbrutekrag\n"
-				 "\033[0m\n");
+	       "          \033[36mhttps://github.com/matricali/cbrutekrag\n"
+	       "\033[0m\n");
 }
 
-void usage(const char *p)
+static void usage(const char *p)
 {
 	printf("\nusage: %s [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.lst]\n"
 	       "\t\t[-t THREADS] [-F OUTPUT FORMAT] [-o OUTPUT.txt] [TARGETS...]\n\n",
@@ -155,40 +155,6 @@ static void btkg_console_setup()
 	}
 }
 #endif
-
-void btkg_options_init(btkg_options_t *options)
-{
-	if (options == NULL)
-		return;
-
-	options->timeout = 3;
-	options->max_threads = 1;
-	options->progress_bar = 0;
-	options->verbose = 0;
-	options->dry_run = 0;
-	options->perform_scan = 0;
-	options->non_openssh = 0;
-	options->allow_honeypots = 0;
-}
-
-void btkg_context_init(btkg_context_t *context)
-{
-	if (context == NULL) {
-		return;
-	}
-
-	btkg_options_init(&context->options);
-
-	context->output = NULL;
-	context->count = 0;
-	context->successful = 0;
-	context->total = 0;
-	context->credentials_idx = 0;
-	context->targets_idx = 0;
-
-	btkg_credentials_list_init(&context->credentials);
-	btkg_target_list_init(&context->targets);
-}
 
 int main(int argc, char **argv)
 {

@@ -6,6 +6,7 @@ set(SOURCE_FILES
     getdelim.c
     getline.c
     cbrutekrag.c
+    context.c
     log.c
     str.c
     iprange.c

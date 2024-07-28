@@ -5,6 +5,7 @@ LDFLAGS	+= -lpthread -lssh -lrt -rdynamic
 
 NAME	= cbrutekrag
 SRCS	:= cbrutekrag.c \
+	context.c \
 	log.c \
 	str.c \
 	iprange.c \

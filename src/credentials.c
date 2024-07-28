@@ -70,7 +70,8 @@ void btkg_credentials_list_init(btkg_credentials_list_t *credentials)
 }
 
 /**
- * @brief Loads credentials from a given file and appends them into the given btkg_credentials_list_t.
+ * @brief Loads credentials from a given file and appends them into the given
+ *	      btkg_credentials_list_t.
  *
  * @param credentials_list Pointer to the btkg_credentials_list_t structure to append the loaded credentials to.
  * @param filename The name of the file to load the credentials from.

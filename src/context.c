@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014-2018 Jorge Matricali
+Copyright (c) 2024 Jorge Matricali
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,39 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef CBRUTEKRAG_H
-#define CBRUTEKRAG_H
-
-#include <stdio.h>
-
-#include "credentials.h"
-#include "target.h"
-
-#define CBRUTEKRAG_VERBOSE_MODE 0x1
-#define CBRUTEKRAG_VERBOSE_SSHLIB 0x2
-
-typedef struct {
-	int timeout;
-	size_t max_threads;
-	int progress_bar;
-	int verbose;
-	int dry_run;
-	int perform_scan;
-	int non_openssh;
-	int allow_honeypots;
-} btkg_options_t;
-
-typedef struct {
-	btkg_options_t options;
-	btkg_credentials_list_t credentials;
-	btkg_target_list_t targets;
-	size_t count;
-	size_t successful;
-	size_t total;
-	size_t credentials_idx;
-	size_t targets_idx;
-	FILE *output;
-} btkg_context_t;
+#include "cbrutekrag.h"
 
 /**
  * @brief Initializes the options structure with default values.
@@ -62,7 +30,20 @@ typedef struct {
  *
  * @param options Pointer to the options structure to be initialized.
  */
-void btkg_options_init(btkg_options_t *options);
+void btkg_options_init(btkg_options_t *options)
+{
+	if (options == NULL)
+		return;
+
+	options->timeout = 3;
+	options->max_threads = 1;
+	options->progress_bar = 0;
+	options->verbose = 0;
+	options->dry_run = 0;
+	options->perform_scan = 0;
+	options->non_openssh = 0;
+	options->allow_honeypots = 0;
+}
 
 /**
  * @brief Initializes the context structure with default values.
@@ -72,6 +53,21 @@ void btkg_options_init(btkg_options_t *options);
  *
  * @param context Pointer to the context structure to be initialized.
  */
-void btkg_context_init(btkg_context_t *context);
+void btkg_context_init(btkg_context_t *context)
+{
+	if (context == NULL) {
+		return;
+	}
 
-#endif /* CBRUTEKRAG_H */
+	btkg_options_init(&context->options);
+
+	context->output = NULL;
+	context->count = 0;
+	context->successful = 0;
+	context->total = 0;
+	context->credentials_idx = 0;
+	context->targets_idx = 0;
+
+	btkg_credentials_list_init(&context->credentials);
+	btkg_target_list_init(&context->targets);
+}
