@@ -171,6 +171,7 @@ void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 	// Print buffer
 	fprintf(stream, "%s", output);
 	free(output);
+	fflush(stream);
 
 	return;
 
@@ -233,6 +234,7 @@ void btkg_log_target_found(FILE *stream, const char *hostname, int port,
 	// Print buffer
 	fprintf(stream, "%s", output);
 	free(output);
+	fflush(stream);
 
 	return;
 
