@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <stddef.h>
 
 #include "cbrutekrag.h"
 
@@ -43,6 +44,7 @@ void btkg_options_init(btkg_options_t *options)
 	options->perform_scan = 0;
 	options->non_openssh = 0;
 	options->allow_honeypots = 0;
+	options->check_http = NULL;
 }
 
 /**
