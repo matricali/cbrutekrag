@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows support
 - Timeout can be specified using --timeout <seconds> argument. Default: 3
 - Separated and customizable scanner output log -F <format> -O <file> (#27)
+- --check-http for check TCP Tunnel after successful login
 
 ### Changed
 

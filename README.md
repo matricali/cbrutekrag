@@ -57,6 +57,7 @@ usage: ./cbrutekrag [-h] [-v] [-aA] [-D] [-P] [-T TARGETS.lst] [-C credentials.l
 -a, --allow-non-openssh   Accepts non OpenSSH servers
 -A, --allow-honeypots     Allow servers detected as honeypots
     --timeout <seconds>   Sets connection timeout (Default: 3)
+    --check-http <host>   Tries to open a TCP Tunnel after successful login
 ```
 
 ## Example usages
