@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +38,8 @@ void run_tests(test_input_t *tests)
 	// Test matrix
 	while (!(tests[i].total == 0 && tests[i].size == 0)) {
 		for (int j = 0; j <= tests[i].total; j++) {
-			progressbar_render(j, tests[i].total, NULL, tests[i].size);
+			progressbar_render(j, tests[i].total, NULL,
+					   tests[i].size);
 		}
 		printf("\n");
 		i++;

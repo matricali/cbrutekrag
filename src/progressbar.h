@@ -35,9 +35,9 @@ SOFTWARE.
  * @param count   The current iteration count.
  * @param total   The total number of iterations.
  * @param suffix  A string suffix to append after the progress bar.
- * @param bar_len The length of the progress bar in characters.
+ * @param suffix_max The width for suffix.
  */
-void progressbar_render(size_t count, size_t total, char *suffix,
-			size_t bar_len);
+ void progressbar_render(size_t count, size_t total, const char *suffix,
+ 			size_t suffix_max);
 
 #endif // PROGRESSBAR_H

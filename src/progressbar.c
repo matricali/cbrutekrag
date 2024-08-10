@@ -31,6 +31,7 @@ SOFTWARE.
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 /**
  * Get the terminal width.
@@ -73,63 +74,53 @@ static size_t get_terminal_width(void)
  * @param count   The current iteration count.
  * @param total   The total number of iterations.
  * @param suffix  A string suffix to append after the progress bar.
- * @param bar_len The length of the progress bar in characters.
+ * @param suffix_max The width for suffix.
  */
 void progressbar_render(size_t count, size_t total, const char *suffix,
-			size_t bar_len)
+			size_t suffix_max)
 {
 	size_t max_cols = get_terminal_width();
+	size_t parcentage_len = 12; // " %6.2f%%  " + ||
 
-	if (bar_len == 0)
-		bar_len = max_cols - 80;
+	if (suffix_max + parcentage_len > max_cols)
+		suffix_max = max_cols - parcentage_len;
+
+	size_t bar_len = max_cols - parcentage_len - suffix_max;
+
 	if (suffix == NULL)
 		suffix = "";
 
-	size_t filled_len = 0;
 	double percentage = 0;
+	size_t filled_len = 0;
 
 	if (total > 0) {
 		filled_len = bar_len * count / total;
 		percentage = ((double)count / (double)total) * 100.0;
 	}
 
-	size_t empty_len = bar_len - filled_len;
-	size_t fill = max_cols - bar_len - strlen(suffix) - 16;
-
 	printf("\b%c[2K\r", 27);
+
 	if (bar_len > 0) {
 		printf("\033[37m|");
 		if (filled_len > 0) {
 			printf("\033[32m");
 			for (size_t i = 0; i < filled_len; ++i) {
-#ifdef _WIN32
-				printf("#");
-#else
 				printf("\u2588");
-#endif
 			}
 		}
+		size_t empty_len =
+			bar_len > filled_len ? bar_len - filled_len : 0;
 		if (empty_len > 0) {
 			printf("\033[37m");
 			for (size_t i = 0; i < empty_len; ++i) {
-#ifdef _WIN32
-				printf("-");
-#else
 				printf("\u2591");
-#endif
 			}
 		}
 		printf("\033[37m|\033[0m");
 	}
 
-	if (max_cols > 60)
-		printf("  %.2f%%   %s", percentage, suffix);
-
-	if (fill > 0) {
-		for (size_t i = 0; i < fill; ++i) {
-			printf(" ");
-		}
-	}
+	printf(" %6.2f%%  %-*s", percentage,
+	       suffix_max > INT_MAX ? INT_MAX : (int)suffix_max, suffix);
 
 	printf("\r");
 	fflush(stdout);

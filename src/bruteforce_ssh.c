@@ -287,7 +287,7 @@ static void *btkg_bruteforce_worker(void *ptr)
 				 context->count, context->total, context->count,
 				 target->host, target->port);
 			progressbar_render(context->count, context->total, str,
-					   0);
+					   40);
 		}
 		pthread_mutex_unlock(&bflock);
 
@@ -342,5 +342,5 @@ void btkg_bruteforce_start(btkg_context_t *context)
 	}
 
 	if (options->progress_bar)
-		progressbar_render(context->count, context->total, NULL, 0);
+		progressbar_render(context->count, context->total, NULL, 40);
 }

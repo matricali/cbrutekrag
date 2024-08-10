@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update total work to do after targets filtering
 - ssh_free releases the memory allocated for banner
 - Flush write buffer to logs immediately
+- Progress bar on smaller terminal sizes (#11)
 
 ### Removed
 

@@ -276,7 +276,7 @@ void *detection_process(void *ptr)
 				 filtered.length, current_target->host,
 				 current_target->port);
 			progressbar_render(scan_counter, target_list->length,
-					   str, 0);
+					   str, 40);
 		}
 		pthread_mutex_unlock(&mutex);
 
@@ -341,7 +341,7 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 	}
 
 	if (options->progress_bar)
-		progressbar_render(1, 1, NULL, 0);
+		progressbar_render(1, 1, NULL, 40);
 
 	*targets = filtered;
 }
