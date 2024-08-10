@@ -22,6 +22,7 @@ SOFTWARE.
 
 #include <getopt.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +55,11 @@ int g_verbose = 0;
 char *g_output_format = NULL;
 char *g_scan_output_format = NULL;
 
+#define OPTIONAL_ARGUMENT_IS_PRESENT                                           \
+	((optarg == NULL && optind < argc && argv[optind][0] != '-') ?         \
+		 (bool)(optarg = argv[optind++]) :                             \
+		 (optarg != NULL))
+
 /* Long options for getopt_long */
 static struct option long_options[] = {
 	{ "help", no_argument, NULL, 'h' },
@@ -72,6 +78,7 @@ static struct option long_options[] = {
 	{ "allow-non-openssh", no_argument, NULL, 'a' },
 	{ "allow-honeypots", no_argument, NULL, 'A' },
 	{ "timeout", required_argument, NULL, 11 },
+	{ "check-http", optional_argument, NULL, 13 },
 	{ NULL, 0, NULL, 0 }
 };
 
@@ -255,6 +262,12 @@ int main(int argc, char **argv)
 				}
 				options->timeout = tempint;
 				break;
+			case 13:
+				options->check_http =
+					strdup((!OPTIONAL_ARGUMENT_IS_PRESENT) ?
+						       "wwww.google.com" :
+						       optarg);
+				break;
 			case 'h':
 				print_banner();
 				usage(argv[0]);
@@ -281,7 +294,8 @@ int main(int argc, char **argv)
 				       "                            \"%%HOSTNAME%%:%%PORT%%\\t%%BANNER%%\\n\"\n"
 				       "  -a, --allow-non-openssh   Accepts non OpenSSH servers\n"
 				       "  -A, --allow-honeypots     Allow servers detected as honeypots\n"
-				       "      --timeout <seconds>   Sets connection timeout (Default: 3)\n");
+				       "      --timeout <seconds>   Sets connection timeout (Default: 3)\n"
+				       "      --check-http <host>   Tries to open a TCP Tunnel after successful login\n");
 				exit(EXIT_SUCCESS);
 			default:
 				usage(argv[0]);

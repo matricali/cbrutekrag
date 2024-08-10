@@ -40,6 +40,7 @@ typedef struct {
 	int perform_scan;
 	int non_openssh;
 	int allow_honeypots;
+	char *check_http;
 } btkg_options_t;
 
 typedef struct {
