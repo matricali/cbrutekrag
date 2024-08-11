@@ -44,17 +44,13 @@ typedef int socklen_t;
 #include <libssh/libssh.h>
 #include <pthread.h>
 
-#include "cbrutekrag.h"
 #include "detection.h"
 #include "log.h"
-#include "macrowrapper.h"
-#include "progressbar.h"
 #include "target.h"
 
 #define BUF_SIZE 1024
 #define BANNER_LEN 256
 
-size_t scan_counter = 0;
 btkg_target_list_t filtered;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -140,7 +136,7 @@ int detection_detect_ssh(btkg_context_t *context, const char *hostname,
 
 	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
 	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-	ssh_options_set(session, SSH_OPTIONS_PORT, &(int){port});
+	ssh_options_set(session, SSH_OPTIONS_PORT, &(int){ port });
 #if LIBSSH_VERSION_MAJOR > 0 ||                                                \
 	(LIBSSH_VERSION_MAJOR == 0 && LIBSSH_VERSION_MINOR >= 6)
 	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
@@ -260,25 +256,15 @@ void *detection_process(void *ptr)
 	btkg_options_t *options = &context->options;
 
 	for (;;) {
-		pthread_mutex_lock(&mutex);
-		if (scan_counter >= target_list->length) {
-			pthread_mutex_unlock(&mutex);
+		pthread_mutex_lock(&context->lock);
+		if (context->count >= target_list->length) {
+			pthread_mutex_unlock(&context->lock);
 			break;
 		}
 		btkg_target_t *current_target =
-			&target_list->targets[scan_counter];
-		scan_counter++;
-
-		if (options->progress_bar) {
-			char str[40];
-			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
-				 scan_counter, target_list->length,
-				 filtered.length, current_target->host,
-				 current_target->port);
-			progressbar_render(scan_counter, target_list->length,
-					   str, 40);
-		}
-		pthread_mutex_unlock(&mutex);
+			&target_list->targets[context->count];
+		context->count++;
+		pthread_mutex_unlock(&context->lock);
 
 		if (options->dry_run) {
 			pthread_mutex_lock(&mutex);
@@ -315,7 +301,6 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 		     btkg_target_list_t *targets, size_t max_threads)
 {
 	btkg_target_list_init(&filtered);
-	btkg_options_t *options = &context->options;
 	btkg_detection_args_t args;
 
 	memset(&args, 0, sizeof(btkg_detection_args_t));
@@ -339,9 +324,6 @@ void detection_start(btkg_context_t *context, btkg_target_list_t *source,
 			log_error("Cannot join thread no: %d\n", ret);
 		}
 	}
-
-	if (options->progress_bar)
-		progressbar_render(1, 1, NULL, 40);
 
 	*targets = filtered;
 }

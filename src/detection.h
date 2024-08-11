@@ -23,6 +23,7 @@ SOFTWARE.
 #ifndef DETECTION_H
 #define DETECTION_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "cbrutekrag.h"

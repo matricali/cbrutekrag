@@ -46,10 +46,9 @@ SOFTWARE.
 #include "credentials.h"
 #include "detection.h"
 #include "log.h"
+#include "progress.h"
 #include "str.h"
 #include "target.h"
-
-#define NANO_PER_SEC 1000000000.0
 
 char *g_output_format = NULL;
 char *g_scan_output_format = NULL;
@@ -143,7 +142,7 @@ static size_t btkg_get_max_threads(void)
  * output. If the console handle is invalid or if there is an error while
  * getting or setting the console mode, an error message is printed to stderr.
  */
-static void btkg_console_setup()
+static void btkg_console_setup(void)
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hConsole != INVALID_HANDLE_VALUE) {
@@ -174,6 +173,7 @@ int main(int argc, char **argv)
 	char *output_filename = NULL;
 	char *scan_output_filename = NULL;
 	int tempint;
+	pthread_t progress_watcher;
 
 	/* Error handler */
 	signal(SIGSEGV, err_handler);
@@ -382,13 +382,16 @@ int main(int argc, char **argv)
 	}
 #endif
 
-	struct timespec start, end;
+	struct timespec start;
 	double elapsed;
 
 	/* Port scan and honeypot detection */
 	if (options->perform_scan) {
 		log_info("Starting servers discoverage process...");
 		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		context.total = context.targets.length;
+		context.count = 0;
 
 		/* Scan output file */
 		if (scan_output_filename != NULL) {
@@ -407,6 +410,8 @@ int main(int argc, char **argv)
 			}
 		}
 
+		btkg_progress_watcher_start(&context, &progress_watcher);
+
 		detection_start(&context, targets, targets,
 				options->max_threads);
 
@@ -418,9 +423,9 @@ int main(int argc, char **argv)
 			g_scan_output_format = NULL;
 		}
 
-		clock_gettime(CLOCK_MONOTONIC, &end);
-		elapsed = (double)(end.tv_sec - start.tv_sec);
-		elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
+		btkg_progress_watcher_wait(&progress_watcher);
+
+		elapsed = btkg_elapsed_time(&start);
 
 		context.total = targets->length * credentials->length;
 
@@ -431,7 +436,7 @@ int main(int argc, char **argv)
 
 	if (targets->length == 0) {
 		log_info("No work to do.");
-		exit(EXIT_SUCCESS);
+		goto _finalize;
 	}
 
 	if (options->max_threads > targets->length) {
@@ -443,24 +448,23 @@ int main(int argc, char **argv)
 	log_info("Starting brute-force process...");
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
+	btkg_progress_watcher_start(&context, &progress_watcher);
+
 	btkg_bruteforce_start(&context);
 
-	clock_gettime(CLOCK_MONOTONIC, &end);
-	elapsed = (double)(end.tv_sec - start.tv_sec);
-	elapsed += (double)(end.tv_nsec - start.tv_nsec) / NANO_PER_SEC;
+	btkg_progress_watcher_wait(&progress_watcher);
+
+	elapsed = btkg_elapsed_time(&start);
 
 	log_info("Brute-force process took %f seconds.", elapsed);
 
-	btkg_credentials_list_destroy(credentials);
-	btkg_target_list_destroy(targets);
-
-	if (context.output != NULL)
-		fclose(context.output);
+_finalize:
+	btkg_context_destroy(&context);
 
 	if (g_output_format != NULL) {
 		free(g_output_format);
 		g_output_format = NULL;
 	}
 
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }

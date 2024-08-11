@@ -24,6 +24,7 @@ SOFTWARE.
 #define CBRUTEKRAG_H
 
 #include <stdio.h>
+#include <pthread.h>
 
 #include "credentials.h"
 #include "target.h"
@@ -54,6 +55,7 @@ typedef struct {
 	size_t targets_idx;
 	FILE *output;
 	FILE *scan_output;
+	pthread_mutex_t lock;
 } btkg_context_t;
 
 /**
@@ -75,5 +77,16 @@ void btkg_options_init(btkg_options_t *options);
  * @param context Pointer to the context structure to be initialized.
  */
 void btkg_context_init(btkg_context_t *context);
+
+/**
+ * @brief Destroys the context structure and frees associated resources.
+ *
+ * This function releases any resources associated with the context, including
+ * mutexes, credentials list, and target list. It should be called when the
+ * context is no longer needed to avoid memory leaks.
+ *
+ * @param context Pointer to the context structure to be destroyed.
+ */
+void btkg_context_destroy(btkg_context_t *context);
 
 #endif /* CBRUTEKRAG_H */

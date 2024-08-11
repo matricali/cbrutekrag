@@ -10,6 +10,7 @@ set(SOURCE_FILES
     log.c
     str.c
     iprange.c
+    progress.c
     progressbar.c
     bruteforce_ssh.c
     detection.c

@@ -22,6 +22,7 @@ SOFTWARE.
 #include <stddef.h>
 
 #include "cbrutekrag.h"
+#include "target.h"
 
 /**
  * @brief Initializes the options structure with default values.
@@ -70,7 +71,40 @@ void btkg_context_init(btkg_context_t *context)
 	context->total = 0;
 	context->credentials_idx = 0;
 	context->targets_idx = 0;
+	pthread_mutex_init(&context->lock, NULL);
 
 	btkg_credentials_list_init(&context->credentials);
 	btkg_target_list_init(&context->targets);
+}
+
+/**
+ * @brief Destroys the context structure and frees associated resources.
+ *
+ * This function releases any resources associated with the context, including
+ * mutexes, credentials list, and target list. It should be called when the
+ * context is no longer needed to avoid memory leaks.
+ *
+ * @param context Pointer to the context structure to be destroyed.
+ */
+void btkg_context_destroy(btkg_context_t *context)
+{
+	if (context == NULL) {
+		return;
+	}
+
+	// Destroy the mutex
+	pthread_mutex_destroy(&context->lock);
+
+	// Free the credentials list
+	btkg_credentials_list_destroy(&context->credentials);
+
+	// Free the target list
+	btkg_target_list_destroy(&context->targets);
+
+	// Free any dynamically allocated memory in the context
+	if (context->output != NULL)
+		fclose(context->output);
+
+	if (context->scan_output != NULL)
+		fclose(context->scan_output);
 }

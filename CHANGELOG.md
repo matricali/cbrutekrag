@@ -14,11 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Timeout can be specified using --timeout <seconds> argument. Default: 3
 - Separated and customizable scanner output log -F <format> -O <file> (#27)
 - --check-http for check TCP Tunnel after successful login
+- A separated thread to monitoring the progress of processes
 
 ### Changed
 
 - Bruteforce process now uses pthread instead of fork
 - Short option for bruteforce output log format changed from -F to -f
+- The current state is no longer reported by the worker threads. Is reported by
+  monitoring thread instead
 
 ### Fixed
 

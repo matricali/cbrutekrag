@@ -29,9 +29,6 @@ SOFTWARE.
 
 #include "cbrutekrag.h"
 #include "log.h"
-#include "progressbar.h"
-
-static pthread_mutex_t bflock = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * Attempt to brute-force SSH login using the provided credentials.
@@ -263,7 +260,7 @@ static void *btkg_bruteforce_worker(void *ptr)
 	btkg_options_t *options = &context->options;
 
 	for (;;) {
-		pthread_mutex_lock(&bflock);
+		pthread_mutex_lock(&context->lock);
 		if (context->targets_idx >= targets->length) {
 			context->targets_idx = 0;
 			context->credentials_idx++;
@@ -271,7 +268,7 @@ static void *btkg_bruteforce_worker(void *ptr)
 		if (context->credentials_idx >= credentials->length) {
 			// Llegamos al final
 			log_debug("No work to do. Stopping thread...");
-			pthread_mutex_unlock(&bflock);
+			pthread_mutex_unlock(&context->lock);
 			break;
 		}
 
@@ -281,24 +278,16 @@ static void *btkg_bruteforce_worker(void *ptr)
 			&credentials->credentials[context->credentials_idx];
 		context->count++;
 
-		if (options->progress_bar) {
-			char str[40];
-			snprintf(str, 40, "[%zu/%zu] %zu OK - %s:%d",
-				 context->count, context->total, context->count,
-				 target->host, target->port);
-			progressbar_render(context->count, context->total, str,
-					   40);
-		}
-		pthread_mutex_unlock(&bflock);
+		pthread_mutex_unlock(&context->lock);
 
 		if (!options->dry_run) {
 			int ret = bruteforce_ssh_try_login(
 				context, target->host, target->port,
 				combo->username, combo->password);
 			if (ret == 0) {
-				pthread_mutex_lock(&bflock);
+				pthread_mutex_lock(&context->lock);
 				context->successful++;
-				pthread_mutex_unlock(&bflock);
+				pthread_mutex_unlock(&context->lock);
 			}
 		} else {
 			log_debug("\033[38m[-]\033[0m %s:%d %s %s",
@@ -340,7 +329,4 @@ void btkg_bruteforce_start(btkg_context_t *context)
 			log_error("Cannot join thread no: %d\n", ret);
 		}
 	}
-
-	if (options->progress_bar)
-		progressbar_render(context->count, context->total, NULL, 40);
 }
