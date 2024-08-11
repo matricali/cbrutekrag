@@ -20,15 +20,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../src/compat.h"
 #include "../src/credentials.h"
 
-int g_verbose = 0;
 char *g_output_format = NULL;
 char *g_scan_output_format = NULL;
 

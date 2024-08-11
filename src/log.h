@@ -23,6 +23,8 @@ SOFTWARE.
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <stdio.h>
+
 /**
  * @brief Logging levels.
  */
@@ -107,6 +109,30 @@ void print_output(int level, const char *file, int line, const char *head,
  * @param ... Additional arguments for the format string.
  */
 void log_output(FILE *stream, const char *format, ...);
+
+/**
+ * @brief Sets the logging verbosity level.
+ *
+ * This function sets the global logging verbosity level based on the given
+ * level parameter. The verbosity level can be used to control the amount of
+ * detail output in log messages.
+ *
+ * The verbosity level is typically a bitwise OR of different flags that
+ * enable various levels of detail. For example, the following flags might
+ * be combined:
+ * - `CBRUTEKRAG_VERBOSE_MODE` (0x1): Enables basic verbose logging.
+ * - `CBRUTEKRAG_VERBOSE_SSHLIB` (0x2): Enables verbose logging for the SSH library.
+ *
+ * Example usage:
+ * @code
+ * options->verbose |= CBRUTEKRAG_VERBOSE_MODE;
+ * log_set_level(options->verbose);
+ * @endcode
+ *
+ * @param level The verbosity level to set. This is typically a combination of
+ *        flags defined as bitwise values (e.g., `CBRUTEKRAG_VERBOSE_MODE`).
+ */
+void log_set_level(int level);
 
 /**
  * @brief Log a successful login attempt with details formatted according to

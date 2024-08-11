@@ -51,7 +51,6 @@ SOFTWARE.
 
 #define NANO_PER_SEC 1000000000.0
 
-int g_verbose = 0;
 char *g_output_format = NULL;
 char *g_scan_output_format = NULL;
 
@@ -208,7 +207,7 @@ int main(int argc, char **argv)
 				break;
 			case 'v':
 				options->verbose |= CBRUTEKRAG_VERBOSE_MODE;
-				g_verbose = options->verbose;
+				log_set_level(options->verbose);
 				break;
 			case 'V':
 				options->verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;

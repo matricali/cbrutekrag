@@ -30,7 +30,7 @@ SOFTWARE.
 #include "str.h" /* btkg_str_replace_placeholder */
 
 /** Global verbosity level. */
-extern int g_verbose;
+static int g_verbose;
 
 /** Global output format string. */
 extern char *g_output_format;
@@ -241,4 +241,31 @@ void btkg_log_target_found(FILE *stream, const char *hostname, int port,
 error:
 	log_error("Error replacing placeholders");
 	free(output);
+}
+
+/**
+ * @brief Sets the logging verbosity level.
+ *
+ * This function sets the global logging verbosity level based on the given
+ * level parameter. The verbosity level can be used to control the amount of
+ * detail output in log messages.
+ *
+ * The verbosity level is typically a bitwise OR of different flags that
+ * enable various levels of detail. For example, the following flags might
+ * be combined:
+ * - `CBRUTEKRAG_VERBOSE_MODE` (0x1): Enables basic verbose logging.
+ * - `CBRUTEKRAG_VERBOSE_SSHLIB` (0x2): Enables verbose logging for the SSH library.
+ *
+ * Example usage:
+ * @code
+ * options->verbose |= CBRUTEKRAG_VERBOSE_MODE;
+ * log_set_level(options->verbose);
+ * @endcode
+ *
+ * @param level The verbosity level to set. This is typically a combination of
+ *        flags defined as bitwise values (e.g., `CBRUTEKRAG_VERBOSE_MODE`).
+ */
+void log_set_level(int level)
+{
+	g_verbose = level;
 }
