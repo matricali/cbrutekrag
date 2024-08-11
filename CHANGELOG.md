@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separated and customizable scanner output log -F <format> -O <file> (#27)
 - --check-http for check TCP Tunnel after successful login
 - A separated thread to monitoring the progress of processes
+- Estimated time remaining and rate indicators
 
 ### Changed
 
