@@ -1,16 +1,8 @@
 set(SOURCE_FILES
     ../src/getdelim.c
     ../src/getline.c
-    # cbrutekrag.c
     ../src/log.c
     ../src/str.c
-    # iprange.c
-    # progressbar.c
-    # bruteforce_ssh.c
-    # detection.c
-    # target.c
-    # credentials.c
-    # macrowrapper.c
   )
 
 # Test credentials parse

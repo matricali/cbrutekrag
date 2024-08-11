@@ -15,7 +15,6 @@ set(SOURCE_FILES
     detection.c
     target.c
     credentials.c
-    macrowrapper.c
   )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 

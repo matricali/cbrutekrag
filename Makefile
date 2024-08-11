@@ -12,8 +12,7 @@ SRCS	:= cbrutekrag.c \
 	progressbar.c \
 	bruteforce_ssh.c \
 	detection.c target.c \
-	credentials.c \
-	macrowrapper.c
+	credentials.c
 OBJS	:= $(SRCS:%.c=obj/%.o)
 
 all: dirs $(NAME)
