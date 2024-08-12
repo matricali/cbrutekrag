@@ -67,6 +67,8 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 		return -1;
 	}
 
+	int timeout = options->timeout;
+
 	ssh_options_set(session, SSH_OPTIONS_HOST, hostname);
 	ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
 	ssh_options_set(session, SSH_OPTIONS_PORT, &(int){ port });
@@ -75,7 +77,7 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 	ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE, "none");
 	ssh_options_set(session, SSH_OPTIONS_HOSTKEYS, "none");
 #endif
-	ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &options->timeout);
+	ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &timeout);
 	ssh_options_set(session, SSH_OPTIONS_USER, username);
 
 	int r;
