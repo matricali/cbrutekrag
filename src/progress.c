@@ -91,7 +91,7 @@ void *progress_worker(void *ptr)
 
 	memset(&stats, 0, stats_len);
 
-	struct timespec last_update;
+	struct timespec last_update = { 0 };
 	int suffix_len = 0;
 
 	while (context->count < context->total) {
