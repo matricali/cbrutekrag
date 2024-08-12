@@ -102,9 +102,13 @@ void btkg_context_destroy(btkg_context_t *context)
 	btkg_target_list_destroy(&context->targets);
 
 	// Free any dynamically allocated memory in the context
-	if (context->output != NULL)
+	if (context->output != NULL) {
 		fclose(context->output);
+		context->output = NULL;
+	}
 
-	if (context->scan_output != NULL)
+	if (context->scan_output != NULL) {
 		fclose(context->scan_output);
+		context->scan_output = NULL;
+	}
 }

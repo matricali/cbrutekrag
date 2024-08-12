@@ -415,8 +415,10 @@ int main(int argc, char **argv)
 		detection_start(&context, targets, targets,
 				options->max_threads);
 
-		if (context.scan_output != NULL)
+		if (context.scan_output != NULL) {
 			fclose(context.scan_output);
+			context.scan_output = NULL;
+		}
 
 		if (g_scan_output_format != NULL) {
 			free(g_scan_output_format);
