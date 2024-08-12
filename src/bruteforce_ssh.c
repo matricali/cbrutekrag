@@ -140,6 +140,10 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 					log_error(
 						"Error ssh_channel_open_forward: %s",
 						ssh_get_error(session));
+					if (channel) {
+						ssh_channel_close(channel);
+    				ssh_channel_free(channel);
+					}
 					ssh_disconnect(session);
 					ssh_free(session);
 
@@ -159,6 +163,10 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 				if (r == SSH_ERROR) {
 					log_error("Error ssh_channel_write: %s",
 						  ssh_get_error(session));
+					if (channel) {
+						ssh_channel_close(channel);
+    				ssh_channel_free(channel);
+					}
 					ssh_disconnect(session);
 					ssh_free(session);
 
@@ -174,6 +182,10 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 						"%s:%d %s %s - http-check empty response",
 						hostname, port, username,
 						password);
+					if (channel) {
+						ssh_channel_close(channel);
+    				ssh_channel_free(channel);
+					}
 					ssh_disconnect(session);
 					ssh_free(session);
 
@@ -183,6 +195,10 @@ int bruteforce_ssh_login(btkg_context_t *context, const char *hostname,
 				if (nbytes < 0) {
 					log_error("Error ssh_channel_read: %s",
 						  ssh_get_error(session));
+					if (channel) {
+						ssh_channel_close(channel);
+    				ssh_channel_free(channel);
+					}
 					ssh_disconnect(session);
 					ssh_free(session);
 
