@@ -262,7 +262,7 @@ void btkg_target_list_load(btkg_target_list_t *target_list,
 	int lines = 0;
 
 	while ((read = getline(&line, &len, fp)) != -1) {
-		strtok(line, "\n");
+		strtok(line, "\n\r");
 		btkg_target_t *ret = btkg_target_parse(line);
 
 		if (ret == NULL) {

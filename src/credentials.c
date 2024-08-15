@@ -91,7 +91,7 @@ void btkg_credentials_list_load(btkg_credentials_list_t *credentials_list,
 	}
 
 	for (int lines = 1; (read = getline(&temp, &len, fp)) != -1; lines++) {
-		temp[strcspn(temp, "\n")] = '\0';
+		temp[strcspn(temp, "\n\r")] = '\0';
 
 		btkg_credentials_t credentials;
 
