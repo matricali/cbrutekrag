@@ -42,6 +42,8 @@ typedef struct {
 	int non_openssh;
 	int allow_honeypots;
 	char *check_http;
+	char *bruteforce_output_format;
+	char *scanner_output_format;
 } btkg_options_t;
 
 typedef struct {

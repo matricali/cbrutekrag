@@ -143,5 +143,4 @@ void btkg_credentials_list_destroy(btkg_credentials_list_t *credentials_list)
 	free(credentials_list->credentials);
 	credentials_list->credentials = NULL;
 	credentials_list->length = 0;
-	credentials_list = NULL;
 }

@@ -144,7 +144,8 @@ void log_set_level(int level);
  * @param username The username used in the login attempt.
  * @param password The password used in the login attempt.
  */
-void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
+void btkg_log_successfull_login(FILE *stream, const char *format,
+				const char *hostname, int port,
 				const char *username, const char *password);
 
 /**
@@ -157,7 +158,7 @@ void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
  * @param banner The server banner.
  * @param password The password used in the login attempt.
  */
-void btkg_log_target_found(FILE *stream, const char *hostname, int port,
-			   const char *banner);
+void btkg_log_target_found(FILE *stream, const char *format,
+			   const char *hostname, int port, const char *banner);
 
 #endif // LOGGER_H

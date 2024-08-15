@@ -26,9 +26,6 @@ SOFTWARE.
 
 #include "../src/target.h"
 
-char *g_output_format = NULL;
-char *g_scan_output_format = NULL;
-
 typedef struct {
 	const char *input;
 	btkg_target_t *expected;

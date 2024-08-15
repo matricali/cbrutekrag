@@ -26,9 +26,6 @@ SOFTWARE.
 
 #include "../src/credentials.h"
 
-char *g_output_format = NULL;
-char *g_scan_output_format = NULL;
-
 typedef struct {
 	const char *input;
 	const char *username;

@@ -50,9 +50,6 @@ SOFTWARE.
 #include "str.h"
 #include "target.h"
 
-char *g_output_format = NULL;
-char *g_scan_output_format = NULL;
-
 #define OPTIONAL_ARGUMENT_IS_PRESENT                                           \
 	((optarg == NULL && optind < argc && argv[optind][0] != '-') ?         \
 		 (bool)(optarg = argv[optind++]) :                             \
@@ -61,6 +58,7 @@ char *g_scan_output_format = NULL;
 /* Long options for getopt_long */
 static struct option long_options[] = {
 	{ "help", no_argument, NULL, 'h' },
+	{ "config", required_argument, NULL, 'c' },
 	{ "verbose", no_argument, NULL, 'v' },
 	{ "verbose-sshlib", no_argument, NULL, 'V' },
 	{ "scan", no_argument, NULL, 's' },
@@ -229,9 +227,9 @@ int main(int argc, char **argv)
 				options->max_threads = (size_t)tempint;
 				break;
 			case 'f':
-				g_output_format = strdup(optarg);
+				options->bruteforce_output_format = strdup(optarg);
 				btkg_str_replace_escape_sequences(
-					g_output_format);
+					options->bruteforce_output_format);
 				break;
 			case 'o':
 				output_filename = strdup(optarg);
@@ -243,9 +241,9 @@ int main(int argc, char **argv)
 				scan_output_filename = strdup(optarg);
 				break;
 			case 'F':
-				g_scan_output_format = strdup(optarg);
+				options->scanner_output_format = strdup(optarg);
 				btkg_str_replace_escape_sequences(
-					g_scan_output_format);
+					options->scanner_output_format);
 				break;
 			case 'D':
 				options->dry_run = 1;
@@ -349,8 +347,8 @@ int main(int argc, char **argv)
 	}
 
 	/* Output Format */
-	if (g_output_format == NULL) {
-		g_output_format = strdup(
+	if (options->bruteforce_output_format == NULL) {
+		options->bruteforce_output_format = strdup(
 			"%DATETIME%\t%HOSTNAME%:%PORT%\t%USERNAME%\t%PASSWORD%\n");
 	}
 
@@ -392,10 +390,11 @@ int main(int argc, char **argv)
 					scan_output_filename);
 				exit(EXIT_FAILURE);
 			}
+			free(scan_output_filename);
 
 			/* Scanner Output Format */
-			if (g_scan_output_format == NULL) {
-				g_scan_output_format =
+			if (options->scanner_output_format == NULL) {
+				options->scanner_output_format =
 					strdup("%HOSTNAME%:%PORT%\t%BANNER%\n");
 			}
 		}
@@ -410,9 +409,9 @@ int main(int argc, char **argv)
 			context.scan_output = NULL;
 		}
 
-		if (g_scan_output_format != NULL) {
-			free(g_scan_output_format);
-			g_scan_output_format = NULL;
+		if (options->scanner_output_format != NULL) {
+			free(options->scanner_output_format);
+			options->scanner_output_format = NULL;
 		}
 
 		btkg_progress_watcher_wait(&progress_watcher);
@@ -453,10 +452,6 @@ int main(int argc, char **argv)
 _finalize:
 	btkg_context_destroy(&context);
 
-	if (g_output_format != NULL) {
-		free(g_output_format);
-		g_output_format = NULL;
-	}
 
 	return EXIT_SUCCESS;
 }

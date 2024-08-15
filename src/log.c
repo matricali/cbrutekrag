@@ -32,12 +32,6 @@ SOFTWARE.
 /** Global verbosity level. */
 static int g_verbose;
 
-/** Global output format string. */
-extern char *g_output_format;
-
-/** Global scanner output format string. */
-extern char *g_scan_output_format;
-
 #define TIMESTAMP_BUFFER_SIZE 20
 
 /**
@@ -123,11 +117,12 @@ void log_output(FILE *stream, const char *format, ...)
  * @param username The username used in the login attempt.
  * @param password The password used in the login attempt.
  */
-void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
+void btkg_log_successfull_login(FILE *stream, const char *format,
+				const char *hostname, int port,
 				const char *username, const char *password)
 {
-	if (g_output_format == NULL) {
-		log_error("g_output_format is NULL");
+	if (format == NULL) {
+		log_error("bruteforce_output_format is NULL");
 		return;
 	}
 
@@ -137,7 +132,7 @@ void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 	snprintf(strport, sizeof(strport), "%d", port);
 
 	// Allocation
-	size_t output_len = strlen(g_output_format) + 1;
+	size_t output_len = strlen(format) + 1;
 	char *output = malloc(output_len);
 
 	if (output == NULL) {
@@ -145,7 +140,7 @@ void btkg_log_successfull_login(FILE *stream, const char *hostname, int port,
 		return;
 	}
 
-	snprintf(output, output_len, "%s", g_output_format);
+	snprintf(output, output_len, "%s", format);
 
 	output = btkg_str_replace_placeholder(output, "%DATETIME%",
 					      get_current_timestamp());
@@ -190,11 +185,11 @@ error:
  * @param banner The server banner.
  * @param password The password used in the login attempt.
  */
-void btkg_log_target_found(FILE *stream, const char *hostname, int port,
-			   const char *banner)
+void btkg_log_target_found(FILE *stream, const char *format,
+			   const char *hostname, int port, const char *banner)
 {
-	if (g_scan_output_format == NULL) {
-		log_error("g_scan_output_format is NULL");
+	if (format == NULL) {
+		log_error("scanner_output_format is NULL");
 		return;
 	}
 
@@ -204,7 +199,7 @@ void btkg_log_target_found(FILE *stream, const char *hostname, int port,
 	snprintf(strport, sizeof(strport), "%d", port);
 
 	// Allocation
-	size_t output_len = strlen(g_scan_output_format) + 1;
+	size_t output_len = strlen(format) + 1;
 	char *output = malloc(output_len);
 
 	if (output == NULL) {
@@ -212,7 +207,7 @@ void btkg_log_target_found(FILE *stream, const char *hostname, int port,
 		return;
 	}
 
-	snprintf(output, output_len, "%s", g_scan_output_format);
+	snprintf(output, output_len, "%s", format);
 
 	output = btkg_str_replace_placeholder(output, "%DATETIME%",
 					      get_current_timestamp());

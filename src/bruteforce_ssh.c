@@ -249,8 +249,10 @@ int bruteforce_ssh_try_login(btkg_context_t *context, const char *hostname,
 		log_info("\033[32m[+]\033[0m %s:%d %s %s", hostname, port,
 			 _username, _password);
 		if (context->output != NULL) {
-			btkg_log_successfull_login(context->output, hostname,
-						   port, _username, _password);
+			btkg_log_successfull_login(
+				context->output,
+				context->options.bruteforce_output_format,
+				hostname, port, _username, _password);
 		}
 	} else {
 		log_debug("\033[38m[-]\033[0m %s:%d %s %s", hostname, port,
@@ -313,7 +315,7 @@ static void *btkg_bruteforce_worker(void *ptr)
 				  combo->password);
 		}
 	}
-	pthread_exit(NULL);
+
 	return NULL;
 }
 

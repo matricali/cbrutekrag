@@ -46,6 +46,8 @@ void btkg_options_init(btkg_options_t *options)
 	options->non_openssh = 0;
 	options->allow_honeypots = 0;
 	options->check_http = NULL;
+	options->bruteforce_output_format = NULL;
+	options->scanner_output_format = NULL;
 }
 
 /**
@@ -111,4 +113,15 @@ void btkg_context_destroy(btkg_context_t *context)
 		fclose(context->scan_output);
 		context->scan_output = NULL;
 	}
+
+	btkg_options_t *options = &context->options;
+
+	free(options->check_http);
+	options->check_http = NULL;
+
+	free(options->bruteforce_output_format);
+	options->bruteforce_output_format = NULL;
+
+	free(options->scanner_output_format);
+	options->scanner_output_format = NULL;
 }
