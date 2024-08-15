@@ -168,8 +168,6 @@ int main(int argc, char **argv)
 {
 	int opt;
 	int option_index = 0;
-	char *hostnames_filename = NULL;
-	char *credentials_filename = NULL;
 	char *output_filename = NULL;
 	char *scan_output_filename = NULL;
 	int tempint;
@@ -196,6 +194,9 @@ int main(int argc, char **argv)
 	btkg_options_t *options = &context.options;
 	options->max_threads = btkg_get_max_threads();
 
+	btkg_target_list_t *targets = &context.targets;
+	btkg_credentials_list_t *credentials = &context.credentials;
+
 	while ((opt = getopt_long(argc, argv, "aAT:C:t:o:f:O:F:DsvVPh",
 				  long_options, &option_index)) != -1) {
 		switch (opt) {
@@ -213,10 +214,10 @@ int main(int argc, char **argv)
 				options->verbose |= CBRUTEKRAG_VERBOSE_SSHLIB;
 				break;
 			case 'T':
-				hostnames_filename = strdup(optarg);
+				btkg_target_list_load(targets, optarg);
 				break;
 			case 'C':
-				credentials_filename = strdup(optarg);
+				btkg_credentials_list_load(credentials, optarg);
 				break;
 			case 't':
 				tempint = atoi(optarg);
@@ -303,8 +304,6 @@ int main(int argc, char **argv)
 	}
 	print_banner();
 
-	btkg_target_list_t *targets = &context.targets;
-
 	/* Targets */
 	while (optind < argc) {
 		btkg_target_t *ret = btkg_target_parse(argv[optind]);
@@ -322,24 +321,15 @@ int main(int argc, char **argv)
 		optind++;
 	}
 
-	if (targets->targets == NULL && hostnames_filename == NULL)
-		hostnames_filename = strdup("hostnames.txt");
+	/* Load targets from default path */
+	if (targets->targets == NULL)
+		btkg_target_list_load(targets, "hostnames.txt");
 
-	if (hostnames_filename != NULL) {
-		btkg_target_list_load(targets, hostnames_filename);
-		free(hostnames_filename);
-	}
-
-	if (credentials_filename == NULL)
-		credentials_filename = strdup("combos.txt");
-
-	/* Load username/password combinations */
-	btkg_credentials_list_load(&context.credentials, credentials_filename);
-	free(credentials_filename);
+	/* Load targets from default path */
+	if (credentials->credentials == NULL)
+		btkg_credentials_list_load(credentials, "combos.txt");
 
 	/* Calculate total attempts */
-	btkg_credentials_list_t *credentials = &context.credentials;
-
 	context.total = targets->length * credentials->length;
 
 	printf("\nAmount of username/password combinations: %zu\n",
