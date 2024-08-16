@@ -212,6 +212,7 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 		}
 		target->port = port;
 		btkg_target_list_append(target_list, target);
+		free(target);
 		return;
 	}
 
@@ -236,6 +237,7 @@ void btkg_target_list_append_range(btkg_target_list_t *target_list,
 		}
 		new_target->port = port;
 		btkg_target_list_append(target_list, new_target);
+		free(new_target);
 	}
 }
 
